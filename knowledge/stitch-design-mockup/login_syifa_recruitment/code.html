@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | Syifa Global Recruitment Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "surface-container-low": "#f0f4f8",
+                    "on-primary-fixed": "#001946",
+                    "outline-variant": "#c4c6d2",
+                    "navy-hover": "#032356",
+                    "orange-mid": "#ea580c",
+                    "background": "#f6fafe",
+                    "on-background": "#171c1f",
+                    "on-tertiary-container": "#f261bd",
+                    "text-muted": "#64748b",
+                    "secondary-container": "#92f3c2",
+                    "secondary-fixed-dim": "#78d9aa",
+                    "surface-tint": "#405c9e",
+                    "secondary": "#006c49",
+                    "on-tertiary-fixed": "#3c002a",
+                    "on-secondary": "#ffffff",
+                    "primary": "#001844",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-container-high": "#e4e9ed",
+                    "error": "#ba1a1a",
+                    "on-secondary-fixed": "#002113",
+                    "inverse-surface": "#2c3134",
+                    "primary-fixed": "#d9e2ff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#171c1f",
+                    "on-secondary-container": "#00714c",
+                    "surface-dark": "#0f172a",
+                    "outline": "#747781",
+                    "inverse-on-surface": "#edf1f5",
+                    "tertiary-container": "#600046",
+                    "error-container": "#ffdad6",
+                    "tertiary": "#3b002a",
+                    "surface": "#f6fafe",
+                    "surface-container": "#eaeef2",
+                    "inverse-primary": "#b1c6ff",
+                    "tertiary-fixed-dim": "#ffaeda",
+                    "timeline-yellow": "#FCF0D6",
+                    "timeline-gold": "#F0DBA3",
+                    "orange-light": "#fb923c",
+                    "on-primary-fixed-variant": "#264484",
+                    "surface-bright": "#f6fafe",
+                    "on-surface-variant": "#444650",
+                    "on-tertiary-fixed-variant": "#890065",
+                    "tertiary-fixed": "#ffd8ea",
+                    "on-error": "#ffffff",
+                    "surface-container-highest": "#dfe3e7",
+                    "secondary-fixed": "#95f6c5",
+                    "on-primary-container": "#7a96dc",
+                    "surface-variant": "#dfe3e7",
+                    "orange-dark": "#9a3412",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#042c6c",
+                    "on-primary": "#ffffff",
+                    "primary-fixed-dim": "#b1c6ff",
+                    "surface-dim": "#d6dade"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "20px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "32px",
+                    "card-padding": "24px",
+                    "section-gap": "48px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "headline-sm": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "headline-sm": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f6fafe;
+        }
+        .neumorphic-card {
+            background: #e8edf6;
+            box-shadow: 6px 6px 14px #c5ccd8, -6px -6px 14px #ffffff;
+        }
+        .identity-gradient {
+            background: linear-gradient(135deg, #042c6c 0%, #0b47a1 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .identity-gradient::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 40px;
+            transform: rotate(45deg);
+        }
+        .identity-gradient::after {
+            content: '';
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 50%;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #042c6c;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+<!-- Main Auth Container -->
+<div class="w-full max-w-[1100px] grid grid-cols-1 lg:grid-cols-2 bg-surface-container-lowest rounded-xl overflow-hidden shadow-2xl min-h-[700px]">
+<!-- Left Side: Brand & Visuals (Hidden on Mobile) -->
+<div class="hidden lg:flex identity-gradient p-12 flex-col justify-between text-on-primary">
+<div>
+<div class="flex items-center gap-3 mb-12">
+<div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+</div>
+<span class="font-headline-md text-headline-md tracking-tight">Syifa Global</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg mb-6 leading-tight">Empowering Global Talents through Syifa Recruitment</h1>
+<p class="font-body-lg text-body-lg text-primary-fixed-dim max-w-md">Connect with world-class opportunities. Our sophisticated recruitment portal streamlines your journey from application to boarding.</p>
+</div>
+<div class="relative mt-auto h-64 rounded-xl overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover opacity-80 mix-blend-overlay" data-alt="A cinematic, high-end professional office environment with floor-to-ceiling windows overlooking a modern city skyline at dusk. The interior features minimalist furniture and soft ambient lighting in shades of navy and silver. Several diverse, professional people are collaborating in the background, out of focus. The overall mood is sophisticated, corporate, and full of upward mobility and ambition, reflecting the Syifa Global brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0Dq2yfkXH3ZUx00xIRN3RL7CqGUIFQ8uvL4BqTd-l07P3NtPX6W2uwFpE30ZMWd7h993IzNCAoH0LzcLcJkipsdtDr2krOuqVh8iuS5CgpqU6weXQDU854xwIMCAXAeAgsEPUJir-2cY5rNbpN7XPJj28K5pRg4JuZXfC7G9T-f0d-_wQDJT6ZSCzwWJSb8nwenv0_fYFPdoioYRoes1UwAay3NjIxhqFK_smfis3AAfQjyZQ1hds"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-6">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-orange-light">verified</span>
+<span class="font-label-md text-label-md">Trusted by 500+ Global Enterprises</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Side: Login Form -->
+<div class="flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white">
+<!-- Mobile Header -->
+<div class="lg:hidden flex items-center gap-2 mb-8">
+<span class="material-symbols-outlined text-primary text-[32px]">rocket_launch</span>
+<span class="font-headline-md text-headline-md text-primary">Syifa Global</span>
+</div>
+<div class="mb-10">
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-2">Welcome Back</h2>
+<p class="font-body-md text-text-muted">Enter your credentials to access your recruitment dashboard.</p>
+</div>
+<form class="space-y-6" id="loginForm">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="block font-label-md text-label-md text-on-surface-variant" for="email">Email Address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">mail</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-xl font-body-md text-on-surface placeholder:text-outline transition-all" id="email" placeholder="name@company.com" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="block font-label-md text-label-md text-on-surface-variant" for="password">Password</label>
+<a class="font-label-sm text-label-sm text-primary hover:text-navy-hover transition-colors" href="#">Forgot Password?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock</span>
+<input class="w-full pl-12 pr-12 py-4 bg-surface-container-low border-none rounded-xl font-body-md text-on-surface placeholder:text-outline transition-all" id="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined" id="passIcon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center gap-3">
+<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" id="remember" type="checkbox"/>
+<label class="font-label-md text-label-md text-on-surface-variant cursor-pointer" for="remember">Remember me for 30 days</label>
+</div>
+<!-- Submit Button -->
+<button class="w-full identity-gradient hover:opacity-90 text-on-primary font-label-md text-label-md py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2" type="submit">
+                    Sign In
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</form>
+<!-- Social Login / Alternate -->
+<div class="relative my-10">
+<div class="absolute inset-0 flex items-center"><div class="w-full border-t border-outline-variant"></div></div>
+<div class="relative flex justify-center text-label-sm"><span class="bg-white px-4 text-text-muted">Or continue with</span></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 py-3 border border-outline-variant rounded-xl hover:bg-surface-container-low transition-colors font-label-sm text-label-sm text-on-surface">
+<svg class="w-5 h-5" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.25.81-.59z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"></path>
+</svg>
+                    Google
+                </button>
+<button class="flex items-center justify-center gap-2 py-3 border border-outline-variant rounded-xl hover:bg-surface-container-low transition-colors font-label-sm text-label-sm text-on-surface">
+<svg class="w-5 h-5 fill-on-surface" viewbox="0 0 24 24">
+<path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.137 20.164 22 16.418 22 12c0-5.523-4.477-10-10-10z"></path>
+</svg>
+                    GitHub
+                </button>
+</div>
+<div class="mt-auto pt-8 text-center">
+<p class="font-body-md text-text-muted">
+                    Don't have an account yet? 
+                    <a class="text-primary font-bold hover:underline" href="#">Sign Up</a>
+</p>
+</div>
+</div>
+</div>
+<!-- Micro-interaction / Background Decorative Elements -->
+<div class="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden opacity-40">
+<div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-primary-fixed blur-[120px]"></div>
+<div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-secondary-fixed blur-[120px]"></div>
+</div>
+<script>
+        function togglePassword() {
+            const passInput = document.getElementById('password');
+            const passIcon = document.getElementById('passIcon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                passIcon.innerText = 'visibility_off';
+            } else {
+                passInput.type = 'password';
+                passIcon.innerText = 'visibility';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalContent = btn.innerHTML;
+            
+            // Success animation mock
+            btn.disabled = true;
+            btn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Validating...`;
+            
+            setTimeout(() => {
+                btn.classList.replace('identity-gradient', 'bg-secondary');
+                btn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Success! Redirecting...`;
+                
+                // Add a subtle particle effect or scale
+                btn.style.transform = "scale(1.02)";
+                
+                setTimeout(() => {
+                    alert('Login successful! Redirecting to dashboard...');
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                    btn.classList.replace('bg-secondary', 'identity-gradient');
+                    btn.style.transform = "scale(1)";
+                }, 1000);
+            }, 1500);
+        });
+
+        // Simple mouse tracking for subtle card tilt
+        const card = document.querySelector('.max-w-\\[1100px\\]');
+        document.addEventListener('mousemove', (e) => {
+            if (window.innerWidth < 1024) return;
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 100;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 100;
+            card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+    </script>
+</body></html>
