@@ -12,7 +12,20 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                navy: {
+                    DEFAULT: '#042c6c',
+                    dark:    '#032356',
+                    light:   '#0b47a1',
+                },
+                'sgg-green': {
+                    DEFAULT: '#047C54',
+                    dark:    '#024732',
+                    hover:   '#036444',
+                },
+                magenta: '#B9308C',
             },
         },
     },

@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<style>
+  body { margin:0; background:#f1f5f9; font-family:'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing:antialiased; color:#334155; }
+  a { color:#042c6c; text-decoration:none; }
+  a:hover { color:#032356; }
+  input, select, textarea, button { font-family:inherit; }
+  input::placeholder, textarea::placeholder { color:#94a3b8; }
+  @keyframes sgRise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  .sg-2col { display:grid; grid-template-columns:1fr; gap:18px; align-items:start; }
+  .sg-login { display:grid; grid-template-columns:1fr; min-height:100vh; }
+  .sg-login-panel { padding:34px 24px 30px; }
+  .sg-login-form { padding:32px 22px 90px; }
+  .sg-hero { padding:34px 24px; }
+  .sg-desk, .sg-desk-flex { display:none; }
+  .sg-mob { display:block; }
+  .sg-mob-list { display:flex; flex-direction:column; }
+  .sg-h1 { font-size:30px; }
+  .sg-stats { display:grid; grid-template-columns:1fr 1fr; }
+  .sg-stats > div + div { border-left:1px solid #e2e8f0; }
+  .sg-stats > div:nth-child(3), .sg-stats > div:nth-child(4) { border-top:1px solid #e2e8f0; }
+  .sg-stats > div:nth-child(3) { border-left:0; }
+  .sg-tl { display:grid; grid-template-columns:1fr; gap:26px; }
+  .sg-tl-line { display:none; }
+  .sg-fields { display:grid; grid-template-columns:1fr; gap:16px; }
+  @media (min-width:768px) {
+    .sg-2col { grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:20px; }
+    .sg-login { grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); }
+    .sg-login-panel { padding:56px 56px 48px; }
+    .sg-login-form { padding:48px 40px; }
+    .sg-hero { padding:52px 48px; }
+    .sg-desk { display:block; }
+    .sg-desk-flex { display:flex !important; }
+    .sg-desk-table { display:table !important; }
+    .sg-mob, .sg-mob-list { display:none !important; }
+    .sg-h1 { font-size:44px; }
+    .sg-stats { grid-template-columns:repeat(4,1fr); }
+    .sg-stats > div:nth-child(3), .sg-stats > div:nth-child(4) { border-top:0; }
+    .sg-stats > div:nth-child(3) { border-left:1px solid #e2e8f0; }
+    .sg-tl { grid-template-columns:repeat(5,1fr); gap:0; }
+    .sg-tl-line { display:block; }
+    .sg-fields { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#f1f5f9">
+
+<sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+<div style="animation:sgRise .4s ease both">
+
+  <div style="height:4px;background:linear-gradient(90deg,#042c6c 0%,#0b47a1 55%,#B9308C 100%)"></div>
+
+  <header style="position:sticky;top:0;z-index:40;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #e2e8f0">
+    <div style="max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:28px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#042c6c,#0b47a1);display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;letter-spacing:-.5px">SG</div>
+        <div style="line-height:1.15">
+          <div style="font-size:15px;font-weight:800;color:#1e293b;letter-spacing:-.2px">Syifa Global Group</div>
+          <div style="font-size:11px;font-weight:600;color:#64748b;letter-spacing:.06em;text-transform:uppercase">Karier &amp; Rekrutmen</div>
+        </div>
+      </div>
+      <nav class="sg-desk-flex" style="gap:6px;margin-left:auto;align-items:center">
+        <a href="#" style="padding:8px 14px;border-radius:10px;font-size:14px;font-weight:600;color:#042c6c;background:rgba(4,44,108,.07)">Beranda</a>
+        <a href="#" style="padding:8px 14px;border-radius:10px;font-size:14px;font-weight:600;color:#475569">Lowongan</a>
+        <a href="#" style="padding:8px 14px;border-radius:10px;font-size:14px;font-weight:600;color:#475569">Tentang Kami</a>
+        <a href="#" style="padding:8px 14px;border-radius:10px;font-size:14px;font-weight:600;color:#475569">Bantuan</a>
+        <button onClick="{{ goLogin }}" style="margin-left:10px;padding:10px 20px;border-radius:11px;border:0;background:#042c6c;color:#fff;font-size:14px;font-weight:700;cursor:pointer" style-hover="background:#032356">Masuk</button>
+      </nav>
+      <button class="sg-mob" onClick="{{ goLogin }}" style="margin-left:auto;padding:9px 16px;border-radius:11px;border:0;background:#042c6c;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">Masuk</button>
+    </div>
+  </header>
+
+  <main style="max-width:1180px;margin:0 auto;padding:32px 24px 72px">
+
+    <section class="sg-hero" style="position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(135deg,#042c6c 0%,#0b47a1 100%);color:#fff">
+      <div style="position:absolute;width:340px;height:340px;border-radius:50%;background:rgba(255,255,255,.07);right:-90px;top:-120px"></div>
+      <div style="position:absolute;width:210px;height:210px;border-radius:50%;background:rgba(185,48,140,.22);right:120px;bottom:-130px"></div>
+      <div style="position:absolute;width:160px;height:160px;border-radius:34px;background:rgba(255,255,255,.05);transform:rotate(24deg);left:-70px;bottom:-70px"></div>
+      <div style="position:relative;z-index:1;max-width:680px">
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.14);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase"><i class="fa-solid fa-briefcase"></i> 24 posisi dibuka bulan ini</div>
+        <h1 class="sg-h1" style="margin:20px 0 14px;line-height:1.1;font-weight:800;letter-spacing:-1.2px;text-wrap:pretty">Tumbuh bersama<br />Syifa Global Group</h1>
+        <p style="margin:0;font-size:17px;line-height:1.6;color:rgba(255,255,255,.82);max-width:540px;text-wrap:pretty">Satu akun untuk melamar, memantau tahap seleksi, dan mengelola dokumen lamaran Anda — dari layar mana pun.</p>
+        <div style="margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;background:rgba(255,255,255,.12);padding:10px;border-radius:16px;max-width:640px">
+          <div style="flex:1 1 240px;display:flex;align-items:center;gap:10px;background:#fff;border-radius:11px;padding:0 14px">
+            <i class="fa-solid fa-magnifying-glass" style="color:#94a3b8;font-size:14px"></i>
+            <input placeholder="Posisi, kata kunci, atau unit" style="flex:1;border:0;outline:none;padding:14px 0;font-size:14px;color:#1e293b;background:transparent" />
+          </div>
+          <div style="flex:1 1 170px;display:flex;align-items:center;gap:10px;background:#fff;border-radius:11px;padding:0 14px">
+            <i class="fa-solid fa-location-dot" style="color:#94a3b8;font-size:14px"></i>
+            <input placeholder="Lokasi" style="flex:1;border:0;outline:none;padding:14px 0;font-size:14px;color:#1e293b;background:transparent" />
+          </div>
+          <button style="padding:14px 26px;border-radius:11px;border:0;background:#fff;color:#042c6c;font-size:14px;font-weight:700;cursor:pointer">Cari Lowongan</button>
+        </div>
+        <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:8px">
+          <span style="padding:7px 13px;border-radius:999px;background:rgba(255,255,255,.13);font-size:12.5px;font-weight:600">Perawat</span>
+          <span style="padding:7px 13px;border-radius:999px;background:rgba(255,255,255,.13);font-size:12.5px;font-weight:600">Apoteker</span>
+          <span style="padding:7px 13px;border-radius:999px;background:rgba(255,255,255,.13);font-size:12.5px;font-weight:600">Admin &amp; Keuangan</span>
+          <span style="padding:7px 13px;border-radius:999px;background:rgba(255,255,255,.13);font-size:12.5px;font-weight:600">IT Support</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="sg-stats" style="margin-top:20px;background:#fff;border:1px solid #e2e8f0;border-radius:18px;overflow:hidden">
+      <div style="padding:22px 26px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#64748b">Lowongan Aktif</div>
+        <div style="margin-top:6px;font-size:30px;font-weight:800;color:#042c6c;letter-spacing:-1px">24</div>
+      </div>
+      <div style="padding:22px 26px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#64748b">Unit Kerja</div>
+        <div style="margin-top:6px;font-size:30px;font-weight:800;color:#042c6c;letter-spacing:-1px">7</div>
+      </div>
+      <div style="padding:22px 26px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#64748b">Kandidat Bergabung</div>
+        <div style="margin-top:6px;font-size:30px;font-weight:800;color:#047C54;letter-spacing:-1px">1.286</div>
+      </div>
+      <div style="padding:22px 26px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#64748b">Rata-rata Respons</div>
+        <div style="margin-top:6px;font-size:30px;font-weight:800;color:#042c6c;letter-spacing:-1px">3 hari</div>
+      </div>
+    </section>
+
+    <section style="margin-top:40px">
+      <div style="text-align:center;max-width:620px;margin:0 auto 34px">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#64748b">Alur Rekrutmen</div>
+        <h2 style="margin:10px 0 8px;font-size:26px;font-weight:800;color:#1e293b;letter-spacing:-.6px">Lima tahap, semuanya transparan</h2>
+        <p style="margin:0;font-size:14.5px;line-height:1.6;color:#64748b;text-wrap:pretty">Setiap perpindahan tahap dikirim ke email dan WhatsApp Anda, serta dapat dipantau kapan saja dari dashboard kandidat.</p>
+      </div>
+
+      <div class="sg-tl">
+        <div style="position:relative;text-align:center">
+          <div class="sg-tl-line" style="position:absolute;top:33px;left:calc(50% + 40px);right:calc(-50% + 40px);border-top:2px dashed #cbd5e1"></div>
+          <div style="position:relative;z-index:1;width:66px;height:66px;margin:0 auto;border-radius:50%;background:#042c6c;color:#fff;display:grid;place-items:center;font-size:19px"><i class="fa-solid fa-plus"></i></div>
+          <div style="margin-top:16px;font-size:15px;font-weight:800;color:#1e293b">Daftar &amp; Lamar</div>
+          <div style="margin-top:5px;font-size:13px;line-height:1.5;color:#64748b">Buat akun kandidat dan isi formulir lamaran</div>
+        </div>
+        <div style="position:relative;text-align:center">
+          <div class="sg-tl-line" style="position:absolute;top:33px;left:calc(50% + 40px);right:calc(-50% + 40px);border-top:2px dashed #cbd5e1"></div>
+          <div style="position:relative;z-index:1;width:66px;height:66px;margin:0 auto;border-radius:50%;background:#fff;border:2px solid #042c6c;color:#042c6c;display:grid;place-items:center;font-size:19px"><i class="fa-regular fa-circle-check"></i></div>
+          <div style="margin-top:16px;font-size:15px;font-weight:800;color:#1e293b">Seleksi Berkas</div>
+          <div style="margin-top:5px;font-size:13px;line-height:1.5;color:#64748b">Tim HR meninjau kelengkapan dokumen</div>
+        </div>
+        <div style="position:relative;text-align:center">
+          <div class="sg-tl-line" style="position:absolute;top:33px;left:calc(50% + 40px);right:calc(-50% + 40px);border-top:2px dashed #cbd5e1"></div>
+          <div style="position:relative;z-index:1;width:66px;height:66px;margin:0 auto;border-radius:50%;background:#fff;border:2px solid #042c6c;color:#042c6c;display:grid;place-items:center;font-size:19px"><i class="fa-solid fa-user-group"></i></div>
+          <div style="margin-top:16px;font-size:15px;font-weight:800;color:#1e293b">Wawancara</div>
+          <div style="margin-top:5px;font-size:13px;line-height:1.5;color:#64748b">Jadwal user &amp; HR dikirim via email</div>
+        </div>
+        <div style="position:relative;text-align:center">
+          <div class="sg-tl-line" style="position:absolute;top:33px;left:calc(50% + 40px);right:calc(-50% + 40px);border-top:2px dashed #cbd5e1"></div>
+          <div style="position:relative;z-index:1;width:66px;height:66px;margin:0 auto;border-radius:50%;background:#fff;border:2px solid #042c6c;color:#042c6c;display:grid;place-items:center;font-size:19px"><i class="fa-regular fa-file-lines"></i></div>
+          <div style="margin-top:16px;font-size:15px;font-weight:800;color:#1e293b">Surat Penawaran</div>
+          <div style="margin-top:5px;font-size:13px;line-height:1.5;color:#64748b">Offering letter dan negosiasi</div>
+        </div>
+        <div style="position:relative;text-align:center">
+          <div style="position:relative;z-index:1;width:66px;height:66px;margin:0 auto;border-radius:50%;background:#047C54;color:#fff;display:grid;place-items:center;font-size:19px"><i class="fa-solid fa-circle-check"></i></div>
+          <div style="margin-top:16px;font-size:15px;font-weight:800;color:#047C54">Bergabung</div>
+          <div style="margin-top:5px;font-size:13px;line-height:1.5;color:#64748b">Onboarding dan mulai berkarier</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sg-2col" style="margin-top:36px">
+      <div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+          <h2 style="margin:0;font-size:20px;font-weight:800;color:#1e293b;letter-spacing:-.4px">Lowongan Terbaru</h2>
+          <a href="#" style="font-size:13.5px;font-weight:700">Lihat semua <i class="fa-solid fa-arrow-right" style="font-size:11px"></i></a>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+
+          <article style="background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:20px 22px;display:flex;gap:16px;align-items:flex-start" style-hover="border-color:#042c6c;box-shadow:0 10px 24px rgba(4,44,108,.08)">
+            <div style="width:46px;height:46px;flex:0 0 46px;border-radius:14px;background:rgba(4,44,108,.08);display:grid;place-items:center;color:#042c6c;font-size:17px"><i class="fa-solid fa-user-nurse"></i></div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                <h3 style="margin:0;font-size:16.5px;font-weight:700;color:#1e293b">Perawat Pelaksana — Rawat Inap</h3>
+                <span style="padding:4px 10px;border-radius:999px;background:rgba(4,124,84,.1);color:#047C54;font-size:11.5px;font-weight:700">Full Time</span>
+              </div>
+              <div style="margin-top:5px;font-size:13.5px;font-weight:600;color:#475569">Syifa Medika · Divisi Keperawatan</div>
+              <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:#64748b">
+                <span><i class="fa-solid fa-location-dot" style="color:#94a3b8;margin-right:6px"></i>Bandung</span>
+                <span><i class="fa-regular fa-clock" style="color:#94a3b8;margin-right:6px"></i>Ditutup 20 Agu 2026</span>
+                <span><i class="fa-solid fa-graduation-cap" style="color:#94a3b8;margin-right:6px"></i>D3/S1 Keperawatan</span>
+              </div>
+            </div>
+            <button onClick="{{ goForm }}" style="align-self:center;padding:11px 20px;border-radius:11px;border:0;background:#042c6c;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#032356">Lamar Sekarang</button>
+          </article>
+
+          <article style="background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:20px 22px;display:flex;gap:16px;align-items:flex-start" style-hover="border-color:#042c6c;box-shadow:0 10px 24px rgba(4,44,108,.08)">
+            <div style="width:46px;height:46px;flex:0 0 46px;border-radius:14px;background:rgba(4,44,108,.08);display:grid;place-items:center;color:#042c6c;font-size:17px"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                <h3 style="margin:0;font-size:16.5px;font-weight:700;color:#1e293b">Apoteker Penanggung Jawab</h3>
+                <span style="padding:4px 10px;border-radius:999px;background:rgba(4,124,84,.1);color:#047C54;font-size:11.5px;font-weight:700">Full Time</span>
+              </div>
+              <div style="margin-top:5px;font-size:13.5px;font-weight:600;color:#475569">Syifa Farma · Divisi Farmasi</div>
+              <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:#64748b">
+                <span><i class="fa-solid fa-location-dot" style="color:#94a3b8;margin-right:6px"></i>Jakarta Selatan</span>
+                <span><i class="fa-regular fa-clock" style="color:#94a3b8;margin-right:6px"></i>Ditutup 14 Agu 2026</span>
+                <span><i class="fa-solid fa-graduation-cap" style="color:#94a3b8;margin-right:6px"></i>Profesi Apoteker</span>
+              </div>
+            </div>
+            <button onClick="{{ goForm }}" style="align-self:center;padding:11px 20px;border-radius:11px;border:0;background:#042c6c;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#032356">Lamar Sekarang</button>
+          </article>
+
+          <article style="background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:20px 22px;display:flex;gap:16px;align-items:flex-start" style-hover="border-color:#042c6c;box-shadow:0 10px 24px rgba(4,44,108,.08)">
+            <div style="width:46px;height:46px;flex:0 0 46px;border-radius:14px;background:rgba(4,44,108,.08);display:grid;place-items:center;color:#042c6c;font-size:17px"><i class="fa-solid fa-laptop-code"></i></div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                <h3 style="margin:0;font-size:16.5px;font-weight:700;color:#1e293b">IT Support Specialist</h3>
+                <span style="padding:4px 10px;border-radius:999px;background:rgba(4,44,108,.09);color:#042c6c;font-size:11.5px;font-weight:700">Kontrak</span>
+              </div>
+              <div style="margin-top:5px;font-size:13.5px;font-weight:600;color:#475569">Kantor Pusat · Divisi Teknologi</div>
+              <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:#64748b">
+                <span><i class="fa-solid fa-location-dot" style="color:#94a3b8;margin-right:6px"></i>Bandung</span>
+                <span><i class="fa-regular fa-clock" style="color:#94a3b8;margin-right:6px"></i>Ditutup 30 Agu 2026</span>
+                <span><i class="fa-solid fa-graduation-cap" style="color:#94a3b8;margin-right:6px"></i>D3/S1 Informatika</span>
+              </div>
+            </div>
+            <button onClick="{{ goForm }}" style="align-self:center;padding:11px 20px;border-radius:11px;border:0;background:#042c6c;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#032356">Lamar Sekarang</button>
+          </article>
+
+          <article style="background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:20px 22px;display:flex;gap:16px;align-items:flex-start" style-hover="border-color:#042c6c;box-shadow:0 10px 24px rgba(4,44,108,.08)">
+            <div style="width:46px;height:46px;flex:0 0 46px;border-radius:14px;background:rgba(4,44,108,.08);display:grid;place-items:center;color:#042c6c;font-size:17px"><i class="fa-solid fa-calculator"></i></div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                <h3 style="margin:0;font-size:16.5px;font-weight:700;color:#1e293b">Staf Akuntansi &amp; Pajak</h3>
+                <span style="padding:4px 10px;border-radius:999px;background:rgba(4,124,84,.1);color:#047C54;font-size:11.5px;font-weight:700">Full Time</span>
+              </div>
+              <div style="margin-top:5px;font-size:13.5px;font-weight:600;color:#475569">Kantor Pusat · Divisi Keuangan</div>
+              <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:#64748b">
+                <span><i class="fa-solid fa-location-dot" style="color:#94a3b8;margin-right:6px"></i>Bandung</span>
+                <span><i class="fa-regular fa-clock" style="color:#94a3b8;margin-right:6px"></i>Ditutup 05 Sep 2026</span>
+                <span><i class="fa-solid fa-graduation-cap" style="color:#94a3b8;margin-right:6px"></i>S1 Akuntansi</span>
+              </div>
+            </div>
+            <button onClick="{{ goForm }}" style="align-self:center;padding:11px 20px;border-radius:11px;border:0;background:#042c6c;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#032356">Lamar Sekarang</button>
+          </article>
+
+        </div>
+      </div>
+
+      <aside style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:24px">
+          <h3 style="margin:0 0 4px;font-size:16px;font-weight:800;color:#1e293b">Butuh bantuan?</h3>
+          <p style="margin:0 0 18px;font-size:13px;line-height:1.6;color:#64748b">Tim rekrutmen menjawab pertanyaan seputar lowongan dan status lamaran pada hari kerja, 08.00–16.00 WIB.</p>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:rgba(4,44,108,.08);color:#042c6c;display:grid;place-items:center;font-size:13px"><i class="fa-regular fa-envelope"></i></div>
+              <div style="font-size:13.5px;font-weight:700;color:#334155">rekrutmen@syifaglobal.co.id</div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:rgba(4,124,84,.1);color:#047C54;display:grid;place-items:center;font-size:13px"><i class="fa-brands fa-whatsapp"></i></div>
+              <div style="font-size:13.5px;font-weight:700;color:#334155">0812-1234-5678</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section style="margin-top:36px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;overflow:hidden">
+      <div style="padding:22px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <h2 style="margin:0;font-size:18px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Semua Posisi Terbuka</h2>
+          <p style="margin:4px 0 0;font-size:13px;color:#64748b">Diperbarui 1 Agustus 2026</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button style="padding:9px 15px;border-radius:999px;border:0;background:#042c6c;color:#fff;font-size:13px;font-weight:700;cursor:pointer"><i class="fa-solid fa-list" style="margin-right:7px;font-size:11px"></i>Semua</button>
+          <button style="padding:9px 15px;border-radius:999px;border:0;background:rgba(4,44,108,.06);color:#042c6c;font-size:13px;font-weight:700;cursor:pointer" style-hover="background:rgba(4,44,108,.12)"><i class="fa-solid fa-stethoscope" style="margin-right:7px;font-size:11px"></i>Medis</button>
+          <button style="padding:9px 15px;border-radius:999px;border:0;background:rgba(4,124,84,.08);color:#047C54;font-size:13px;font-weight:700;cursor:pointer" style-hover="background:rgba(4,124,84,.16)"><i class="fa-solid fa-building" style="margin-right:7px;font-size:11px"></i>Non-Medis</button>
+        </div>
+      </div>
+      <div class="sg-mob-list" style="padding:8px 14px 14px;gap:8px">
+        <div style="display:flex;gap:12px;align-items:center;padding:14px;border:1px solid #e2e8f0;border-radius:14px">
+          <div style="width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:rgba(4,44,108,.08);color:#042c6c;display:grid;place-items:center"><i class="fa-solid fa-baby"></i></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:#1e293b">Bidan Pelaksana</div>
+            <div style="font-size:12.5px;color:#64748b">Kebidanan · Cimahi · 3 orang</div>
+          </div>
+          <span style="padding:5px 10px;border-radius:999px;background:rgba(4,124,84,.1);color:#047C54;font-size:11.5px;font-weight:700">Dibuka</span>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:14px;border:1px solid #e2e8f0;border-radius:14px">
+          <div style="width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:rgba(4,44,108,.08);color:#042c6c;display:grid;place-items:center"><i class="fa-solid fa-flask"></i></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:#1e293b">Analis Laboratorium</div>
+            <div style="font-size:12.5px;color:#64748b">Penunjang Medis · Bandung · 2 orang</div>
+          </div>
+          <span style="padding:5px 10px;border-radius:999px;background:rgba(4,124,84,.1);color:#047C54;font-size:11.5px;font-weight:700">Dibuka</span>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:14px;border:1px solid #e2e8f0;border-radius:14px">
+          <div style="width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:rgba(4,44,108,.08);color:#042c6c;display:grid;place-items:center"><i class="fa-solid fa-folder"></i></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:#1e293b">Staf Rekam Medis</div>
+            <div style="font-size:12.5px;color:#64748b">Administrasi · Bandung · 1 orang</div>
+          </div>
+          <span style="padding:5px 10px;border-radius:999px;background:rgba(217,119,6,.12);color:#b45309;font-size:11.5px;font-weight:700">Segera Tutup</span>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:14px;border:1px solid #e2e8f0;border-radius:14px">
+          <div style="width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:rgba(4,44,108,.08);color:#042c6c;display:grid;place-items:center"><i class="fa-solid fa-handshake"></i></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:#1e293b">Marketing &amp; Kemitraan</div>
+            <div style="font-size:12.5px;color:#64748b">Bisnis · Jakarta Selatan · 2 orang</div>
+          </div>
+          <span style="padding:5px 10px;border-radius:999px;background:rgba(4,124,84,.1);color:#047C54;font-size:11.5px;font-weight:700">Dibuka</span>
+        </div>
+      </div>
+      <table class="sg-desk-table" style="display:none;width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:13px 24px;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0">Posisi</th>
+            <th style="text-align:left;padding:13px 16px;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0">Unit</th>
+            <th style="text-align:left;padding:13px 16px;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0">Lokasi</th>
+            <th style="text-align:left;padding:13px 16px;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0">Kuota</th>
+            <th style="text-align:right;padding:13px 24px;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style-hover="background:#f8fafc">
+            <td style="padding:15px 24px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:700;color:#1e293b">Bidan Pelaksana</td>
+            <td style="padding:15px 16px;border-bottom:1px solid #f1f5f9;font-size:13.5px;color:#475569">Kebidanan</td>
+            <td style="padding:15px 16px;border-bottom:1px solid #f1f5f9;font-size:13.5px;color:#475569">Cimahi</td>
+            <td style="padding:15px 16px;border-bottom:1px solid #f1f5f9;font-size:13.5px;color:#475569">3 orang</td>
+            <td style="padding:15px 24px;border-bottom:1px solid #f1f5f9;text-align:right"><span style="padding:5px 12px;border-radius:999px;background:rgba(4,124,84,.1);color:#047C54;font-size:12px;font-weight:700">Dibuka</span></td>
+          </tr>
+          <tr style-hover="background:#f8fafc">
+            <td style="padding:15px 24px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:700;color:#1e293b">Analis Laboratorium</td>
+            <td style="padding:15px 16px;border-bottom:1px solid #f1f5f9;font-size:13.5px;color:#475569">Penunjang Medis</td>
+            <td style="padding:15px 16px;border-bottom:1px solid #f1f5f9;font-size:13.5px;color:#475569">Bandung</td>
+            <td style="padding:15px 16px;border-bottom:1px solid #f1f5f9;font-size:13.5px;color:#475569">2 orang</td>
+            <td style="padding:15px 24px;border-bottom:1px solid #f1f5f9;text-align:right"><span style="padding:5px 12px;border-radius:999px;background:rgba(4,124,84,.1);color:#047C54;font-size:12px;font-weight:700">Dibuka</span></td>
+          </tr>
+          <tr style-hover="background:#f8fafc">
+            <td style="padding:15px 24px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:700;color:#1e293b">Staf Rekam Medis</td>
+            <td style="padding:15px 16px;border-bottom:1px solid #f1f5f9;font-size:13.5px;color:#475569">Administrasi</td>
+            <td style="padding:15px 16px;border-bottom:1px solid #f1f5f9;font-size:13.5px;color:#475569">Bandung</td>
+            <td style="padding:15px 16px;border-bottom:1px solid #f1f5f9;font-size:13.5px;color:#475569">1 orang</td>
+            <td style="padding:15px 24px;border-bottom:1px solid #f1f5f9;text-align:right"><span style="padding:5px 12px;border-radius:999px;background:rgba(217,119,6,.12);color:#b45309;font-size:12px;font-weight:700">Segera Tutup</span></td>
+          </tr>
+          <tr style-hover="background:#f8fafc">
+            <td style="padding:15px 24px;font-size:14px;font-weight:700;color:#1e293b">Marketing &amp; Kemitraan</td>
+            <td style="padding:15px 16px;font-size:13.5px;color:#475569">Bisnis</td>
+            <td style="padding:15px 16px;font-size:13.5px;color:#475569">Jakarta Selatan</td>
+            <td style="padding:15px 16px;font-size:13.5px;color:#475569">2 orang</td>
+            <td style="padding:15px 24px;text-align:right"><span style="padding:5px 12px;border-radius:999px;background:rgba(4,124,84,.1);color:#047C54;font-size:12px;font-weight:700">Dibuka</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section style="margin-top:36px;position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(135deg,#042c6c 0%,#0b47a1 62%,#B9308C 165%);color:#fff;padding:clamp(28px,5vw,40px) clamp(24px,5vw,44px);display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between">
+      <div style="position:absolute;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.06);right:60px;top:-140px"></div>
+      <div style="position:relative;z-index:1;max-width:560px">
+        <h2 style="margin:0 0 10px;font-size:26px;font-weight:800;letter-spacing:-.6px">Belum menemukan posisi yang cocok?</h2>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:rgba(255,255,255,.82)">Buat akun kandidat dan simpan profil Anda. Kami akan menghubungi bila ada lowongan yang sesuai dengan kualifikasi Anda.</p>
+      </div>
+      <button onClick="{{ goLogin }}" style="position:relative;z-index:1;padding:15px 30px;border-radius:12px;border:0;background:#fff;color:#042c6c;font-size:15px;font-weight:800;cursor:pointer">Daftar Akun Kandidat</button>
+    </section>
+
+  </main>
+
+  <footer style="background:#fff;border-top:1px solid #e2e8f0;padding:34px 24px 90px">
+    <div style="max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between">
+      <div style="font-size:13px;color:#64748b">© 2026 Syifa Global Group · Seluruh proses rekrutmen tidak dipungut biaya apa pun.</div>
+      <div style="display:flex;gap:20px;font-size:13px;font-weight:600">
+        <a href="#">Kebijakan Privasi</a>
+        <a href="#">Syarat &amp; Ketentuan</a>
+        <a href="#">Hubungi HR</a>
+      </div>
+    </div>
+  </footer>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+<div class="sg-login" style="animation:sgRise .4s ease both">
+
+  <div class="sg-login-panel" style="position:relative;overflow:hidden;background:linear-gradient(150deg,#042c6c 0%,#0b47a1 78%,#B9308C 190%);color:#fff;display:flex;flex-direction:column">
+    <div style="position:absolute;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,.06);left:-160px;top:-160px"></div>
+    <div style="position:absolute;width:250px;height:250px;border-radius:56px;background:rgba(255,255,255,.05);transform:rotate(28deg);right:-90px;bottom:120px"></div>
+    <div style="position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(185,48,140,.2);left:80px;bottom:-90px"></div>
+
+    <div style="position:relative;z-index:1;display:flex;align-items:center;gap:12px">
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-weight:800;font-size:15px">SG</div>
+      <div style="font-size:15px;font-weight:800;letter-spacing:-.2px">Syifa Global Group</div>
+    </div>
+
+    <div style="position:relative;z-index:1;margin-top:34px;max-width:460px">
+      <h1 style="margin:0 0 16px;font-size:clamp(26px,6vw,38px);line-height:1.15;font-weight:800;letter-spacing:-1.1px;text-wrap:pretty">Satu akun untuk seluruh perjalanan lamaran Anda.</h1>
+      <p style="margin:0;font-size:16px;line-height:1.65;color:rgba(255,255,255,.8)">Pantau tahap seleksi, unggah dokumen susulan, dan terima jadwal wawancara di satu tempat.</p>
+      <div style="margin-top:32px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:12px;align-items:center"><i class="fa-solid fa-circle-check" style="color:rgba(255,255,255,.7)"></i><span style="font-size:14.5px;font-weight:600">Status lamaran real-time</span></div>
+        <div style="display:flex;gap:12px;align-items:center"><i class="fa-solid fa-circle-check" style="color:rgba(255,255,255,.7)"></i><span style="font-size:14.5px;font-weight:600">Dokumen tersimpan, tidak perlu unggah ulang</span></div>
+        <div style="display:flex;gap:12px;align-items:center"><i class="fa-solid fa-circle-check" style="color:rgba(255,255,255,.7)"></i><span style="font-size:14.5px;font-weight:600">Notifikasi jadwal wawancara</span></div>
+      </div>
+    </div>
+
+    <div style="position:relative;z-index:1;margin-top:44px;font-size:12.5px;color:rgba(255,255,255,.62)">Rekrutmen Syifa Global Group tidak memungut biaya dalam bentuk apa pun.</div>
+  </div>
+
+  <div class="sg-login-form" style="display:flex;align-items:center;justify-content:center;background:#f1f5f9">
+    <div style="width:100%;max-width:400px">
+      <button onClick="{{ goLanding }}" style="display:inline-flex;align-items:center;gap:8px;margin-bottom:26px;padding:8px 14px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;color:#475569;font-size:13px;font-weight:700;cursor:pointer" style-hover="border-color:#cbd5e1"><i class="fa-solid fa-arrow-left" style="font-size:11px"></i> Kembali ke beranda</button>
+
+      <h2 style="margin:0 0 6px;font-size:26px;font-weight:800;color:#1e293b;letter-spacing:-.7px">Masuk ke akun kandidat</h2>
+      <p style="margin:0 0 28px;font-size:14px;color:#64748b">Gunakan email yang terdaftar saat membuat akun.</p>
+
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:28px;box-shadow:0 10px 30px rgba(15,23,42,.05)">
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Email</label>
+            <div style="display:flex;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:12px;padding:0 14px;background:#fff" style-focus="border-color:#042c6c">
+              <i class="fa-regular fa-envelope" style="color:#94a3b8;font-size:14px"></i>
+              <input type="email" placeholder="nama@email.com" style="flex:1;border:0;outline:none;padding:13px 0;font-size:14px;color:#1e293b;background:transparent" />
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+              <label style="font-size:13px;font-weight:700;color:#334155">Kata Sandi</label>
+              <a href="#" style="font-size:12.5px;font-weight:700">Lupa sandi?</a>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:12px;padding:0 14px;background:#fff">
+              <i class="fa-solid fa-lock" style="color:#94a3b8;font-size:13px"></i>
+              <input type="{{ pwType }}" placeholder="••••••••" style="flex:1;border:0;outline:none;padding:13px 0;font-size:14px;color:#1e293b;background:transparent" />
+              <button onClick="{{ togglePw }}" style="border:0;background:transparent;color:#64748b;cursor:pointer;font-size:13px;padding:4px"><i class="{{ pwIcon }}"></i></button>
+            </div>
+          </div>
+
+          <label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:#475569;font-weight:600;cursor:pointer">
+            <input type="checkbox" style="width:16px;height:16px;accent-color:#042c6c;cursor:pointer" />
+            Ingat saya di perangkat ini
+          </label>
+
+          <button style="width:100%;padding:14px;border-radius:12px;border:0;background:#042c6c;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer" style-hover="background:#032356">Masuk</button>
+
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="flex:1;height:1px;background:#e2e8f0"></div>
+            <span style="font-size:12px;font-weight:600;color:#64748b">atau</span>
+            <div style="flex:1;height:1px;background:#e2e8f0"></div>
+          </div>
+
+          <button onClick="{{ goForm }}" style="width:100%;padding:13px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:14px;font-weight:700;cursor:pointer" style-hover="border-color:#042c6c;color:#042c6c">Daftar sebagai kandidat baru</button>
+        </div>
+      </div>
+
+      <p style="margin:22px 0 0;font-size:12.5px;line-height:1.6;color:#64748b;text-align:center">Dengan masuk, Anda menyetujui <a href="#" style="font-weight:700">Syarat &amp; Ketentuan</a> serta <a href="#" style="font-weight:700">Kebijakan Privasi</a> Syifa Global Group.</p>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isForm }}" hint-placeholder-val="{{ false }}">
+<div style="animation:sgRise .4s ease both">
+  <div style="height:4px;background:linear-gradient(90deg,#042c6c 0%,#0b47a1 55%,#B9308C 100%)"></div>
+
+  <header style="background:#fff;border-bottom:1px solid #e2e8f0">
+    <div style="max-width:1000px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:16px">
+      <button onClick="{{ goLanding }}" style="width:38px;height:38px;border-radius:11px;border:1px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer" style-hover="border-color:#cbd5e1"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="line-height:1.2">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#64748b">Jumat, 1 Agustus 2026 · 09:24 WIB</div>
+        <div style="font-size:17px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Formulir Lamaran</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <span style="font-size:13px;color:#64748b;font-weight:600">Tersimpan otomatis</span>
+        <div style="width:34px;height:34px;border-radius:50%;background:rgba(4,44,108,.09);color:#042c6c;display:grid;place-items:center;font-size:13px;font-weight:800">AR</div>
+      </div>
+    </div>
+  </header>
+
+  <main style="max-width:1000px;margin:0 auto;padding:28px 20px 96px">
+
+    <div style="position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(135deg,#042c6c 0%,#0b47a1 100%);color:#fff;padding:28px 30px">
+      <div style="position:absolute;width:230px;height:230px;border-radius:50%;background:rgba(255,255,255,.07);right:-70px;top:-110px"></div>
+      <div style="position:absolute;width:130px;height:130px;border-radius:30px;background:rgba(185,48,140,.18);transform:rotate(22deg);right:170px;bottom:-80px"></div>
+      <div style="position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.82">Melamar untuk posisi</div>
+          <h1 style="margin:8px 0 6px;font-size:24px;font-weight:800;letter-spacing:-.5px">Perawat Pelaksana — Rawat Inap</h1>
+          <div style="font-size:13.5px;color:rgba(255,255,255,.82)">Syifa Medika · Bandung · Full Time · Ditutup 20 Agu 2026</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:rgba(255,255,255,.75);font-weight:600">Kelengkapan berkas</div>
+          <div style="font-size:30px;font-weight:800;letter-spacing:-1px">60%</div>
+        </div>
+      </div>
+      <div style="position:relative;z-index:1;margin-top:18px;height:7px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden">
+        <div style="width:60%;height:100%;border-radius:999px;background:#fff"></div>
+      </div>
+    </div>
+
+
+    <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:10px">
+      <button onClick="{{ tabDiri }}" style="{{ tabDiriStyle }}"><i class="fa-solid fa-user" style="margin-right:8px;font-size:12px"></i>Data Diri</button>
+      <button onClick="{{ tabKarier }}" style="{{ tabKarierStyle }}"><i class="fa-solid fa-graduation-cap" style="margin-right:8px;font-size:12px"></i>Pendidikan &amp; Pengalaman</button>
+      <button onClick="{{ tabDok }}" style="{{ tabDokStyle }}"><i class="fa-solid fa-folder-open" style="margin-right:8px;font-size:12px"></i>Dokumen</button>
+    </div>
+
+    <sc-if value="{{ onDiri }}" hint-placeholder-val="{{ true }}">
+    <div class="sg-2col" style="margin-top:18px">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:26px 28px">
+        <h2 style="margin:0 0 3px;font-size:17px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Data Diri</h2>
+        <p style="margin:0 0 22px;font-size:13px;color:#64748b">Isi sesuai dokumen identitas resmi (KTP).</p>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Nama Lengkap <span style="color:#b91c1c">*</span></label>
+            <input value="Annisa Rahmawati" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">NIK <span style="color:#b91c1c">*</span></label>
+            <input placeholder="16 digit sesuai KTP" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Email <span style="color:#b91c1c">*</span></label>
+            <input value="annisa.r@email.com" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Nomor WhatsApp <span style="color:#b91c1c">*</span></label>
+            <input placeholder="08xxxxxxxxxx" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Tempat Lahir</label>
+            <input placeholder="Kota kelahiran" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Tanggal Lahir</label>
+            <input type="date" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Jenis Kelamin</label>
+            <select style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff">
+              <option>Perempuan</option>
+              <option>Laki-laki</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Status Perkawinan</label>
+            <select style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff">
+              <option>Belum Menikah</option>
+              <option>Menikah</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:16px">
+          <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Alamat Domisili</label>
+          <textarea rows="3" placeholder="Jalan, RT/RW, kelurahan, kecamatan, kota" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;resize:vertical" style-focus="border-color:#042c6c"></textarea>
+        </div>
+
+        <div style="margin-top:22px;padding-top:20px;border-top:1px solid #f1f5f9;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center">
+          <span style="font-size:12.5px;color:#64748b"><i class="fa-regular fa-clock" style="margin-right:6px;color:#94a3b8"></i>Draf terakhir disimpan 09:22</span>
+          <div style="display:flex;gap:10px">
+            <button style="padding:12px 20px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="border-color:#94a3b8">Simpan Draf</button>
+            <button onClick="{{ tabKarier }}" style="padding:12px 22px;border-radius:12px;border:0;background:#042c6c;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:#032356">Lanjut <i class="fa-solid fa-arrow-right" style="margin-left:6px;font-size:11px"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <aside style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:#FCF0D6;border:1px solid #F0DBA3;border-radius:20px;padding:22px;position:relative;overflow:hidden">
+          <div style="position:absolute;width:150px;height:150px;border-radius:50%;background:rgba(240,219,163,.5);right:-60px;top:-70px"></div>
+          <div style="position:relative;z-index:1">
+            <div style="font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#422006">Tahap Anda</div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;background:#422006;color:#FCF0D6;display:grid;place-items:center;font-size:10px"><i class="fa-solid fa-check"></i></span><span style="font-size:13.5px;font-weight:700;color:#422006">Akun terverifikasi</span></div>
+              <div style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;border:2px solid #422006;display:grid;place-items:center;font-size:10px;color:#422006;font-weight:800">2</span><span style="font-size:13.5px;font-weight:700;color:#422006">Pengisian formulir</span></div>
+              <div style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(66,32,6,.3);display:grid;place-items:center;font-size:10px;color:#64748b;font-weight:800">3</span><span style="font-size:13.5px;font-weight:600;color:#64748b">Screening HR</span></div>
+              <div style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(66,32,6,.3);display:grid;place-items:center;font-size:10px;color:#64748b;font-weight:800">4</span><span style="font-size:13.5px;font-weight:600;color:#64748b">Wawancara</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:22px">
+          <h3 style="margin:0 0 12px;font-size:15px;font-weight:800;color:#1e293b">Sebelum mengirim</h3>
+          <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:13px;line-height:1.55;color:#475569">
+            <li>Pastikan nama sesuai KTP — tidak dapat diubah setelah dikirim.</li>
+            <li>Ukuran tiap berkas maksimal 2 MB, format PDF/JPG.</li>
+            <li>Nomor WhatsApp aktif untuk pemberitahuan jadwal.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ onKarier }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:18px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:26px 28px">
+      <h2 style="margin:0 0 3px;font-size:17px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Pendidikan &amp; Pengalaman</h2>
+      <p style="margin:0 0 22px;font-size:13px;color:#64748b">Cantumkan pendidikan terakhir dan pengalaman kerja paling relevan.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+        <div>
+          <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Jenjang Terakhir <span style="color:#b91c1c">*</span></label>
+          <select style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff">
+            <option>D3</option>
+            <option>S1</option>
+            <option>Profesi</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Institusi <span style="color:#b91c1c">*</span></label>
+          <input placeholder="Nama universitas / sekolah" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none" style-focus="border-color:#042c6c" />
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Program Studi</label>
+          <input placeholder="mis. Keperawatan" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none" style-focus="border-color:#042c6c" />
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">IPK</label>
+          <input placeholder="3.45" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none" style-focus="border-color:#042c6c" />
+        </div>
+      </div>
+
+      <div style="margin-top:26px;padding-top:22px;border-top:1px solid #f1f5f9">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <h3 style="margin:0;font-size:15px;font-weight:800;color:#1e293b">Pengalaman Kerja</h3>
+          <button style="padding:9px 15px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#042c6c;font-size:13px;font-weight:700;cursor:pointer" style-hover="border-color:#042c6c"><i class="fa-solid fa-plus" style="margin-right:7px;font-size:11px"></i>Tambah</button>
+        </div>
+
+        <div style="border:1px solid #e2e8f0;border-radius:16px;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;gap:16px;padding:14px 18px;border-bottom:1px solid #f1f5f9">
+            <span style="font-size:13px;font-weight:700;color:#334155">Posisi</span>
+            <span style="font-size:13.5px;color:#334155">Perawat Pelaksana — IGD</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:16px;padding:14px 18px;border-bottom:1px solid #f1f5f9">
+            <span style="font-size:13px;font-weight:700;color:#334155">Instansi</span>
+            <span style="font-size:13.5px;color:#334155">RS Harapan Sehat, Cimahi</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:16px;padding:14px 18px;border-bottom:1px solid #f1f5f9">
+            <span style="font-size:13px;font-weight:700;color:#334155">Periode</span>
+            <span style="font-size:13.5px;color:#334155">Mar 2023 — Jun 2026</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:16px;padding:14px 18px">
+            <span style="font-size:13px;font-weight:700;color:#334155">Alasan Pindah</span>
+            <span style="font-size:13.5px;color:#64748b">Pengembangan karier</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:22px">
+        <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Sertifikasi / STR</label>
+        <input placeholder="Nomor STR aktif, sertifikasi BTCLS, dsb." style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none" style-focus="border-color:#042c6c" />
+      </div>
+
+      <div style="margin-top:22px;padding-top:20px;border-top:1px solid #f1f5f9;display:flex;gap:10px;justify-content:flex-end">
+        <button onClick="{{ tabDiri }}" style="padding:12px 20px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="border-color:#94a3b8">Kembali</button>
+        <button onClick="{{ tabDok }}" style="padding:12px 22px;border-radius:12px;border:0;background:#042c6c;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:#032356">Lanjut ke Dokumen <i class="fa-solid fa-arrow-right" style="margin-left:6px;font-size:11px"></i></button>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ onDok }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:18px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:26px 28px">
+      <h2 style="margin:0 0 3px;font-size:17px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Dokumen Lamaran</h2>
+      <p style="margin:0 0 22px;font-size:13px;color:#64748b">Format PDF atau JPG, maksimal 2 MB per berkas.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+        <div style="border:2px dashed #cbd5e1;border-radius:16px;padding:26px 20px;text-align:center;background:#f8fafc;cursor:pointer" style-hover="border-color:#042c6c;background:rgba(4,44,108,.03)">
+          <i class="fa-solid fa-file-lines" style="font-size:22px;color:#94a3b8"></i>
+          <div style="margin-top:10px;font-size:14px;font-weight:700;color:#1e293b">Curriculum Vitae</div>
+          <div style="margin-top:4px;font-size:12.5px;color:#64748b">Seret berkas atau klik untuk unggah</div>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-radius:16px;padding:20px;background:#fff;display:flex;gap:14px;align-items:center">
+          <div style="width:42px;height:42px;flex:0 0 42px;border-radius:12px;background:rgba(4,124,84,.1);color:#047C54;display:grid;place-items:center"><i class="fa-solid fa-check"></i></div>
+          <div style="min-width:0;flex:1">
+            <div style="font-size:14px;font-weight:700;color:#1e293b">Ijazah &amp; Transkrip</div>
+            <div style="font-size:12.5px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">ijazah-annisa.pdf · 1,2 MB</div>
+          </div>
+          <button style="border:0;background:transparent;color:#64748b;cursor:pointer;font-size:14px"><i class="fa-regular fa-trash-can"></i></button>
+        </div>
+        <div style="border:2px dashed #cbd5e1;border-radius:16px;padding:26px 20px;text-align:center;background:#f8fafc;cursor:pointer" style-hover="border-color:#042c6c;background:rgba(4,44,108,.03)">
+          <i class="fa-solid fa-id-card" style="font-size:22px;color:#94a3b8"></i>
+          <div style="margin-top:10px;font-size:14px;font-weight:700;color:#1e293b">KTP</div>
+          <div style="margin-top:4px;font-size:12.5px;color:#64748b">Seret berkas atau klik untuk unggah</div>
+        </div>
+        <div style="border:2px dashed #cbd5e1;border-radius:16px;padding:26px 20px;text-align:center;background:#f8fafc;cursor:pointer" style-hover="border-color:#042c6c;background:rgba(4,44,108,.03)">
+          <i class="fa-solid fa-certificate" style="font-size:22px;color:#94a3b8"></i>
+          <div style="margin-top:10px;font-size:14px;font-weight:700;color:#1e293b">STR / Sertifikat</div>
+          <div style="margin-top:4px;font-size:12.5px;color:#64748b">Opsional untuk posisi non-medis</div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px">
+        <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Surat Lamaran Singkat</label>
+        <textarea rows="4" placeholder="Ceritakan singkat mengapa Anda cocok untuk posisi ini (maks. 800 karakter)." style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;resize:vertical" style-focus="border-color:#042c6c"></textarea>
+      </div>
+
+      <label style="margin-top:20px;display:flex;gap:11px;align-items:flex-start;padding:16px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;cursor:pointer">
+        <input type="checkbox" style="width:17px;height:17px;margin-top:1px;accent-color:#042c6c;cursor:pointer" />
+        <span style="font-size:13px;line-height:1.6;color:#475569">Saya menyatakan seluruh data dan dokumen yang saya kirimkan adalah benar, dan bersedia menerima konsekuensi apabila di kemudian hari ditemukan ketidaksesuaian.</span>
+      </label>
+
+      <div style="margin-top:22px;padding-top:20px;border-top:1px solid #f1f5f9;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center">
+        <span style="font-size:12.5px;color:#64748b">Proses rekrutmen Syifa Global Group tidak dipungut biaya.</span>
+        <div style="display:flex;gap:10px">
+          <button onClick="{{ tabKarier }}" style="padding:12px 20px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="border-color:#94a3b8">Kembali</button>
+          <button style="padding:12px 26px;border-radius:12px;border:0;background:#047C54;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:#036444"><i class="fa-solid fa-paper-plane" style="margin-right:8px;font-size:12px"></i>Kirim Lamaran</button>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+  </main>
+</div>
+</sc-if>
+
+
+<sc-if value="{{ isTahap1 }}" hint-placeholder-val="{{ false }}">
+<div style="animation:sgRise .4s ease both">
+  <div style="height:4px;background:linear-gradient(90deg,#042c6c 0%,#0b47a1 55%,#B9308C 100%)"></div>
+
+  <header style="background:#fff;border-bottom:1px solid #e2e8f0">
+    <div style="max-width:1000px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:16px">
+      <button onClick="{{ goLanding }}" style="width:38px;height:38px;border-radius:11px;border:1px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer" style-hover="border-color:#cbd5e1"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="line-height:1.2">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#64748b">Jumat, 1 Agustus 2026 · 09:24 WIB</div>
+        <div style="font-size:17px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Formulir Pelamar — Tahap 1</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <span style="font-size:13px;color:#64748b;font-weight:600">Tersimpan otomatis</span>
+      </div>
+    </div>
+  </header>
+
+  <main style="max-width:1000px;margin:0 auto;padding:28px 20px 96px">
+
+    <div style="position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(135deg,#042c6c 0%,#0b47a1 100%);color:#fff;padding:28px 30px">
+      <div style="position:absolute;width:230px;height:230px;border-radius:50%;background:rgba(255,255,255,.07);right:-70px;top:-110px"></div>
+      <div style="position:absolute;width:130px;height:130px;border-radius:30px;background:rgba(185,48,140,.18);transform:rotate(22deg);right:170px;bottom:-80px"></div>
+      <div style="position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.82">Data Pelamar</div>
+          <h1 style="margin:8px 0 6px;font-size:24px;font-weight:800;letter-spacing:-.5px">Lengkapi data diri Anda</h1>
+          <div style="font-size:13.5px;color:rgba(255,255,255,.82)">Seluruh isian bertanda * wajib diisi. Data dapat disimpan sebagai draf.</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:rgba(255,255,255,.75);font-weight:600">Tahap 1 dari 2</div>
+          <div style="font-size:30px;font-weight:800;letter-spacing:-1px">50%</div>
+        </div>
+      </div>
+      <div style="position:relative;z-index:1;margin-top:18px;height:7px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden">
+        <div style="width:50%;height:100%;border-radius:999px;background:#fff"></div>
+      </div>
+    </div>
+
+
+    <section style="margin-top:16px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:26px 28px">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:4px">
+        <div style="width:28px;height:28px;flex:0 0 28px;border-radius:9px;background:rgba(4,44,108,.08);color:#042c6c;display:grid;place-items:center;font-size:12.5px;font-weight:800">1</div>
+        <h2 style="margin:0;font-size:17px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Data Diri</h2>
+      </div>
+      <p style="margin:0 0 20px;padding-left:40px;font-size:13px;color:#64748b">Isi sesuai dokumen identitas resmi (KTP).</p>
+      <div class="sg-fields">
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Nama Lengkap <span style="color:#b91c1c">*</span></label>
+            <input placeholder="Nama sesuai KTP" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Jenis Kelamin <span style="color:#b91c1c">*</span></label>
+            <select style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff">
+              <option>Pilih jenis kelamin</option>
+              <option>Laki-laki</option>
+              <option>Perempuan</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">No. WhatsApp <span style="color:#b91c1c">*</span></label>
+            <input placeholder="08xxxxxxxxxx" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+            <p style="margin:6px 0 0;font-size:12.5px;color:#64748b">Nomor aktif — dipakai untuk pemberitahuan jadwal.</p>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Usia <span style="color:#b91c1c">*</span></label>
+            <input type="number" min="17" placeholder="mis. 24" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Tempat Lahir</label>
+            <input placeholder="Kota kelahiran (opsional)" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Tanggal Lahir <span style="color:#b91c1c">*</span></label>
+            <input type="date" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+          </div>
+          <div style="grid-column:1/-1">
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Alamat Domisili <span style="color:#b91c1c">*</span></label>
+            <textarea rows="3" placeholder="Jalan, RT/RW, kelurahan, kecamatan, kota" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff;resize:vertical" style-focus="border-color:#042c6c"></textarea>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Instagram <span style="color:#b91c1c">*</span></label>
+            <input placeholder="@username" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Akun LinkedIn</label>
+            <input placeholder="linkedin.com/in/... (opsional)" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+          </div>
+      </div>
+    </section>
+
+    <section style="margin-top:16px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:26px 28px">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:4px">
+        <div style="width:28px;height:28px;flex:0 0 28px;border-radius:9px;background:rgba(4,44,108,.08);color:#042c6c;display:grid;place-items:center;font-size:12.5px;font-weight:800">2</div>
+        <h2 style="margin:0;font-size:17px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Pendidikan</h2>
+      </div>
+      <p style="margin:0 0 20px;padding-left:40px;font-size:13px;color:#64748b">Cantumkan pendidikan formal terakhir yang telah diselesaikan.</p>
+      <div class="sg-fields">
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Jenjang Pendidikan <span style="color:#b91c1c">*</span></label>
+            <select style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff">
+              <option>Pilih jenjang</option>
+              <option>SMA/SMK</option>
+              <option>D3</option>
+              <option>D4</option>
+              <option>S1</option>
+              <option>S2</option>
+              <option>Profesi</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Jurusan <span style="color:#b91c1c">*</span></label>
+            <input placeholder="mis. Keperawatan" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Nama Universitas / Instansi <span style="color:#b91c1c">*</span></label>
+            <input placeholder="Nama kampus atau sekolah" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Tahun Lulus <span style="color:#b91c1c">*</span></label>
+            <input type="number" min="1970" max="2026" placeholder="2024" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+          </div>
+          <div style="grid-column:1/-1">
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Tanggal Berlaku STR</label>
+            <input type="date" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+            <p style="margin:6px 0 0;font-size:12.5px;color:#64748b">Khusus pelamar tenaga kesehatan. Kosongkan bila tidak berlaku.</p>
+          </div>
+      </div>
+    </section>
+
+    <section style="margin-top:16px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:26px 28px">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:4px">
+        <div style="width:28px;height:28px;flex:0 0 28px;border-radius:9px;background:rgba(4,44,108,.08);color:#042c6c;display:grid;place-items:center;font-size:12.5px;font-weight:800">3</div>
+        <h2 style="margin:0;font-size:17px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Posisi &amp; Pengalaman</h2>
+      </div>
+      <p style="margin:0 0 20px;padding-left:40px;font-size:13px;color:#64748b">Pilih posisi yang dilamar dan ceritakan pengalaman kerja Anda.</p>
+      <div class="sg-fields">
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Posisi yang Dilamar <span style="color:#b91c1c">*</span></label>
+            <select style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff">
+              <option>Pilih posisi</option>
+              <option>Perawat Pelaksana — Rawat Inap</option>
+              <option>Apoteker Penanggung Jawab</option>
+              <option>Bidan Pelaksana</option>
+              <option>Analis Laboratorium</option>
+              <option>Staf Rekam Medis</option>
+              <option>IT Support Specialist</option>
+              <option>Staf Akuntansi &amp; Pajak</option>
+              <option>Marketing &amp; Kemitraan</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Posisi Lain yang Diminati</label>
+            <input placeholder="Opsional" style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff" style-focus="border-color:#042c6c" />
+            <p style="margin:6px 0 0;font-size:12.5px;color:#64748b">Diisi bila Anda bersedia dipertimbangkan untuk posisi lain.</p>
+          </div>
+          <div style="grid-column:1/-1">
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Pengalaman Kerja <span style="color:#b91c1c">*</span></label>
+            <textarea rows="4" placeholder="Tuliskan posisi, instansi, dan periode kerja Anda. Contoh: Perawat Pelaksana IGD — RS Harapan Sehat, Mar 2023 s.d. Jun 2026." style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff;resize:vertical" style-focus="border-color:#042c6c"></textarea>
+          </div>
+          <div style="grid-column:1/-1">
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Bersedia Ditempatkan di Luar Kota <span style="color:#b91c1c">*</span></label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <label style="flex:1 1 160px;display:flex;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;color:#334155;cursor:pointer" style-hover="border-color:#042c6c">
+                <input type="radio" name="relocate" style="width:16px;height:16px;accent-color:#042c6c;cursor:pointer" /> Ya, bersedia
+              </label>
+              <label style="flex:1 1 160px;display:flex;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;color:#334155;cursor:pointer" style-hover="border-color:#042c6c">
+                <input type="radio" name="relocate" style="width:16px;height:16px;accent-color:#042c6c;cursor:pointer" /> Tidak bersedia
+              </label>
+            </div>
+          </div>
+      </div>
+    </section>
+
+    <section style="margin-top:16px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:26px 28px">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:4px">
+        <div style="width:28px;height:28px;flex:0 0 28px;border-radius:9px;background:rgba(4,44,108,.08);color:#042c6c;display:grid;place-items:center;font-size:12.5px;font-weight:800">4</div>
+        <h2 style="margin:0;font-size:17px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Ekspektasi &amp; Ketersediaan</h2>
+      </div>
+      <p style="margin:0 0 20px;padding-left:40px;font-size:13px;color:#64748b">Informasi ini membantu HR menyiapkan penawaran yang sesuai.</p>
+      <div class="sg-fields">
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Gaji Terakhir <span style="color:#b91c1c">*</span></label>
+            <div style="display:flex;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:12px;padding:0 14px;background:#fff">
+              <span style="font-size:13.5px;font-weight:700;color:#64748b">Rp</span>
+              <input type="number" placeholder="0" style="flex:1;border:0;outline:none;padding:12px 0;font-size:14px;color:#1e293b;background:transparent" />
+            </div>
+            <p style="margin:6px 0 0;font-size:12.5px;color:#64748b">Tulis 0 bila belum pernah bekerja.</p>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Gaji yang Diharapkan <span style="color:#b91c1c">*</span></label>
+            <div style="display:flex;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:12px;padding:0 14px;background:#fff">
+              <span style="font-size:13.5px;font-weight:700;color:#64748b">Rp</span>
+              <input type="number" placeholder="0" style="flex:1;border:0;outline:none;padding:12px 0;font-size:14px;color:#1e293b;background:transparent" />
+            </div>
+          </div>
+          <div style="grid-column:1/-1">
+            <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">Bersedia Bergabung <span style="color:#b91c1c">*</span></label>
+            <select style="width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-size:14px;color:#1e293b;outline:none;background:#fff">
+              <option>Pilih ketersediaan</option>
+              <option>Segera</option>
+              <option>Dalam 2 minggu</option>
+              <option>Dalam 1 bulan</option>
+              <option>Lebih dari 2 bulan</option>
+            </select>
+          </div>
+      </div>
+    </section>
+
+    <section style="margin-top:16px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:26px 28px">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:4px">
+        <div style="width:28px;height:28px;flex:0 0 28px;border-radius:9px;background:rgba(4,124,84,.1);color:#047C54;display:grid;place-items:center;font-size:12.5px;font-weight:800">5</div>
+        <h2 style="margin:0;font-size:17px;font-weight:800;color:#1e293b;letter-spacing:-.3px">Dokumen</h2>
+      </div>
+      <p style="margin:0 0 20px;padding-left:40px;font-size:13px;color:#64748b">CV wajib berformat PDF, maksimal 2 MB per berkas.</p>
+      <div class="sg-fields">
+        <div>
+          <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">File CV <span style="color:#b91c1c">*</span></label>
+          <div style="border:2px dashed #cbd5e1;border-radius:16px;padding:24px 20px;text-align:center;background:#f8fafc;cursor:pointer" style-hover="border-color:#042c6c;background:rgba(4,44,108,.03)">
+            <i class="fa-solid fa-file-pdf" style="font-size:22px;color:#94a3b8"></i>
+            <div style="margin-top:10px;font-size:14px;font-weight:700;color:#1e293b">Unggah CV (PDF)</div>
+            <div style="margin-top:4px;font-size:12.5px;color:#64748b">Seret berkas ke sini atau klik untuk memilih</div>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#334155">File Sertifikat Keahlian</label>
+          <div style="border:2px dashed #cbd5e1;border-radius:16px;padding:24px 20px;text-align:center;background:#f8fafc;cursor:pointer" style-hover="border-color:#042c6c;background:rgba(4,44,108,.03)">
+            <i class="fa-solid fa-certificate" style="font-size:22px;color:#94a3b8"></i>
+            <div style="margin-top:10px;font-size:14px;font-weight:700;color:#1e293b">Unggah Sertifikat</div>
+            <div style="margin-top:4px;font-size:12.5px;color:#64748b">Opsional · PDF atau JPG</div>
+          </div>
+        </div>
+      </div>
+
+      <label style="margin-top:22px;display:flex;gap:11px;align-items:flex-start;padding:16px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;cursor:pointer">
+        <input type="checkbox" style="width:17px;height:17px;margin-top:1px;accent-color:#042c6c;cursor:pointer" />
+        <span style="font-size:13px;line-height:1.6;color:#475569">Saya menyatakan seluruh data dan dokumen yang saya kirimkan adalah benar, dan bersedia menerima konsekuensi apabila di kemudian hari ditemukan ketidaksesuaian.</span>
+      </label>
+
+      <div style="margin-top:22px;padding-top:20px;border-top:1px solid #f1f5f9;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center">
+        <span style="font-size:12.5px;color:#64748b">Proses rekrutmen Syifa Global Group tidak dipungut biaya.</span>
+        <div style="display:flex;gap:10px">
+          <button style="padding:12px 20px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="border-color:#94a3b8">Simpan Draf</button>
+          <button style="padding:12px 26px;border-radius:12px;border:0;background:#047C54;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:#036444"><i class="fa-solid fa-paper-plane" style="margin-right:8px;font-size:12px"></i>Kirim Lamaran</button>
+        </div>
+      </div>
+    </section>
+
+
+  </main>
+</div>
+</sc-if>
+
+<div style="position:fixed;right:20px;bottom:20px;z-index:80;display:flex;gap:4px;padding:5px;border-radius:999px;background:rgba(15,23,42,.9);backdrop-filter:blur(8px);box-shadow:0 10px 30px rgba(15,23,42,.25)">
+  <button onClick="{{ goLanding }}" style="{{ navLandingStyle }}">Landing</button>
+  <button onClick="{{ goLogin }}" style="{{ navLoginStyle }}">Login</button>
+  <button onClick="{{ goForm }}" style="{{ navFormStyle }}">Formulir</button>
+  <button onClick="{{ goTahap1 }}" style="{{ navTahap1Style }}">Tahap 1</button>
+</div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  state = { screen: 'landing', tab: 'diri', showPw: false };
+
+  navStyle(active) {
+    return 'padding:9px 18px;border-radius:999px;border:0;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;'
+      + (active ? 'background:#fff;color:#0f172a' : 'background:transparent;color:rgba(255,255,255,.72)');
+  }
+
+  tabStyle(active, color) {
+    const tint = color === 'green' ? 'rgba(4,124,84,.08)' : 'rgba(4,44,108,.06)';
+    const fg = color === 'green' ? '#047C54' : '#042c6c';
+    const solid = color === 'green' ? '#047C54' : '#042c6c';
+    return 'padding:11px 18px;border-radius:12px;border:0;cursor:pointer;font-size:13.5px;font-weight:700;font-family:inherit;'
+      + (active ? 'background:' + solid + ';color:#fff' : 'background:' + tint + ';color:' + fg);
+  }
+
+  go(screen) { this.setState({ screen }); window.scrollTo(0, 0); }
+
+  renderVals() {
+    const s = this.state;
+    return {
+      isLanding: s.screen === 'landing',
+      isLogin: s.screen === 'login',
+      isForm: s.screen === 'form',
+      isTahap1: s.screen === 'tahap1',
+      goTahap1: () => this.go('tahap1'),
+      navTahap1Style: this.navStyle(s.screen === 'tahap1'),
+      goLanding: () => this.go('landing'),
+      goLogin: () => this.go('login'),
+      goForm: () => this.go('form'),
+      navLandingStyle: this.navStyle(s.screen === 'landing'),
+      navLoginStyle: this.navStyle(s.screen === 'login'),
+      navFormStyle: this.navStyle(s.screen === 'form'),
+      onDiri: s.tab === 'diri',
+      onKarier: s.tab === 'karier',
+      onDok: s.tab === 'dok',
+      tabDiri: () => this.setState({ tab: 'diri' }),
+      tabKarier: () => this.setState({ tab: 'karier' }),
+      tabDok: () => this.setState({ tab: 'dok' }),
+      tabDiriStyle: this.tabStyle(s.tab === 'diri'),
+      tabKarierStyle: this.tabStyle(s.tab === 'karier'),
+      tabDokStyle: this.tabStyle(s.tab === 'dok', 'green'),
+      pwType: s.showPw ? 'text' : 'password',
+      pwIcon: s.showPw ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye',
+      togglePw: () => this.setState({ showPw: !s.showPw })
+    };
+  }
+}
+</script>
+</body>
+</html>
