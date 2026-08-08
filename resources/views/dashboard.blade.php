@@ -12,18 +12,7 @@ $statusMap = [
 $activeApp = $applications->first(fn($a) => in_array($a->status, ['applied','screening','interview']));
 $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rejected']));
 
-function sgDashIcon(string $title): string {
-    $t = strtolower($title);
-    if (str_contains($t, 'perawat') || str_contains($t, 'nurse')) return 'fa-user-nurse';
-    if (str_contains($t, 'bidan'))                                  return 'fa-baby';
-    if (str_contains($t, 'apoteker') || str_contains($t, 'farmasi')) return 'fa-prescription-bottle-medical';
-    if (str_contains($t, 'admin') || str_contains($t, 'rekam'))    return 'fa-folder';
-    if (str_contains($t, 'hr') || str_contains($t, 'rekrut'))      return 'fa-handshake';
-    if (str_contains($t, 'marketing'))                              return 'fa-chart-line';
-    if (str_contains($t, 'it') || str_contains($t, 'teknologi'))   return 'fa-laptop-code';
-    if (str_contains($t, 'akunt') || str_contains($t, 'pajak'))    return 'fa-calculator';
-    return 'fa-briefcase';
-}
+
 @endphp
 
 {{-- Flash messages --}}
@@ -53,8 +42,8 @@ function sgDashIcon(string $title): string {
 
 {{-- Active application widget --}}
 @if($activeApp)
-<div class="mt-5 rounded-[18px] border border-slate-200 bg-white overflow-hidden">
-  <div class="px-6 py-[14px] border-b border-slate-100 flex items-center justify-between">
+<div class="sg-card mt-5 rounded-[18px] overflow-hidden">
+  <div class="sg-dd-header px-6 py-[14px] border-b border-slate-100 flex items-center justify-between">
     <div class="text-[12px] font-bold uppercase tracking-[0.06em] text-slate-500">
       <i class="fa-solid fa-circle-dot mr-1.5 text-sgg-green text-[10px]"></i>Lamaran Sedang Berjalan
     </div>
@@ -85,20 +74,23 @@ function sgDashIcon(string $title): string {
         'applied' => 0, 'screening' => 1, 'interview' => 2, 'passed', 'rejected' => 3, default => 0
       };
     @endphp
-    <div class="mt-5 pt-5 border-t border-slate-100" style="display:flex;gap:0;">
+    @php
+      $tlBrand = $activeApp->jobOpening->company?->brand_color ?? '#042c6c';
+    @endphp
+    <div class="sg-tl-widget mt-5 pt-5 border-t border-slate-100" style="display:flex;gap:0;">
       @foreach($tlSteps as $i => $s)
       <div style="flex:1;text-align:center;position:relative;padding:0 4px;">
         @if($i > 0)
-        <div style="position:absolute;top:13px;left:0;right:50%;height:2px;background:{{ $i <= $curStep ? '#042c6c' : '#e2e8f0' }};"></div>
+        <div class="sg-tl-track" style="position:absolute;top:13px;left:0;right:50%;height:2px;background:{{ $i <= $curStep ? $tlBrand : '#e2e8f0' }};"></div>
         @endif
         @if($i < 3)
-        <div style="position:absolute;top:13px;left:50%;right:0;height:2px;background:{{ $i < $curStep ? '#042c6c' : '#e2e8f0' }};"></div>
+        <div class="sg-tl-track" style="position:absolute;top:13px;left:50%;right:0;height:2px;background:{{ $i < $curStep ? $tlBrand : '#e2e8f0' }};"></div>
         @endif
-        <div style="width:26px;height:26px;border-radius:50%;margin:0 auto;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-size:10px;
-          {{ $i <= $curStep ? 'background:#042c6c;color:#fff;' : 'background:#f1f5f9;color:#94a3b8;border:2px solid #e2e8f0;' }}">
+        <div class="sg-tl-node" style="width:26px;height:26px;border-radius:50%;margin:0 auto;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-size:10px;
+          {{ $i <= $curStep ? 'background:'.$tlBrand.';color:#fff;' : 'background:#f1f5f9;color:#94a3b8;border:2px solid #e2e8f0;' }}">
           <i class="fa-solid {{ $i < $curStep ? 'fa-check' : $s['icon'] }}"></i>
         </div>
-        <div style="margin-top:5px;font-size:10.5px;font-weight:700;color:{{ $i <= $curStep ? '#042c6c' : '#94a3b8' }};">{{ $s['label'] }}</div>
+        <div style="margin-top:5px;font-size:10.5px;font-weight:700;color:{{ $i <= $curStep ? $tlBrand : '#94a3b8' }};">{{ $s['label'] }}</div>
       </div>
       @endforeach
     </div>
@@ -121,36 +113,7 @@ function sgDashIcon(string $title): string {
   @else
   <div class="sg-job-grid">
     @foreach($openings as $opening)
-    <article class="sg-job-card">
-      <div class="flex gap-[14px] items-start">
-        <div class="w-[42px] h-[42px] shrink-0 rounded-[13px] grid place-items-center text-[16px] text-navy bg-navy/[0.08]">
-          <i class="fa-solid {{ sgDashIcon($opening->title) }}"></i>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex flex-wrap gap-1.5 items-center">
-            <h3 class="m-0 text-[15px] font-bold text-slate-800 leading-[1.3]">{{ $opening->title }}</h3>
-            <span class="px-[9px] py-[3px] rounded-full text-[11px] font-bold text-sgg-green whitespace-nowrap bg-sgg-green/[0.1]">Full Time</span>
-          </div>
-          <div class="mt-0.5 text-[13px] font-semibold text-slate-600">{{ $opening->company_name }}</div>
-        </div>
-      </div>
-      @if($opening->description)
-      <div class="mt-3 text-[13px] text-slate-500 leading-normal line-clamp-2">{{ $opening->description }}</div>
-      @endif
-      <div class="sg-job-card-footer">
-        <span class="text-[12px] text-slate-500">
-          <i class="fa-solid fa-users text-slate-400 mr-[5px]"></i>Kuota: {{ $opening->quota }} orang
-        </span>
-        <div style="display:flex;gap:8px;">
-          <a href="{{ route('lowongan.show', $opening) }}" class="sg-job-card-btn" style="background:#f1f5f9;color:#042c6c;">Detail</a>
-          @if($activeApp)
-            <span class="sg-job-card-btn" style="background:#e2e8f0;color:#94a3b8;cursor:not-allowed;">Melamar</span>
-          @else
-            <a href="{{ route('lamaran.create', $opening) }}" class="sg-job-card-btn">Lamar</a>
-          @endif
-        </div>
-      </div>
-    </article>
+      <x-job-card :opening="$opening" :index="$loop->index" :hasActiveApp="(bool) $activeApp" />
     @endforeach
   </div>
   @endif
@@ -166,7 +129,7 @@ function sgDashIcon(string $title): string {
   <div class="flex flex-col gap-3">
     @foreach($pastApps as $app)
     <a href="{{ route('lamaran.show', $app) }}"
-       class="no-underline flex items-center gap-4 bg-white border border-slate-200 rounded-[16px] px-5 py-4 hover:border-navy transition-colors duration-150">
+       class="sg-card no-underline flex items-center gap-4 rounded-[16px] px-5 py-4 hover:border-navy transition-colors duration-150">
       <div class="w-[40px] h-[40px] shrink-0 rounded-[12px] grid place-items-center text-slate-400 bg-slate-100 text-[15px]">
         <i class="fa-solid fa-file-lines"></i>
       </div>

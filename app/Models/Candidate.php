@@ -16,6 +16,7 @@ class Candidate extends Model
 
     protected $fillable = [
         'user_id',
+        'job_application_id',
         'name',
         'nickname',
         'nik',
@@ -53,9 +54,9 @@ class Candidate extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function jobApplications(): HasMany
+    public function jobApplication(): BelongsTo
     {
-        return $this->hasMany(JobApplication::class);
+        return $this->belongsTo(JobApplication::class);
     }
 
     public function familyMembers(): HasMany

@@ -18,7 +18,7 @@ class JobApplicationController extends Controller
     public function show(JobApplication $application)
     {
         abort_if($application->user_id !== Auth::id(), 403);
-        $application->load('jobOpening');
+        $application->load(['jobOpening.company.formSections.fields', 'answers']);
         return view('lamaran.show', compact('application'));
     }
 
@@ -26,82 +26,82 @@ class JobApplicationController extends Controller
     {
         abort_if(! $jobOpening->is_active, 404);
 
+        $jobOpening->load('company.formSections.fields');
+        abort_if(! ($jobOpening->company?->is_active ?? false), 404);
+
         if (JobApplication::hasActiveApplication(Auth::id())) {
             return redirect()->route('dashboard')
                 ->with('warning', 'Kamu sudah memiliki lamaran aktif. Selesaikan atau tunggu hasilnya sebelum melamar posisi lain.');
         }
 
-        $previousApp = Auth::user()->jobApplications()->latest()->first();
+        $previousApp = Auth::user()->jobApplications()->with(['jobOpening', 'answers'])->latest()->first();
 
-        return view('lamaran.create', compact('jobOpening', 'previousApp'));
+        $co    = $jobOpening->company;
+        $brand = $co?->brand_color ?? '#042c6c';
+        [$r, $g, $b] = sscanf($brand, '#%02x%02x%02x');
+        $brandDark = sprintf('#%02x%02x%02x', intval($r * 0.65), intval($g * 0.65), intval($b * 0.65));
+
+        return view('lamaran.create', compact('jobOpening', 'previousApp', 'co', 'brand', 'brandDark', 'r', 'g', 'b'));
     }
 
     public function store(Request $request, JobOpening $jobOpening)
     {
         abort_if(! $jobOpening->is_active, 404);
 
+        $jobOpening->load('company.formSections.fields');
+        abort_if(! ($jobOpening->company?->is_active ?? false), 404);
+
         if (JobApplication::hasActiveApplication(Auth::id())) {
             return redirect()->route('dashboard')
                 ->with('warning', 'Kamu sudah memiliki lamaran aktif.');
         }
 
-        $data = $request->validate([
-            'full_name'            => 'required|string|max:255',
-            'gender'               => 'required|in:laki_laki,perempuan',
-            'whatsapp_number'      => 'required|string|max:20',
-            'domicile_address'     => 'required|string',
-            'birth_place'          => 'nullable|string|max:100',
-            'birth_date'           => 'required|date|before:today',
-            'instagram_handle'     => 'required|string|max:100',
-            'linkedin_url'         => 'nullable|url|max:255',
-            'education_level'      => 'required|in:sma_smk,d3,d4,s1,s2,profesi',
-            'major'                => 'required|string|max:100',
-            'school_name'          => 'required|string|max:255',
-            'graduation_year'      => 'required|integer|min:1970|max:' . date('Y'),
-            'str_valid_until'      => 'nullable|date',
-            'other_position_note'  => 'nullable|string|max:255',
-            'work_experience_note' => 'nullable|string',
-            'willing_relocate'     => 'required|boolean',
-            'last_salary'          => 'required|numeric|min:0',
-            'expected_salary'      => 'required|numeric|min:0',
-            'availability'         => 'required|in:immediately,2_weeks,1_month,more_than_2_months',
-            'cv_file'              => 'required|file|mimes:pdf|max:2048',
-            'certificate_file'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-        ]);
+        $rules = [];
+        foreach ($jobOpening->company->formSections as $section) {
+            foreach ($section->fields as $field) {
+                $base = $field->is_required ? 'required' : 'nullable';
+                $opts = $field->options ?? [];
 
-        $cvPath = $request->file('cv_file')->store('applications/cv', 'public');
-
-        $certPath = null;
-        if ($request->hasFile('certificate_file')) {
-            $certPath = $request->file('certificate_file')->store('applications/certificates', 'public');
+                if ($field->type === 'file') {
+                    $r = [$base, 'file'];
+                    if (!empty($opts['mimes']))  $r[] = 'mimes:' . implode(',', $opts['mimes']);
+                    if (!empty($opts['max_kb'])) $r[] = 'max:' . $opts['max_kb'];
+                    $rules["files.{$field->name}"] = implode('|', $r);
+                } elseif ($field->type === 'number') {
+                    $rules["fields.{$field->name}"] = "{$base}|numeric";
+                } elseif ($field->type === 'date') {
+                    $rules["fields.{$field->name}"] = "{$base}|date";
+                } elseif (in_array($field->type, ['select', 'radio']) && !empty($opts['choices'])) {
+                    $rules["fields.{$field->name}"] = "{$base}|in:" . implode(',', $opts['choices']);
+                } else {
+                    $rules["fields.{$field->name}"] = "{$base}|string|max:2000";
+                }
+            }
         }
 
-        JobApplication::create([
-            'user_id'              => Auth::id(),
-            'job_opening_id'       => $jobOpening->id,
-            'full_name'            => $data['full_name'],
-            'gender'               => $data['gender'],
-            'whatsapp_number'      => $data['whatsapp_number'],
-            'domicile_address'     => $data['domicile_address'],
-            'birth_place'          => $data['birth_place'],
-            'birth_date'           => $data['birth_date'],
-            'instagram_handle'     => $data['instagram_handle'],
-            'linkedin_url'         => $data['linkedin_url'],
-            'education_level'      => $data['education_level'],
-            'major'                => $data['major'],
-            'school_name'          => $data['school_name'],
-            'graduation_year'      => $data['graduation_year'],
-            'str_valid_until'      => $data['str_valid_until'],
-            'other_position_note'  => $data['other_position_note'],
-            'work_experience_note' => $data['work_experience_note'],
-            'willing_relocate'     => $data['willing_relocate'],
-            'last_salary'          => $data['last_salary'],
-            'expected_salary'      => $data['expected_salary'],
-            'availability'         => $data['availability'],
-            'cv_file_path'         => $cvPath,
-            'certificate_file_path' => $certPath,
-            'status'               => JobApplication::STATUS_APPLIED,
+        $request->validate($rules);
+
+        $application = JobApplication::create([
+            'user_id'        => Auth::id(),
+            'job_opening_id' => $jobOpening->id,
+            'status'         => JobApplication::STATUS_APPLIED,
         ]);
+
+        $answers = [];
+        foreach ($request->input('fields', []) as $key => $value) {
+            $answers[] = ['field_key' => $key, 'value' => $value];
+        }
+        foreach ($jobOpening->company->formSections as $section) {
+            foreach ($section->fields->where('type', 'file') as $field) {
+                if ($request->hasFile("files.{$field->name}")) {
+                    $path = $request->file("files.{$field->name}")
+                        ->store("applications/{$field->name}", 'public');
+                    $answers[] = ['field_key' => $field->name, 'value' => $path];
+                }
+            }
+        }
+
+        $application->answers()->createMany($answers);
 
         return redirect()->route('dashboard')
             ->with('success', 'Lamaran berhasil dikirim! Tim HR kami akan meninjau berkas Anda.');

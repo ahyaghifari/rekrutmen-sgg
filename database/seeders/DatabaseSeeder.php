@@ -18,10 +18,13 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'MUHAMMAD AHYA GHIFARI',
             'email' => 'ahyaghifari288@gmail.com',
+            'is_staff' => true,
         ]);
 
         $this->call([
+            CompanySeeder::class,
             JobOpeningSeeder::class,
+            FormSectionsSeeder::class,
         ]);
     }
 }

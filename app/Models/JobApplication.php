@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -22,41 +23,10 @@ class JobApplication extends Model
     protected $fillable = [
         'user_id',
         'job_opening_id',
-        'candidate_id',
-        'full_name',
-        'gender',
-        'whatsapp_number',
-        'age',
-        'domicile_address',
-        'birth_place',
-        'birth_date',
-        'instagram_handle',
-        'linkedin_url',
-        'education_level',
-        'major',
-        'school_name',
-        'graduation_year',
-        'str_valid_until',
-        'other_position_note',
-        'work_experience_note',
-        'willing_relocate',
-        'last_salary',
-        'expected_salary',
-        'availability',
-        'certificate_file_path',
-        'cv_file_path',
         'status',
     ];
 
-    protected $casts = [
-        'birth_date' => 'date',
-        'str_valid_until' => 'date',
-        'age' => 'integer',
-        'graduation_year' => 'integer',
-        'willing_relocate' => 'boolean',
-        'last_salary' => 'decimal:2',
-        'expected_salary' => 'decimal:2',
-    ];
+    protected $casts = [];
 
     /**
      * Konstanta status + daftar status yang dianggap "aktif" (masih berjalan).
@@ -73,6 +43,17 @@ class JobApplication extends Model
         self::STATUS_INTERVIEW,
     ];
 
+    public function answers(): HasMany
+    {
+        return $this->hasMany(JobApplicationAnswer::class);
+    }
+
+    /** Ambil semua jawaban sebagai key-value array. */
+    public function answersMap(): array
+    {
+        return $this->answers->pluck('value', 'field_key')->all();
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -83,9 +64,9 @@ class JobApplication extends Model
         return $this->belongsTo(JobOpening::class);
     }
 
-    public function candidate(): BelongsTo
+    public function candidate(): HasOne
     {
-        return $this->belongsTo(Candidate::class);
+        return $this->hasOne(Candidate::class);
     }
 
     public function offeringLetter(): HasOne

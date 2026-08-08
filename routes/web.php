@@ -1,26 +1,23 @@
 <?php
 
+use App\Exports\ApplicationsExport;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\ProfileController;
-use App\Models\JobApplication;
+use App\Http\Controllers\PublicController;
 use App\Models\JobOpening;
 use Illuminate\Support\Facades\Route;
+use Maatwebsite\Excel\Facades\Excel;
 
-Route::get('/', function () {
-    $openings = JobOpening::active()->orderBy('created_at', 'desc')->get();
-    return view('welcome', compact('openings'));
-})->name('welcome');
-
-Route::get('/lowongan/{jobOpening}', function (JobOpening $jobOpening) {
-    abort_if(! $jobOpening->is_active, 404);
-    return view('lowongan.show', compact('jobOpening'));
-})->name('lowongan.show');
+Route::get('/', [PublicController::class, 'welcome'])->name('welcome');
+Route::get('/lowongan/{jobOpening}', [PublicController::class, 'lowongan'])->name('lowongan.show');
 
 Route::get('/dashboard', function () {
-    $applications = auth()->user()->jobApplications()->with('jobOpening')->latest()->get();
-    $openings = JobOpening::active()->orderBy('created_at', 'desc')->get();
+    $applications = auth()->user()->jobApplications()->with('jobOpening.company')->latest()->get();
+    $openings = JobOpening::with('company')->active()
+        ->whereHas('company', fn ($q) => $q->where('is_active', true))
+        ->orderBy('created_at', 'desc')->get();
     return view('dashboard', compact('applications', 'openings'));
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'/* , 'verified' */])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/lamaran', [JobApplicationController::class, 'index'])->name('lamaran.index');
@@ -32,5 +29,14 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+// Admin export — protected by Filament auth guard
+Route::get('/kelola-rekrutmen/export-pelamar', function () {
+    abort_unless(auth()->guard('web')->check(), 403);
+    $id       = request('job_opening_id');
+    $opening  = JobOpening::findOrFail($id);
+    $filename = 'pelamar-' . \Illuminate\Support\Str::slug($opening->title) . '-' . now()->format('Ymd') . '.xlsx';
+    return Excel::download(new ApplicationsExport($id), $filename);
+})->name('admin.export.applications');
 
 require __DIR__.'/auth.php';

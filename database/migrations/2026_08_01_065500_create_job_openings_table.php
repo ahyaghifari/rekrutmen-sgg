@@ -19,8 +19,9 @@ return new class extends Migration
     {
         Schema::create('job_openings', function (Blueprint $table) {
             $table->ulid('id')->primary();
+            $table->foreignId('company_id')->nullable()->constrained()->nullOnDelete();
             $table->string('title');
-            $table->string('company_name');
+            $table->string('company_name')->nullable();
             $table->unsignedInteger('quota')->default(1);
             $table->boolean('is_active')->default(true);
             $table->text('description')->nullable();
