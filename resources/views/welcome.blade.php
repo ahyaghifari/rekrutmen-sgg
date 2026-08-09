@@ -13,7 +13,7 @@
   <header class="sg-navbar-header border-b">
     <div class="max-w-[1180px] mx-auto px-6 py-[14px] flex items-center gap-7">
       <div class="flex items-center gap-3">
-        <img src="/logo-sgg.png" alt="Syifa Global Group" class="h-9 w-auto" width="36" height="36" />
+        <img src="/logo-sgg.png" alt="Syifa Global Grou" class="h-9 w-auto" width="36" height="36" />
         <div class="text-[11px] font-semibold tracking-[0.06em] uppercase text-slate-400">Portal Rekrutmen</div>
       </div>
 
