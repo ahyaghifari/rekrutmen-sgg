@@ -295,7 +295,6 @@ input::placeholder, textarea::placeholder { color: #94a3b8; }
 [data-theme="dark"] .sg-chk-face { border-color: #1e2d45; }
 
 /* ── Dark mode ── */
-[data-theme="dark"],
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; } }
 [data-theme="dark"] { color-scheme: dark; }
 
