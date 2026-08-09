@@ -105,7 +105,7 @@
     $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#0f6e3d'];
     @endphp
 
-    <form method="POST" action="{{ route('lamaran.store', $jobOpening) }}" enctype="multipart/form-data">
+    <form id="lamaran-form" method="POST" action="{{ route('lamaran.store', $jobOpening) }}" enctype="multipart/form-data">
       @csrf
 
       @foreach($co->formSections as $sectionIndex => $formSection)
@@ -234,7 +234,7 @@
           <span class="text-[12.5px] text-slate-500">Proses rekrutmen Syifa Global Group tidak dipungut biaya.</span>
           <div class="flex gap-[10px]">
             <a href="{{ route('welcome') }}" class="sg-auth-alt-btn px-5 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 text-[13.5px] font-bold no-underline hover:border-slate-400 transition-colors duration-150">Batal</a>
-            <button type="submit" class="px-[26px] py-3 rounded-xl border-0 bg-sgg-green hover:bg-sgg-green-hover text-white text-[13.5px] font-bold cursor-pointer transition-colors duration-150">
+            <button type="button" onclick="openConfirm()" class="px-[26px] py-3 rounded-xl border-0 bg-sgg-green hover:bg-sgg-green-hover text-white text-[13.5px] font-bold cursor-pointer transition-colors duration-150">
               <i class="fa-solid fa-paper-plane mr-2 text-xs"></i>Kirim Lamaran
             </button>
           </div>
@@ -242,6 +242,53 @@
       </section>
 
     </form>
+
+    {{-- Confirmation Modal --}}
+    <div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:9999;padding:16px;" class="flex items-center justify-center">
+      <div onclick="closeConfirm()" style="position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(3px);"></div>
+      <div class="relative sg-card rounded-[22px] shadow-2xl w-full max-w-sm mx-auto px-7 py-7" style="z-index:1;">
+        <div class="flex flex-col items-center text-center gap-3">
+          <div class="w-14 h-14 rounded-full flex items-center justify-center mb-1" style="background:rgba(4,44,108,0.1);">
+            <i class="fa-solid fa-paper-plane text-xl" style="color:{{ $brand }};"></i>
+          </div>
+          <h3 class="m-0 text-[18px] font-extrabold text-slate-800 tracking-[-0.3px]">Kirim Lamaran?</h3>
+          <p class="m-0 text-[13.5px] text-slate-500 leading-relaxed">
+            Pastikan semua data yang kamu isi sudah benar.<br>
+            Lamaran yang sudah dikirim <strong>tidak dapat diubah</strong>.
+          </p>
+        </div>
+        <div class="mt-6 flex gap-[10px]">
+          <button type="button" onclick="closeConfirm()"
+            class="flex-1 px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 text-[13.5px] font-bold cursor-pointer transition-colors duration-150 hover:border-slate-400">
+            Periksa Kembali
+          </button>
+          <button type="button" onclick="submitLamaran()"
+            class="flex-1 px-4 py-3 rounded-xl border-0 text-white text-[13.5px] font-bold cursor-pointer transition-colors duration-150"
+            style="background:{{ $brand }};">
+            <i class="fa-solid fa-paper-plane mr-1.5 text-xs"></i>Ya, Kirim!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    function openConfirm() {
+      var form = document.getElementById('lamaran-form');
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      document.getElementById('confirm-modal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeConfirm() {
+      document.getElementById('confirm-modal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    function submitLamaran() {
+      document.getElementById('lamaran-form').submit();
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeConfirm();
+    });
+    </script>
   </main>
 </div>
 

@@ -20,14 +20,19 @@ class JobOpening extends Model
         'title',
         'company_name',
         'quota',
+        'max_applicants',
+        'applications_deadline',
+        'hris_job_opening_id',
         'is_active',
         'description',
         'requirements',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'quota' => 'integer',
+        'is_active'             => 'boolean',
+        'quota'                 => 'integer',
+        'max_applicants'        => 'integer',
+        'applications_deadline' => 'date',
     ];
 
     public function company(): BelongsTo

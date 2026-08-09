@@ -17,13 +17,14 @@ Route::get('/dashboard', function () {
         ->whereHas('company', fn ($q) => $q->where('is_active', true))
         ->orderBy('created_at', 'desc')->get();
     return view('dashboard', compact('applications', 'openings'));
-})->middleware(['auth'/* , 'verified' */])->name('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/lamaran', [JobApplicationController::class, 'index'])->name('lamaran.index');
     Route::get('/lamaran/{application}', [JobApplicationController::class, 'show'])->name('lamaran.show');
+    Route::get('/lamaran/{application}/berkas/{field}', [JobApplicationController::class, 'downloadAttachment'])->name('lamaran.attachment');
     Route::get('/lamar/{jobOpening}', [JobApplicationController::class, 'create'])->name('lamaran.create');
-    Route::post('/lamar/{jobOpening}', [JobApplicationController::class, 'store'])->name('lamaran.store');
+    Route::post('/lamar/{jobOpening}', [JobApplicationController::class, 'store'])->middleware('throttle:10,1')->name('lamaran.store');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -32,11 +33,20 @@ Route::middleware('auth')->group(function () {
 
 // Admin export — protected by Filament auth guard
 Route::get('/kelola-rekrutmen/export-pelamar', function () {
-    abort_unless(auth()->guard('web')->check(), 403);
+    abort_unless(auth()->guard('web')->check() && auth()->user()->is_staff, 403);
     $id       = request('job_opening_id');
+    $status   = request('status') ?: null;
     $opening  = JobOpening::findOrFail($id);
-    $filename = 'pelamar-' . \Illuminate\Support\Str::slug($opening->title) . '-' . now()->format('Ymd') . '.xlsx';
-    return Excel::download(new ApplicationsExport($id), $filename);
-})->name('admin.export.applications');
+
+    $user = auth()->user();
+    abort_unless(
+        $user->hasAnyRole(['super_admin', 'Super Admin']) || $user->company_id === $opening->company_id,
+        403
+    );
+
+    $suffix   = $status ? '-' . $status : '';
+    $filename = 'pelamar-' . \Illuminate\Support\Str::slug($opening->title) . $suffix . '-' . now()->format('Ymd') . '.xlsx';
+    return Excel::download(new ApplicationsExport($id, $status), $filename);
+})->middleware('throttle:10,1')->name('admin.export.applications');
 
 require __DIR__.'/auth.php';

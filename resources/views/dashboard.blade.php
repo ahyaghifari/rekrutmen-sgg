@@ -3,13 +3,14 @@
 
 @php
 $statusMap = [
-    'applied'   => ['label' => 'Lamaran Masuk',    'badge' => 'badge-applied',   'icon' => 'fa-paper-plane'],
-    'screening' => ['label' => 'Screening',          'badge' => 'badge-screening', 'icon' => 'fa-magnifying-glass'],
-    'interview' => ['label' => 'Wawancara',          'badge' => 'badge-interview', 'icon' => 'fa-comments'],
-    'passed'    => ['label' => 'Diterima',           'badge' => 'badge-passed',    'icon' => 'fa-circle-check'],
-    'rejected'  => ['label' => 'Tidak Dilanjutkan', 'badge' => 'badge-rejected',  'icon' => 'fa-circle-xmark'],
+    'applied'     => ['label' => 'Lamaran Masuk',    'badge' => 'badge-applied',      'icon' => 'fa-paper-plane'],
+    'screening'   => ['label' => 'Peninjauan Berkas','badge' => 'badge-screening',    'icon' => 'fa-magnifying-glass'],
+    'shortlisted' => ['label' => 'Lolos Seleksi Berkas','badge' => 'badge-interview', 'icon' => 'fa-clipboard-check'],
+    'interview'   => ['label' => 'Wawancara',        'badge' => 'badge-interview',    'icon' => 'fa-comments'],
+    'passed'      => ['label' => 'Diterima',         'badge' => 'badge-passed',       'icon' => 'fa-circle-check'],
+    'rejected'    => ['label' => 'Tidak Dilanjutkan','badge' => 'badge-rejected',     'icon' => 'fa-circle-xmark'],
 ];
-$activeApp = $applications->first(fn($a) => in_array($a->status, ['applied','screening','interview']));
+$activeApp = $applications->first(fn($a) => in_array($a->status, ['applied','screening','shortlisted','interview']));
 $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rejected']));
 
 
@@ -64,33 +65,47 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
 
     {{-- Mini timeline --}}
     @php
+      $tlBrand = $activeApp->jobOpening->company?->brand_color ?? '#042c6c';
       $tlSteps = [
-        ['label' => 'Lamaran Masuk', 'icon' => 'fa-paper-plane'],
-        ['label' => 'Screening',      'icon' => 'fa-magnifying-glass'],
-        ['label' => 'Wawancara',      'icon' => 'fa-comments'],
-        ['label' => 'Keputusan',      'icon' => 'fa-award'],
+        ['label' => 'Lamaran Masuk',     'icon' => 'fa-paper-plane',      'sub' => 'Formulir terkirim'],
+        ['label' => 'Peninjauan Berkas', 'icon' => 'fa-magnifying-glass', 'sub' => 'Tinjauan awal'],
+        ['label' => 'Seleksi Berkas',    'icon' => 'fa-clipboard-check',  'sub' => 'Keputusan lanjut'],
+        ['label' => 'Wawancara',         'icon' => 'fa-comments',          'sub' => 'Jadwal dikirim'],
+        ['label' => 'Keputusan',         'icon' => 'fa-award',             'sub' => 'Hasil akhir'],
       ];
       $curStep = match($activeApp->status) {
-        'applied' => 0, 'screening' => 1, 'interview' => 2, 'passed', 'rejected' => 3, default => 0
+        'applied'            => 0,
+        'screening'          => 1,
+        'shortlisted'        => 2,
+        'interview'          => 3,
+        'passed', 'rejected' => 4,
+        default              => 0,
       };
+      $lastIdx = count($tlSteps) - 1;
     @endphp
-    @php
-      $tlBrand = $activeApp->jobOpening->company?->brand_color ?? '#042c6c';
-    @endphp
-    <div class="sg-tl-widget mt-5 pt-5 border-t border-slate-100" style="display:flex;gap:0;">
+    <div class="sg-tl-widget mt-5 pt-5 sg-dd-border border-t" style="display:flex;gap:0;">
       @foreach($tlSteps as $i => $s)
+      @php
+        $done    = $i < $curStep;
+        $current = $i === $curStep;
+        $future  = $i > $curStep;
+      @endphp
       <div style="flex:1;text-align:center;position:relative;padding:0 4px;">
         @if($i > 0)
-        <div class="sg-tl-track" style="position:absolute;top:13px;left:0;right:50%;height:2px;background:{{ $i <= $curStep ? $tlBrand : '#e2e8f0' }};"></div>
+        <div class="{{ $done || $current ? '' : 'sg-tl-track-todo' }}"
+             style="position:absolute;top:19px;left:0;right:50%;height:2px;{{ $done || $current ? 'background:'.$tlBrand : '' }};"></div>
         @endif
-        @if($i < 3)
-        <div class="sg-tl-track" style="position:absolute;top:13px;left:50%;right:0;height:2px;background:{{ $i < $curStep ? $tlBrand : '#e2e8f0' }};"></div>
+        @if($i < $lastIdx)
+        <div class="{{ $done ? '' : 'sg-tl-track-todo' }}"
+             style="position:absolute;top:19px;left:50%;right:0;height:2px;{{ $done ? 'background:'.$tlBrand : '' }};"></div>
         @endif
-        <div class="sg-tl-node" style="width:26px;height:26px;border-radius:50%;margin:0 auto;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-size:10px;
-          {{ $i <= $curStep ? 'background:'.$tlBrand.';color:#fff;' : 'background:#f1f5f9;color:#94a3b8;border:2px solid #e2e8f0;' }}">
-          <i class="fa-solid {{ $i < $curStep ? 'fa-check' : $s['icon'] }}"></i>
+        <div class="{{ $future ? 'sg-tl-node-todo' : '' }}"
+             style="width:38px;height:38px;border-radius:50%;margin:0 auto;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-size:12px;{{ !$future ? 'background:'.$tlBrand.';color:#fff;' : '' }}">
+          <i class="fa-solid {{ $done ? 'fa-check' : $s['icon'] }}"></i>
         </div>
-        <div style="margin-top:5px;font-size:10.5px;font-weight:700;color:{{ $i <= $curStep ? $tlBrand : '#94a3b8' }};">{{ $s['label'] }}</div>
+        <div class="{{ $future ? 'sg-tl-label-todo' : '' }}"
+             style="margin-top:7px;font-size:11px;font-weight:700;line-height:1.3;{{ !$future ? 'color:'.$tlBrand : '' }};">{{ $s['label'] }}</div>
+        <div class="sg-tl-sub">{{ $s['sub'] }}</div>
       </div>
       @endforeach
     </div>

@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'hris' => [
+        'api_token' => env('REKRUTMEN_API_TOKEN'),
+    ],
+
 ];

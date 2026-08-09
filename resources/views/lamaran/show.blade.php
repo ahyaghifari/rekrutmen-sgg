@@ -3,17 +3,19 @@
 
 @php
 $statusMap = [
-    'applied'   => ['label' => 'Lamaran Masuk',    'badge' => 'badge-applied',   'icon' => 'fa-paper-plane'],
-    'screening' => ['label' => 'Screening',          'badge' => 'badge-screening', 'icon' => 'fa-magnifying-glass'],
-    'interview' => ['label' => 'Wawancara',          'badge' => 'badge-interview', 'icon' => 'fa-comments'],
-    'passed'    => ['label' => 'Diterima',           'badge' => 'badge-passed',    'icon' => 'fa-circle-check'],
-    'rejected'  => ['label' => 'Tidak Dilanjutkan', 'badge' => 'badge-rejected',  'icon' => 'fa-circle-xmark'],
+    'applied'     => ['label' => 'Lamaran Masuk',        'badge' => 'badge-applied',   'icon' => 'fa-paper-plane'],
+    'screening'   => ['label' => 'Peninjauan Berkas',    'badge' => 'badge-screening', 'icon' => 'fa-magnifying-glass'],
+    'shortlisted' => ['label' => 'Lolos Seleksi Berkas', 'badge' => 'badge-interview', 'icon' => 'fa-clipboard-check'],
+    'interview'   => ['label' => 'Wawancara',            'badge' => 'badge-interview', 'icon' => 'fa-comments'],
+    'passed'      => ['label' => 'Diterima',             'badge' => 'badge-passed',    'icon' => 'fa-circle-check'],
+    'rejected'    => ['label' => 'Tidak Dilanjutkan',    'badge' => 'badge-rejected',  'icon' => 'fa-circle-xmark'],
 ];
 $steps = [
-    ['label' => 'Lamaran Masuk', 'sub' => 'Formulir terkirim',   'icon' => 'fa-paper-plane'],
-    ['label' => 'Screening',      'sub' => 'Tinjauan berkas',     'icon' => 'fa-magnifying-glass'],
-    ['label' => 'Wawancara',      'sub' => 'Jadwal akan dikirim', 'icon' => 'fa-comments'],
-    ['label' => 'Keputusan',      'sub' => match($application->status) {
+    ['label' => 'Lamaran Masuk',     'sub' => 'Formulir terkirim',         'icon' => 'fa-paper-plane'],
+    ['label' => 'Peninjauan Berkas', 'sub' => 'Tinjauan berkas awal',      'icon' => 'fa-magnifying-glass'],
+    ['label' => 'Seleksi Berkas',    'sub' => 'Keputusan lanjut/terhenti', 'icon' => 'fa-clipboard-check'],
+    ['label' => 'Wawancara',         'sub' => 'Jadwal akan dikirim',       'icon' => 'fa-comments'],
+    ['label' => 'Keputusan',         'sub' => match($application->status) {
         'passed'   => 'Selamat, diterima!',
         'rejected' => 'Tidak dilanjutkan',
         default    => 'Menunggu keputusan',
@@ -24,11 +26,12 @@ $steps = [
     }],
 ];
 $currentStep = match($application->status) {
-    'applied'  => 0,
-    'screening'=> 1,
-    'interview'=> 2,
-    'passed', 'rejected' => 3,
-    default    => 0,
+    'applied'            => 0,
+    'screening'          => 1,
+    'shortlisted'        => 2,
+    'interview'          => 3,
+    'passed', 'rejected' => 4,
+    default              => 0,
 };
 $isRejected  = $application->status === 'rejected';
 $answers     = $application->answersMap();
@@ -71,36 +74,35 @@ $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#
 {{-- Status timeline --}}
 <div class="sg-card mt-4 rounded-[18px] px-6 py-5">
   <div class="text-[12px] font-bold uppercase tracking-[0.06em] text-slate-500 mb-5">Tahap Seleksi</div>
+  @php $lastIdx = count($steps) - 1; @endphp
   <div style="display:flex;gap:0;">
     @foreach($steps as $i => $step)
     @php
       $done    = $i < $currentStep;
       $current = $i === $currentStep;
       $future  = $i > $currentStep;
-      $circleBg     = $done ? $brand : ($current ? ($isRejected && $i === 3 ? '#dc2626' : $brand) : '#f1f5f9');
-      $circleColor  = ($done || $current) ? '#fff' : '#94a3b8';
-      $circleBorder = $future ? '2px solid #e2e8f0' : 'none';
-      $labelColor   = $future ? '#94a3b8' : $brand;
-      $lineLeft     = $done || $current ? $brand : '#e2e8f0';
-      $lineRight    = $done ? $brand : '#e2e8f0';
+      $activeColor = ($isRejected && $current && $i === $lastIdx) ? '#dc2626' : $brand;
     @endphp
     <div style="flex:1;text-align:center;position:relative;padding:0 4px;">
       @if($i > 0)
-      <div class="sg-tl-line" style="position:absolute;top:17px;left:0;right:50%;height:2px;background:{{ $lineLeft }};"></div>
+      <div class="sg-tl-line {{ $done || $current ? '' : 'sg-tl-track-todo' }}"
+           style="position:absolute;top:19px;left:0;right:50%;height:2px;{{ $done || $current ? 'background:'.$brand : '' }};"></div>
       @endif
-      @if($i < count($steps) - 1)
-      <div class="sg-tl-line" style="position:absolute;top:17px;left:50%;right:0;height:2px;background:{{ $lineRight }};"></div>
+      @if($i < $lastIdx)
+      <div class="sg-tl-line {{ $done ? '' : 'sg-tl-track-todo' }}"
+           style="position:absolute;top:19px;left:50%;right:0;height:2px;{{ $done ? 'background:'.$brand : '' }};"></div>
       @endif
-      <div class="sg-tl-node {{ $future ? 'sg-tl-node-inactive' : '' }}"
-           style="width:34px;height:34px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;position:relative;z-index:1;background:{{ $circleBg }};color:{{ $circleColor }};border:{{ $circleBorder }};">
+      <div class="{{ $future ? 'sg-tl-node-todo' : '' }}"
+           style="width:38px;height:38px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;position:relative;z-index:1;{{ !$future ? 'background:'.$activeColor.';color:#fff;' : '' }}">
         @if($done)
           <i class="fa-solid fa-check"></i>
         @else
           <i class="fa-solid {{ $step['icon'] }}"></i>
         @endif
       </div>
-      <div style="margin-top:8px;font-size:11.5px;font-weight:700;line-height:1.3;color:{{ $labelColor }};">{{ $step['label'] }}</div>
-      <div class="text-slate-400" style="margin-top:3px;font-size:10.5px;line-height:1.3;">{{ $step['sub'] }}</div>
+      <div class="{{ $future ? 'sg-tl-label-todo' : '' }}"
+           style="margin-top:8px;font-size:11.5px;font-weight:700;line-height:1.3;{{ !$future ? 'color:'.$brand : '' }};">{{ $step['label'] }}</div>
+      <div class="sg-tl-sub">{{ $step['sub'] }}</div>
     </div>
     @endforeach
   </div>
@@ -127,7 +129,7 @@ $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#
         <div class="text-[11.5px] font-bold text-slate-500 uppercase tracking-[0.05em] mb-1">{{ $field->label }}</div>
         @if($field->type === 'file')
           @if(!$isEmpty)
-          <a href="{{ asset('storage/' . $val) }}" target="_blank"
+          <a href="{{ route('lamaran.attachment', ['application' => $application->id, 'field' => $field->name]) }}" target="_blank"
              class="inline-flex items-center gap-2 px-4 py-[9px] rounded-[10px] border border-slate-200 text-[13px] font-semibold text-slate-700 no-underline hover:border-navy hover:text-navy transition-colors duration-150" style="background:rgba(0,0,0,0.02);">
             <i class="fa-solid fa-file-pdf text-red-500"></i>Lihat Dokumen
           </a>

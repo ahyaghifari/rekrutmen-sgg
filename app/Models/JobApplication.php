@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class JobApplication extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasUlids, SoftDeletes;
 
     /**
      * Form lamaran pelamar — pengganti Google Form (PRD §4a).
@@ -31,11 +32,12 @@ class JobApplication extends Model
     /**
      * Konstanta status + daftar status yang dianggap "aktif" (masih berjalan).
      */
-    public const STATUS_APPLIED = 'applied';
-    public const STATUS_SCREENING = 'screening';
-    public const STATUS_INTERVIEW = 'interview';
-    public const STATUS_PASSED = 'passed';
-    public const STATUS_REJECTED = 'rejected';
+    public const STATUS_APPLIED      = 'applied';
+    public const STATUS_SCREENING    = 'screening';
+    public const STATUS_SHORTLISTED  = 'shortlisted';
+    public const STATUS_INTERVIEW    = 'interview';
+    public const STATUS_PASSED       = 'passed';
+    public const STATUS_REJECTED     = 'rejected';
 
     public const ACTIVE_STATUSES = [
         self::STATUS_APPLIED,

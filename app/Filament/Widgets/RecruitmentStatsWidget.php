@@ -18,7 +18,7 @@ class RecruitmentStatsWidget extends BaseWidget
         $activeOpenings   = JobOpening::active()->count();
         $thisMonth        = JobApplication::whereMonth('created_at', now()->month)
                                ->whereYear('created_at', now()->year)->count();
-        $inProgress       = JobApplication::whereIn('status', ['screening', 'interview'])->count();
+        $inProgress       = JobApplication::whereIn('status', ['screening', 'shortlisted', 'interview'])->count();
         $passed           = JobApplication::where('status', 'passed')->count();
         $newApplicants    = JobApplication::where('status', 'applied')->count();
 

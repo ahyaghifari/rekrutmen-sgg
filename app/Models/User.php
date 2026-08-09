@@ -2,23 +2,39 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmailContract
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles, MustVerifyEmailTrait;
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return (bool) $this->is_staff;
+        return $this->hasAnyRole(['super_admin', 'Super Admin', 'Admin']);
+    }
+
+    /**
+     * Wajib verifikasi email di production. Di local dianggap selalu terverifikasi
+     * biar gak ribet testing pake email asal.
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        if (app()->environment('local')) {
+            return true;
+        }
+
+        return parent::hasVerifiedEmail();
     }
 
     /**
@@ -30,6 +46,8 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'company_id',
+        'is_staff',
     ];
 
     /**
@@ -53,6 +71,11 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function jobApplications(): HasMany

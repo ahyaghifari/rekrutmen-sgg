@@ -60,31 +60,39 @@
     </a>
 
     {{-- Hero card --}}
-    <div class="relative overflow-hidden rounded-[20px] text-white px-8 py-8"
+    <div class="relative overflow-hidden rounded-[20px] text-white px-6 py-6"
          style="background:linear-gradient(135deg,{{ $brand }} 0%,{{ $brandDark }} 100%);">
-      <div class="absolute w-[280px] h-[280px] rounded-full -right-[80px] -top-[130px] pointer-events-none bg-white/[0.05]"></div>
-      <div class="absolute w-[140px] h-[140px] rounded-[34px] rotate-[22deg] right-[200px] -bottom-[80px] pointer-events-none bg-white/[0.08]"></div>
-      <div class="relative z-[1] flex flex-wrap gap-5 items-center">
-        <div class="w-[64px] h-[64px] shrink-0 rounded-[18px] grid place-items-center overflow-hidden bg-white/[0.18]">
-          @if($logo)
-            <img src="{{ $logo }}" alt="{{ $co->name }}" class="w-full h-full object-contain p-[10px]">
-          @else
-            <i class="fa-solid {{ sgJobIcon($jobOpening->title) }} text-[24px]"></i>
-          @endif
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="text-[11.5px] font-bold tracking-[0.08em] uppercase text-white/70 mb-1">
+      <div class="absolute w-[260px] h-[260px] rounded-full -right-[70px] -top-[120px] pointer-events-none bg-white/[0.05]"></div>
+      <div class="absolute w-[120px] h-[120px] rounded-[30px] rotate-[22deg] right-[180px] -bottom-[70px] pointer-events-none bg-white/[0.08]"></div>
+      <div class="relative z-[1]">
+        {{-- Logo + company --}}
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-[48px] h-[48px] shrink-0 rounded-[14px] grid place-items-center overflow-hidden bg-white/[0.18]">
+            @if($logo)
+              <img src="{{ $logo }}" alt="{{ $co->name }}" class="w-full h-full object-contain p-[8px]">
+            @else
+              <i class="fa-solid {{ sgJobIcon($jobOpening->title) }} text-[20px]"></i>
+            @endif
+          </div>
+          <div class="text-[12px] font-bold tracking-[0.07em] uppercase text-white/75 leading-tight">
             {{ $co?->name ?? $jobOpening->company_name }}
           </div>
-          <h1 class="m-0 text-[26px] font-extrabold tracking-[-0.6px] leading-[1.15]">{{ $jobOpening->title }}</h1>
         </div>
-        <div class="shrink-0 flex flex-wrap gap-3 items-center">
-          <div class="flex items-center gap-[10px] px-4 py-[10px] rounded-[12px] bg-white/[0.12] text-[13px] font-semibold">
-            <i class="fa-solid fa-users text-white/70 text-xs"></i>{{ $jobOpening->quota }} posisi
+        {{-- Title --}}
+        <h1 class="m-0 mb-4 text-[22px] font-extrabold tracking-[-0.5px] leading-[1.2]">{{ $jobOpening->title }}</h1>
+        {{-- Chips --}}
+        <div class="flex flex-wrap gap-2">
+          <div class="flex items-center gap-2 px-3 py-[7px] rounded-[10px] bg-white/[0.12] text-[12.5px] font-semibold">
+            <i class="fa-solid fa-users text-white/70 text-[11px]"></i>{{ $jobOpening->quota }} posisi
           </div>
-          <div class="flex items-center gap-[10px] px-4 py-[10px] rounded-[12px] bg-white/[0.12] text-[13px] font-semibold">
-            <i class="fa-solid fa-clock text-white/70 text-xs"></i>Full Time
+          <div class="flex items-center gap-2 px-3 py-[7px] rounded-[10px] bg-white/[0.12] text-[12.5px] font-semibold">
+            <i class="fa-solid fa-clock text-white/70 text-[11px]"></i>Full Time
           </div>
+          @if($jobOpening->applications_deadline)
+          <div class="flex items-center gap-2 px-3 py-[7px] rounded-[10px] bg-white/[0.12] text-[12.5px] font-semibold">
+            <i class="fa-solid fa-calendar-xmark text-white/70 text-[11px]"></i>Ditutup {{ $jobOpening->applications_deadline->translatedFormat('d M Y') }}
+          </div>
+          @endif
         </div>
       </div>
     </div>
@@ -183,6 +191,25 @@
               <i class="fa-solid fa-users w-4 text-center text-slate-400"></i>
               <span>Kuota <strong class="text-slate-700">{{ $jobOpening->quota }} orang</strong></span>
             </div>
+            @if($jobOpening->max_applicants)
+            <div class="flex items-center gap-3 text-[12.5px] text-slate-500">
+              <i class="fa-solid fa-person-circle-check w-4 text-center text-slate-400"></i>
+              <span>Maks. <strong class="text-slate-700">{{ number_format($jobOpening->max_applicants) }}</strong> pelamar</span>
+            </div>
+            @endif
+            @if($jobOpening->applications_deadline)
+            @php $deadlinePast = $jobOpening->applications_deadline->isPast(); @endphp
+            <div class="flex items-center gap-3 text-[12.5px] {{ $deadlinePast ? 'text-red-500' : 'text-slate-500' }}">
+              <i class="fa-solid fa-calendar-xmark w-4 text-center {{ $deadlinePast ? 'text-red-400' : 'text-slate-400' }}"></i>
+              <span>
+                @if($deadlinePast)
+                  <strong class="text-red-600">Pendaftaran ditutup</strong>
+                @else
+                  Ditutup <strong class="text-slate-700">{{ $jobOpening->applications_deadline->translatedFormat('d M Y') }}</strong>
+                @endif
+              </span>
+            </div>
+            @endif
             <div class="flex items-center gap-3 text-[12.5px] text-slate-500">
               <i class="fa-solid fa-briefcase w-4 text-center text-slate-400"></i>
               <span>Full Time</span>

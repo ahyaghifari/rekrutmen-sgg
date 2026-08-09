@@ -14,7 +14,8 @@ use Illuminate\Support\Collection;
 class ApplicationsExport implements FromCollection, WithHeadings, WithStyles, ShouldAutoSize
 {
     public function __construct(
-        private string $jobOpeningId
+        private string  $jobOpeningId,
+        private ?string $status = null,
     ) {}
 
     private function getFieldMap(): array
@@ -23,8 +24,8 @@ class ApplicationsExport implements FromCollection, WithHeadings, WithStyles, Sh
         $map = [];
         foreach ($jobOpening?->company?->formSections ?? [] as $section) {
             foreach ($section->fields as $field) {
-                if ($field->type === 'file') continue;
-                $map[$field->name] = $field->label;
+                $label = $field->type === 'file' ? $field->label . ' (Link)' : $field->label;
+                $map[$field->name] = ['label' => $label, 'type' => $field->type];
             }
         }
         return $map;
@@ -34,7 +35,7 @@ class ApplicationsExport implements FromCollection, WithHeadings, WithStyles, Sh
     {
         return array_merge(
             ['No', 'Status', 'Tanggal Daftar'],
-            array_values($this->getFieldMap())
+            array_column($this->getFieldMap(), 'label')
         );
     }
 
@@ -43,19 +44,21 @@ class ApplicationsExport implements FromCollection, WithHeadings, WithStyles, Sh
         $fieldMap     = $this->getFieldMap();
         $fieldKeys    = array_keys($fieldMap);
         $statusLabels = [
-            'applied'   => 'Lamaran Masuk',
-            'screening' => 'Screening',
-            'interview' => 'Wawancara',
-            'passed'    => 'Diterima',
-            'rejected'  => 'Tidak Dilanjutkan',
+            'applied'     => 'Lamaran Masuk',
+            'screening'   => 'Peninjauan Berkas',
+            'shortlisted' => 'Lolos Seleksi Berkas',
+            'interview'   => 'Wawancara',
+            'passed'      => 'Diterima',
+            'rejected'    => 'Tidak Dilanjutkan',
         ];
 
         $applications = JobApplication::with('answers')
             ->where('job_opening_id', $this->jobOpeningId)
+            ->when($this->status, fn ($q) => $q->where('status', $this->status))
             ->latest()
             ->get();
 
-        return $applications->map(function ($app, $i) use ($fieldKeys, $statusLabels) {
+        return $applications->map(function ($app, $i) use ($fieldKeys, $fieldMap, $statusLabels) {
             $answers = $app->answersMap();
             $row = [
                 $i + 1,
@@ -63,7 +66,11 @@ class ApplicationsExport implements FromCollection, WithHeadings, WithStyles, Sh
                 $app->created_at->format('d/m/Y H:i'),
             ];
             foreach ($fieldKeys as $key) {
-                $row[] = $answers[$key] ?? '';
+                $value = $answers[$key] ?? '';
+                if ($fieldMap[$key]['type'] === 'file' && $value) {
+                    $value = route('lamaran.attachment', ['application' => $app->id, 'field' => $key]);
+                }
+                $row[] = $value;
             }
             return $row;
         });

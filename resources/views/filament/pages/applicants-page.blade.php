@@ -1,20 +1,32 @@
 <x-filament-panels::page>
 
-    {{-- Job Opening Selector --}}
+    {{-- Filter: Perusahaan + Lowongan --}}
     <div class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 p-6">
-        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-            Pilih Lowongan
-        </label>
-        <select
-            wire:model.live="jobOpeningId"
-            class="w-full max-w-lg rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
-            <option value="">— Pilih lowongan —</option>
-            @foreach($this->getJobOpenings() as $opening)
-                <option value="{{ $opening->id }}">
-                    {{ $opening->title }} — {{ $opening->company?->name ?? $opening->company_name }}
-                </option>
-            @endforeach
-        </select>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Perusahaan</label>
+                <select
+                    wire:model.live="companyId"
+                    class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="">— Semua perusahaan —</option>
+                    @foreach($this->getCompanies() as $company)
+                        <option value="{{ $company->id }}">{{ $company->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Lowongan</label>
+                <select
+                    wire:model.live="jobOpeningId"
+                    @if(!$this->companyId) disabled @endif
+                    class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <option value="">— Pilih lowongan —</option>
+                    @foreach($this->getJobOpenings() as $opening)
+                        <option value="{{ $opening->id }}">{{ $opening->title }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
     </div>
 
     {{-- Stats Cards --}}
@@ -27,6 +39,133 @@
             <div class="text-3xl font-extrabold" style="color:{{ $stat['color'] }}">{{ $stat['value'] }}</div>
         </div>
         @endforeach
+    </div>
+    @endif
+
+    {{-- Bulk: Seleksi Berkas (screening → shortlisted/rejected) --}}
+    @if($this->jobOpeningId && in_array($this->statusFilter, ['', 'screening']) && $this->getScreeningCount() > 0)
+    @php $screeningCount = $this->getScreeningCount(); @endphp
+    <div class="fi-section rounded-xl bg-yellow-50 dark:bg-yellow-950/30 ring-1 ring-yellow-200 dark:ring-yellow-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-clipboard-document-check class="w-4 h-4 text-yellow-700 dark:text-yellow-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-yellow-900 dark:text-yellow-100">Siap Seleksi Berkas</div>
+                <div class="text-xs text-yellow-700 dark:text-yellow-400 mt-0.5">
+                    Ada <strong>{{ $screeningCount }}</strong> pelamar dalam tahap peninjauan. Pilih siapa yang lolos.
+                </div>
+            </div>
+        </div>
+        {{ ($this->seleksiBerkasAction) }}
+    </div>
+    @endif
+
+    {{-- Banner: draft jadwal wawancara belum diterapkan --}}
+    @if($this->jobOpeningId && $this->getInterviewDraft())
+    @php $ivDraft = $this->getInterviewDraft(); @endphp
+    <div class="fi-section rounded-xl bg-blue-50 dark:bg-blue-950/30 ring-1 ring-blue-200 dark:ring-blue-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-calendar-days class="w-4 h-4 text-blue-700 dark:text-blue-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-blue-900 dark:text-blue-100">Draft Jadwal Wawancara Tersimpan</div>
+                <div class="text-xs text-blue-700 dark:text-blue-400 mt-0.5">
+                    {{ $ivDraft->interview_date?->translatedFormat('d F Y') }}
+                    @if($ivDraft->interview_time) · {{ substr($ivDraft->interview_time, 0, 5) }} @endif
+                    @if($ivDraft->location) · {{ $ivDraft->location }} @endif
+                    — {{ $ivDraft->invitees()->count() }} pelamar diundang. Status belum berubah.
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            {{ ($this->jadwalWawancaraAction) }}
+            {{ ($this->publishInterviewAction) }}
+        </div>
+    </div>
+    @endif
+
+    {{-- Banner: shortlisted — siap jadwalkan wawancara --}}
+    @if($this->jobOpeningId && in_array($this->statusFilter, ['', 'shortlisted']) && $this->getShortlistedCount() > 0 && !$this->getInterviewDraft())
+    <div class="fi-section rounded-xl bg-sky-50 dark:bg-sky-950/30 ring-1 ring-sky-200 dark:ring-sky-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-sky-100 dark:bg-sky-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-calendar-days class="w-4 h-4 text-sky-700 dark:text-sky-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-sky-900 dark:text-sky-100">Siap Jadwalkan Wawancara</div>
+                <div class="text-xs text-sky-700 dark:text-sky-400 mt-0.5">
+                    <strong>{{ $this->getShortlistedCount() }}</strong> pelamar lolos seleksi berkas. Tentukan jadwal wawancara mereka.
+                </div>
+            </div>
+        </div>
+        {{ ($this->jadwalWawancaraAction) }}
+    </div>
+    @endif
+
+    {{-- Banner: ada draft keputusan seleksi belum diterapkan --}}
+    @if($this->jobOpeningId && $this->getDraftDecisionCount() > 0)
+    @php $draftCount = $this->getDraftDecisionCount(); @endphp
+    <div class="fi-section rounded-xl bg-emerald-50 dark:bg-emerald-950/30 ring-1 ring-emerald-200 dark:ring-emerald-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-check-circle class="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-emerald-900 dark:text-emerald-100">Draft Keputusan Seleksi Berkas Tersimpan</div>
+                <div class="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5">
+                    <strong>{{ $draftCount }}</strong> keputusan belum diterapkan — pelamar belum melihat perubahan.
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            {{ ($this->seleksiBerkasAction) }}
+            {{ ($this->publishScreeningAction) }}
+        </div>
+    </div>
+    @endif
+
+    {{-- Bulk: pindahkan semua Lamaran Masuk ke Screening --}}
+    @if($this->jobOpeningId && in_array($this->statusFilter, ['', 'applied']) && $this->getAppliedCount() > 0)
+    @php $appliedCount = $this->getAppliedCount(); @endphp
+    <div class="fi-section rounded-xl bg-blue-50 dark:bg-blue-950/30 ring-1 ring-blue-200 dark:ring-blue-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-inbox class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-blue-900 dark:text-blue-100">Lamaran Masuk Belum Ditinjau</div>
+                <div class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+                    Ada <strong>{{ $appliedCount }}</strong> lamaran yang belum masuk tahap peninjauan berkas.
+                </div>
+            </div>
+        </div>
+        {{ ($this->bulkMoveToScreeningAction) }}
+    </div>
+    @endif
+
+    {{-- Filter Status + Export --}}
+    @if($this->jobOpeningId)
+    <div class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 px-6 py-4 flex items-center gap-4">
+        <label class="text-sm font-semibold text-gray-700 dark:text-gray-200 shrink-0">Filter Status</label>
+        <select
+            wire:model.live="statusFilter"
+            class="w-full max-w-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option value="">— Semua status —</option>
+            <option value="applied">Lamaran Masuk</option>
+            <option value="screening">Peninjauan Berkas</option>
+            <option value="shortlisted">Lolos Seleksi Berkas</option>
+            <option value="interview">Wawancara</option>
+            <option value="passed">Diterima</option>
+            <option value="rejected">Tidak Dilanjutkan</option>
+        </select>
+        <a href="{{ route('admin.export.applications', array_filter(['job_opening_id' => $this->jobOpeningId, 'status' => $this->statusFilter ?: null])) }}"
+           target="_blank"
+           class="inline-flex items-center gap-1.5 rounded-lg bg-success-600 hover:bg-success-700 px-4 py-2 text-sm font-semibold text-white transition shrink-0">
+            <x-heroicon-m-arrow-down-tray class="w-4 h-4" />
+            Export Excel
+        </a>
     </div>
     @endif
 

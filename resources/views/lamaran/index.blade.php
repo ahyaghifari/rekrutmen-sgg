@@ -3,11 +3,12 @@
 
 @php
 $statusMap = [
-    'applied'   => ['label' => 'Lamaran Masuk',    'badge' => 'badge-applied'],
-    'screening' => ['label' => 'Screening',          'badge' => 'badge-screening'],
-    'interview' => ['label' => 'Wawancara',          'badge' => 'badge-interview'],
-    'passed'    => ['label' => 'Diterima',           'badge' => 'badge-passed'],
-    'rejected'  => ['label' => 'Tidak Dilanjutkan', 'badge' => 'badge-rejected'],
+    'applied'     => ['label' => 'Lamaran Masuk',        'badge' => 'badge-applied'],
+    'screening'   => ['label' => 'Peninjauan Berkas',    'badge' => 'badge-screening'],
+    'shortlisted' => ['label' => 'Lolos Seleksi Berkas', 'badge' => 'badge-interview'],
+    'interview'   => ['label' => 'Wawancara',            'badge' => 'badge-interview'],
+    'passed'      => ['label' => 'Diterima',             'badge' => 'badge-passed'],
+    'rejected'    => ['label' => 'Tidak Dilanjutkan',    'badge' => 'badge-rejected'],
 ];
 @endphp
 
