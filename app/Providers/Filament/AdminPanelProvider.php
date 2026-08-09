@@ -28,6 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('kelola-rekrutmen')
             ->login()
+            ->profile()
             ->colors([
                 'primary' => Color::Blue,
             ])
