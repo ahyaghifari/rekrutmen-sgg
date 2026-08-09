@@ -20,14 +20,16 @@ class CompanySeeder extends Seeder
         ];
 
         foreach ($companies as $data) {
-            Company::create([
-                'hris_code'   => $data['hris_code'],
-                'name'        => $data['name'],
-                'brand_color' => '#042c6c',
-                'logo_path'   => null,
-                'email'       => null,
-                'phone'       => null,
-            ]);
+            Company::firstOrCreate(
+                ['hris_code' => $data['hris_code']],
+                [
+                    'name'        => $data['name'],
+                    'brand_color' => '#042c6c',
+                    'logo_path'   => null,
+                    'email'       => null,
+                    'phone'       => null,
+                ]
+            );
         }
     }
 }
