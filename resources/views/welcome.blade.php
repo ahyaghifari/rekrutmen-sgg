@@ -195,19 +195,30 @@
       <div class="absolute w-[280px] h-[280px] rounded-full -right-[60px] -top-[140px] pointer-events-none bg-white/[0.06]" aria-hidden="true"></div>
       <div class="absolute w-[160px] h-[160px] rounded-full -left-[60px] -bottom-[80px] pointer-events-none bg-white/[0.04]" aria-hidden="true"></div>
       <div class="relative z-[1]">
-        <div class="text-[11.5px] font-bold tracking-[0.1em] uppercase text-white/70 mb-[10px]">Hubungi Tim HR</div>
+        <div class="text-[11.5px] font-bold tracking-[0.1em] uppercase text-white/70 mb-[10px]">Hubungi Tim Rekrutmen</div>
         <h2 id="help-heading" class="m-0 mb-[10px] text-[26px] font-extrabold tracking-[-0.6px]">Butuh bantuan?</h2>
         <p class="m-0 text-[15px] leading-[1.6] text-white/[0.82] max-w-[480px]">Tim rekrutmen kami siap menjawab pertanyaan seputar lowongan dan status lamaran pada hari kerja, 08.00–16.00 WIB.</p>
       </div>
       <div class="relative z-[1] flex flex-col gap-3">
-        <a href="mailto:rekrutmen@syifaglobal.co.id" class="flex items-center gap-3 px-5 py-[14px] rounded-[14px] no-underline text-white bg-white/[0.14] hover:bg-white/[0.22] transition-colors duration-150" style="touch-action:manipulation;">
-          <div class="w-9 h-9 shrink-0 rounded-[10px] grid place-items-center text-sm bg-white/[0.18]" aria-hidden="true"><i class="fa-regular fa-envelope"></i></div>
-          <span class="text-sm font-bold">rekrutmen@syifaglobal.co.id</span>
-        </a>
-        <a href="https://wa.me/628121234567" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 px-5 py-[14px] rounded-[14px] no-underline text-white bg-white/[0.14] hover:bg-white/[0.22] transition-colors duration-150" style="touch-action:manipulation;">
-          <div class="w-9 h-9 shrink-0 rounded-[10px] grid place-items-center text-sm bg-white/[0.18]" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></div>
-          <span class="text-sm font-bold">0812-1234-5678</span>
-        </a>
+        @forelse($contacts as $contact)
+          @if($contact->email)
+            <a href="mailto:{{ $contact->email }}" class="flex items-center gap-3 px-5 py-[14px] rounded-[14px] no-underline text-white bg-white/[0.14] hover:bg-white/[0.22] transition-colors duration-150" style="touch-action:manipulation;">
+              <div class="w-9 h-9 shrink-0 rounded-[10px] grid place-items-center text-sm bg-white/[0.18]" aria-hidden="true"><i class="fa-regular fa-envelope"></i></div>
+              <span class="text-sm font-bold">{{ $contact->name }} &middot; {{ $contact->email }}</span>
+            </a>
+          @endif
+          @if($contact->phone)
+            <a href="https://wa.me/{{ preg_replace('/\D/', '', $contact->phone) }}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 px-5 py-[14px] rounded-[14px] no-underline text-white bg-white/[0.14] hover:bg-white/[0.22] transition-colors duration-150" style="touch-action:manipulation;">
+              <div class="w-9 h-9 shrink-0 rounded-[10px] grid place-items-center text-sm bg-white/[0.18]" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></div>
+              <span class="text-sm font-bold">{{ $contact->name }} &middot; {{ $contact->phone }}</span>
+            </a>
+          @endif
+        @empty
+          <a href="mailto:rekrutmen@syifaglobal.co.id" class="flex items-center gap-3 px-5 py-[14px] rounded-[14px] no-underline text-white bg-white/[0.14] hover:bg-white/[0.22] transition-colors duration-150" style="touch-action:manipulation;">
+            <div class="w-9 h-9 shrink-0 rounded-[10px] grid place-items-center text-sm bg-white/[0.18]" aria-hidden="true"><i class="fa-regular fa-envelope"></i></div>
+            <span class="text-sm font-bold">rekrutmen@syifaglobal.co.id</span>
+          </a>
+        @endforelse
       </div>
     </section>
 

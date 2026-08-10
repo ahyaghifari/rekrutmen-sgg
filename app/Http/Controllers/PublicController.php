@@ -29,7 +29,11 @@ class PublicController extends Controller
             ];
         })->values()->all();
 
-        return view('welcome', compact('openings', 'slides'));
+        $contacts = Company::active()
+            ->where(fn ($q) => $q->whereNotNull('email')->orWhereNotNull('phone'))
+            ->get(['name', 'email', 'phone']);
+
+        return view('welcome', compact('openings', 'slides', 'contacts'));
     }
 
     public function lowongan(JobOpening $jobOpening)

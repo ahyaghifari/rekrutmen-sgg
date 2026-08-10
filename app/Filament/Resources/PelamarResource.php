@@ -57,6 +57,11 @@ class PelamarResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\IconColumn::make('email_verified_at')
+                    ->label('Email Terverifikasi')
+                    ->boolean()
+                    ->getStateUsing(fn (User $record) => filled($record->email_verified_at)),
+
                 Tables\Columns\TextColumn::make('jobApplications_count')
                     ->label('Lamaran')
                     ->counts('jobApplications')
@@ -72,6 +77,14 @@ class PelamarResource extends Resource
             ->filters([])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('reset_verification')
+                    ->label('Reset Verifikasi Email')
+                    ->icon('heroicon-o-envelope')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalDescription('Pelamar harus memverifikasi ulang emailnya sebelum bisa login kembali.')
+                    ->visible(fn (User $record) => filled($record->email_verified_at))
+                    ->action(fn (User $record) => $record->forceFill(['email_verified_at' => null])->save()),
             ])
             ->bulkActions([]);
     }

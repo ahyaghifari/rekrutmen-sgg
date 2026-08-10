@@ -24,6 +24,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmailContr
         return $this->hasAnyRole(['super_admin', 'Super Admin', 'Admin']);
     }
 
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new \App\Notifications\VerifyEmailNotification);
+    }
+
     /**
      * Wajib verifikasi email di production. Di local dianggap selalu terverifikasi
      * biar gak ribet testing pake email asal.

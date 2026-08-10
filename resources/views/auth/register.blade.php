@@ -5,7 +5,7 @@
     <i class="fa-solid fa-arrow-left text-[11px]"></i> Kembali ke beranda
   </a>
 
-  <h2 class="m-0 mb-1.5 text-[26px] font-extrabold text-slate-800 tracking-[-0.7px]">Buat Akun Kandidat</h2>
+  <h2 class="m-0 mb-1.5 text-[26px] font-extrabold text-slate-800 tracking-[-0.7px]">Buat Akun Pelamar</h2>
   <p class="m-0 mb-7 text-sm text-slate-500">Daftar gratis dan mulai melamar di Syifa Global Group.</p>
 
   <div class="sg-card rounded-[20px] p-7 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">

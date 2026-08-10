@@ -17,16 +17,17 @@ class ApplicantDetailPage extends Page
     protected static string  $view                   = 'filament.pages.applicant-detail-page';
     protected static bool    $shouldRegisterNavigation = false;
 
-    public JobApplication $application;
+    public ?JobApplication $application = null;
 
     public function mount(): void
     {
         $id = request('application');
-        abort_if(! $id, 404);
-        $this->application = JobApplication::with([
-            'jobOpening.company.formSections.fields',
-            'answers',
-        ])->findOrFail($id);
+
+        $this->application = $id
+            ? JobApplication::with(['jobOpening.company.formSections.fields', 'answers'])->find($id)
+            : null;
+
+        abort_if(! $this->application, 404);
 
         abort_unless(
             static::isSuperAdmin() || $this->application->jobOpening->company_id === static::companyId(),
@@ -36,11 +37,13 @@ class ApplicantDetailPage extends Page
 
     public function getTitle(): string
     {
-        return 'Detail Pelamar — ' . ($this->application->answersMap()['full_name'] ?? '');
+        return 'Detail Pelamar — ' . ($this->application?->answersMap()['full_name'] ?? '');
     }
 
     public function changeStatus(string $status): void
     {
+        if (! $this->application) return;
+
         $allowed = ['applied', 'screening', 'shortlisted', 'interview', 'passed', 'rejected'];
         if (! in_array($status, $allowed)) return;
 
