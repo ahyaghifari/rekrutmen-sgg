@@ -122,7 +122,10 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
   </div>
 
   @if($openings->isEmpty())
-  <div class="rounded-[16px] border border-dashed border-slate-300 bg-white px-6 py-8 text-center">
+  <div class="sg-card rounded-[16px] px-6 py-8 text-center">
+    <div class="w-11 h-11 rounded-full grid place-items-center mx-auto mb-2.5" style="background:rgba(4,44,108,.07);">
+      <i class="fa-solid fa-briefcase text-navy text-[17px]"></i>
+    </div>
     <div class="text-[13.5px] font-semibold text-slate-500">Belum ada lowongan yang dibuka saat ini.</div>
   </div>
   @else

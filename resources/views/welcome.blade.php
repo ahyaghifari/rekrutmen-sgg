@@ -153,11 +153,21 @@
         <h2 id="lowongan-heading" class="m-0 text-xl font-extrabold text-slate-800 tracking-[-0.4px]">Lowongan Terbuka</h2>
         <span class="text-[13.5px] font-semibold text-slate-500">{{ $openings->count() }} posisi tersedia</span>
       </div>
+      @if($openings->isEmpty())
+      <div class="sg-card rounded-[16px] px-6 py-10 text-center">
+        <div class="w-12 h-12 rounded-full grid place-items-center mx-auto mb-3" style="background:rgba(4,44,108,.07);">
+          <i class="fa-solid fa-briefcase text-navy text-[19px]"></i>
+        </div>
+        <div class="text-[14.5px] font-bold text-slate-800 mb-1">Belum ada lowongan yang dibuka</div>
+        <p class="m-0 text-[13px] text-slate-500">Pantau terus halaman ini, lowongan baru akan segera hadir.</p>
+      </div>
+      @else
       <div class="sg-job-grid">
         @foreach($openings as $opening)
           <x-job-card :opening="$opening" :index="$loop->index" />
         @endforeach
       </div>
+      @endif
     </section>
 
     {{-- Alur Rekrutmen --}}
