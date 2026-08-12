@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\JobOpeningResource\Pages;
 use App\Models\Company;
 use App\Models\JobOpening;
+use App\Models\Quiz;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Tables;
@@ -18,7 +19,7 @@ class JobOpeningResource extends BaseResource
     protected static ?string $navigationLabel = 'Lowongan';
     protected static ?string $modelLabel = 'Lowongan';
     protected static ?string $pluralModelLabel = 'Lowongan';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 2;
 
     public static function getEloquentQuery(): Builder
     {
@@ -92,6 +93,19 @@ class JobOpeningResource extends BaseResource
                     ->label('Aktif')
                     ->default(true)
                     ->columnSpanFull(),
+            ])->columns(2),
+
+            Forms\Components\Section::make('Tes Online')->schema([
+                Forms\Components\Select::make('quiz_id')
+                    ->label('Kuis')
+                    ->options(Quiz::query()->pluck('name', 'id'))
+                    ->searchable()
+                    ->nullable()
+                    ->helperText('Pilih kuis yang dipakai untuk lowongan ini. Kelola bank soal di menu Kuis.'),
+
+                Forms\Components\Toggle::make('requires_psychotest')
+                    ->label('Wajib Psikotes Offline')
+                    ->helperText('Tandai kalau posisi ini juga mewajibkan psikotes offline tambahan (di luar tes online sistem).'),
             ])->columns(2),
 
             Forms\Components\Section::make('Detail')->schema([

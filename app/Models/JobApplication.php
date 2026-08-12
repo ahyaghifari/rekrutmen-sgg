@@ -25,9 +25,16 @@ class JobApplication extends Model
         'user_id',
         'job_opening_id',
         'status',
+        'quiz_sent_at',
+        'quiz_result',
+        'psychotest_completed_at',
+        'interview_result',
     ];
 
-    protected $casts = [];
+    protected $casts = [
+        'quiz_sent_at'             => 'datetime',
+        'psychotest_completed_at'  => 'datetime',
+    ];
 
     /**
      * Konstanta status + daftar status yang dianggap "aktif" (masih berjalan).
@@ -36,6 +43,8 @@ class JobApplication extends Model
     public const STATUS_SCREENING    = 'screening';
     public const STATUS_SHORTLISTED  = 'shortlisted';
     public const STATUS_INTERVIEW    = 'interview';
+    public const STATUS_MCU          = 'mcu';
+    public const STATUS_ONBOARDING   = 'onboarding';
     public const STATUS_PASSED       = 'passed';
     public const STATUS_REJECTED     = 'rejected';
 
@@ -44,6 +53,30 @@ class JobApplication extends Model
         self::STATUS_SCREENING,
         self::STATUS_INTERVIEW,
     ];
+
+    /**
+     * Begitu status jadi shortlisted (lulus berkas), pelamar resmi jadi
+     * kandidat — row Candidate dibuat otomatis di sini supaya konsisten
+     * berapa pun jalur yang mengubah status ke shortlisted (ScreeningDecision,
+     * perubahan manual dari detail halaman, dst).
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (JobApplication $app) {
+            if (! $app->wasChanged('status') || $app->status !== self::STATUS_SHORTLISTED) {
+                return;
+            }
+
+            $candidate = Candidate::firstOrCreate(
+                ['user_id' => $app->user_id],
+                ['job_application_id' => $app->id, 'name' => $app->answersMap()['full_name'] ?? $app->user->name]
+            );
+
+            if ($candidate->job_application_id !== $app->id) {
+                $candidate->update(['job_application_id' => $app->id]);
+            }
+        });
+    }
 
     public function answers(): HasMany
     {
@@ -74,6 +107,16 @@ class JobApplication extends Model
     public function offeringLetter(): HasOne
     {
         return $this->hasOne(OfferingLetter::class);
+    }
+
+    public function quizAttempt(): HasOne
+    {
+        return $this->hasOne(QuizAttempt::class);
+    }
+
+    public function mcuInvitee(): HasOne
+    {
+        return $this->hasOne(McuInvitee::class);
     }
 
     /**

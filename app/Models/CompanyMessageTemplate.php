@@ -15,6 +15,9 @@ class CompanyMessageTemplate extends Model
     public const EVENT_SCREENING_REJECTED  = 'screening_rejected';
     public const EVENT_SCREENING_PASSED    = 'screening_passed';
     public const EVENT_INTERVIEW_SCHEDULED = 'interview_scheduled';
+    public const EVENT_QUIZ_SENT           = 'quiz_sent';
+    public const EVENT_MCU_SCHEDULED       = 'mcu_scheduled';
+    public const EVENT_ONBOARDING_INVITE   = 'onboarding_invite';
 
     public static function forCompanyEvent(int $companyId, string $event): ?self
     {

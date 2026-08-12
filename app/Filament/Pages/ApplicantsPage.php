@@ -6,17 +6,12 @@ use App\Filament\Concerns\ScopedToCompany;
 use App\Models\ApplicationNotification;
 use App\Models\Company;
 use App\Models\CompanyMessageTemplate;
-use App\Models\InterviewSchedule;
 use App\Models\JobApplication;
 use App\Models\JobOpening;
 use App\Models\ScreeningDecision;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\TimePicker;
 use Illuminate\Support\HtmlString;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -34,8 +29,8 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
     use InteractsWithTable, InteractsWithActions, InteractsWithForms, ScopedToCompany;
 
     protected static ?string $navigationIcon  = 'heroicon-o-users';
-    protected static ?string $navigationLabel = 'Pelamar';
-    protected static ?string $title           = 'Pelamar';
+    protected static ?string $navigationLabel = 'Daftar Pelamar';
+    protected static ?string $title           = 'Daftar Pelamar';
     protected static string  $view            = 'filament.pages.applicants-page';
     protected static ?int    $navigationSort  = 4;
 
@@ -268,153 +263,6 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
             });
     }
 
-    // ── Interview scheduling ─────────────────────────────────────────────────
-
-    public function getShortlistedCount(): int
-    {
-        if (! $this->jobOpeningId) return 0;
-        return JobApplication::where('job_opening_id', $this->jobOpeningId)
-            ->where('status', 'shortlisted')->count();
-    }
-
-    public function getInterviewDraft(): ?InterviewSchedule
-    {
-        return $this->jobOpeningId ? InterviewSchedule::draftForOpening($this->jobOpeningId) : null;
-    }
-
-    public function jadwalWawancaraAction(): Action
-    {
-        $shortlisted = $this->jobOpeningId
-            ? JobApplication::with(['answers' => fn ($q) => $q->where('field_key', 'full_name')])
-                ->where('job_opening_id', $this->jobOpeningId)
-                ->where('status', 'shortlisted')
-                ->get()
-            : collect();
-
-        $options = $shortlisted->mapWithKeys(fn ($app) => [
-            $app->id => $app->answers->firstWhere('field_key', 'full_name')?->value ?? '(tanpa nama)',
-        ])->all();
-
-        $draft        = $this->getInterviewDraft();
-        $draftInvited = $draft ? $draft->invitees()->pluck('job_application_id')->toArray() : [];
-
-        return Action::make('jadwalWawancara')
-            ->label('Jadwalkan Wawancara (' . count($options) . ' pelamar)')
-            ->icon('heroicon-m-calendar-days')
-            ->color('info')
-            ->fillForm([
-                'interview_date' => $draft?->interview_date?->format('Y-m-d'),
-                'interview_time' => $draft?->interview_time,
-                'location'       => $draft?->location,
-                'notes'          => $draft?->notes,
-                'invited_ids'    => $draftInvited,
-            ])
-            ->form([
-                DatePicker::make('interview_date')
-                    ->label('Tanggal Wawancara')
-                    ->required()
-                    ->native(false)
-                    ->displayFormat('d/m/Y'),
-                TimePicker::make('interview_time')
-                    ->label('Waktu')
-                    ->seconds(false),
-                TextInput::make('location')
-                    ->label('Lokasi / Link Meeting')
-                    ->placeholder('Contoh: Zoom https://... atau Jl. Merdeka No. 1'),
-                Textarea::make('notes')
-                    ->label('Catatan untuk Pelamar')
-                    ->rows(2)
-                    ->placeholder('Informasi tambahan yang perlu diketahui pelamar'),
-                CheckboxList::make('invited_ids')
-                    ->label('Pilih Pelamar yang Diundang')
-                    ->helperText('Semua yang dipilih akan diundang wawancara. Draft ini belum mengubah status pelamar.')
-                    ->options($options)
-                    ->searchable()
-                    ->bulkToggleable()
-                    ->columns(1),
-            ])
-            ->modalHeading('Jadwalkan Wawancara')
-            ->modalSubmitActionLabel('Simpan Draft Jadwal')
-            ->modalCancelActionLabel('Batal')
-            ->modalWidth('lg')
-            ->action(function (array $data): void {
-                if (! $this->jobOpeningId) return;
-
-                InterviewSchedule::saveDraft($this->jobOpeningId, $data, $data['invited_ids'] ?? []);
-
-                \Filament\Notifications\Notification::make()
-                    ->title('Draft jadwal wawancara tersimpan. Status pelamar belum berubah.')
-                    ->warning()
-                    ->send();
-            });
-    }
-
-    public function publishInterviewAction(): Action
-    {
-        $draft = $this->getInterviewDraft();
-
-        $invitees = $draft
-            ? $draft->invitees()->with(['jobApplication.answers'])->get()
-            : collect();
-
-        $inviteeNames = $invitees->map(fn ($inv) =>
-            $inv->jobApplication->answers->firstWhere('field_key', 'full_name')?->value ?? '—'
-        )->values();
-
-        $namesHtml = $inviteeNames->map(fn ($name) =>
-            '<li style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">'
-            . '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;"></span>'
-            . e($name) . '</li>'
-        )->join('');
-
-        $dateStr = $draft?->interview_date?->translatedFormat('d F Y') ?? '-';
-        $timeStr = $draft?->interview_time ? substr($draft->interview_time, 0, 5) : '-';
-
-        return Action::make('publishInterview')
-            ->label('Terapkan Jadwal (' . $invitees->count() . ')')
-            ->icon('heroicon-m-check-circle')
-            ->color('success')
-            ->modalHeading('Terapkan Jadwal Wawancara?')
-            ->modalDescription("Tanggal: {$dateStr}  |  Waktu: {$timeStr}" . ($draft?->location ? "  |  {$draft->location}" : ''))
-            ->form([
-                Placeholder::make('diundang')
-                    ->label("{$invitees->count()} Pelamar Diundang")
-                    ->content(new HtmlString(
-                        '<ul style="border:1px solid #e5e7eb;border-radius:8px;max-height:200px;overflow-y:auto;margin:0;padding:0;list-style:none;">'
-                        . ($namesHtml ?: '<li style="padding:8px 12px;font-size:13px;color:#9ca3af;">Tidak ada</li>')
-                        . '</ul>'
-                    )),
-            ])
-            ->modalSubmitActionLabel('Terapkan Saja')
-            ->modalCancelActionLabel('Batal')
-            ->modalWidth('lg')
-            ->extraModalFooterActions([
-                Action::make('publishAndNotify')
-                    ->label('Terapkan & Beritahu')
-                    ->icon('heroicon-m-paper-airplane')
-                    ->color('primary')
-                    ->action(function (): void {
-                        $draft = $this->getInterviewDraft();
-                        if (! $draft) return;
-                        $draft->apply();
-                        $this->sendNotificationsForOpening($this->jobOpeningId);
-                        $this->resetTable();
-                        \Filament\Notifications\Notification::make()
-                            ->title('Jadwal diterapkan. Undangan wawancara terkirim.')
-                            ->success()->send();
-                    }),
-            ])
-            ->action(function (): void {
-                $draft = $this->getInterviewDraft();
-                if (! $draft) return;
-                $draft->apply();
-                $this->resetTable();
-                \Filament\Notifications\Notification::make()
-                    ->title('Jadwal diterapkan. Draft undangan tersimpan di halaman Notifikasi.')
-                    ->success()->send();
-            });
-    }
-
     private function sendNotificationsForOpening(string $jobOpeningId): void
     {
         $drafts = ApplicationNotification::with(['jobApplication.user'])
@@ -468,12 +316,11 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
         $base = fn () => JobApplication::where('job_opening_id', $this->jobOpeningId);
 
         return [
-            ['label' => 'Total Pelamar',   'value' => $base()->count(),                               'color' => '#042c6c', 'icon' => 'heroicon-o-users'],
-            ['label' => 'Lamaran Masuk',   'value' => $base()->where('status', 'applied')->count(),   'color' => '#64748b', 'icon' => 'heroicon-o-inbox'],
-            ['label' => 'Screening',        'value' => $base()->where('status', 'screening')->count(), 'color' => '#0284c7', 'icon' => 'heroicon-o-magnifying-glass'],
-            ['label' => 'Wawancara',        'value' => $base()->where('status', 'interview')->count(), 'color' => '#b45309', 'icon' => 'heroicon-o-chat-bubble-left-right'],
-            ['label' => 'Diterima',         'value' => $base()->where('status', 'passed')->count(),    'color' => '#047C54', 'icon' => 'heroicon-o-check-badge'],
-            ['label' => 'Tidak Dilanjutkan','value' => $base()->where('status', 'rejected')->count(),  'color' => '#dc2626', 'icon' => 'heroicon-o-x-circle'],
+            ['label' => 'Total Pelamar',    'value' => $base()->count(),                                'color' => '#042c6c', 'icon' => 'heroicon-o-users'],
+            ['label' => 'Lamaran Masuk',    'value' => $base()->where('status', 'applied')->count(),    'color' => '#64748b', 'icon' => 'heroicon-o-inbox'],
+            ['label' => 'Screening',        'value' => $base()->where('status', 'screening')->count(),  'color' => '#0284c7', 'icon' => 'heroicon-o-magnifying-glass'],
+            ['label' => 'Lolos Berkas',     'value' => $base()->where('status', 'shortlisted')->count(),'color' => '#047C54', 'icon' => 'heroicon-o-check-badge'],
+            ['label' => 'Tidak Dilanjutkan','value' => $base()->where('status', 'rejected')->count(),   'color' => '#dc2626', 'icon' => 'heroicon-o-x-circle'],
         ];
     }
 

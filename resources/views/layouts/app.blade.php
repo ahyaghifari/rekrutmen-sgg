@@ -44,6 +44,16 @@
            class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('lamaran.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
           <i class="fa-solid fa-file-lines mr-1.5 text-xs"></i>Lamaran Saya
         </a>
+        @if(auth()->user()->candidate)
+        <a href="{{ route('data-diri.edit') }}"
+           class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('data-diri.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
+          <i class="fa-solid fa-id-card mr-1.5 text-xs"></i>Data Diri Kandidat
+        </a>
+        <a href="{{ route('tes-online.show') }}"
+           class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('tes-online.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
+          <i class="fa-solid fa-computer mr-1.5 text-xs"></i>Tes Online
+        </a>
+        @endif
       </nav>
 
       {{-- Desktop: user dropdown + dark toggle --}}
@@ -119,6 +129,16 @@
                class="sg-dd-item flex items-center gap-2 px-4 py-[11px] text-[13px] font-semibold text-slate-700 no-underline transition-colors duration-150">
               <i class="fa-solid fa-file-lines w-4 text-center text-slate-400"></i>Lamaran Saya
             </a>
+            @if(auth()->user()->candidate)
+            <a href="{{ route('data-diri.edit') }}"
+               class="sg-dd-item flex items-center gap-2 px-4 py-[11px] text-[13px] font-semibold text-slate-700 no-underline transition-colors duration-150">
+              <i class="fa-solid fa-id-card w-4 text-center text-slate-400"></i>Data Diri Kandidat
+            </a>
+            <a href="{{ route('tes-online.show') }}"
+               class="sg-dd-item flex items-center gap-2 px-4 py-[11px] text-[13px] font-semibold text-slate-700 no-underline transition-colors duration-150">
+              <i class="fa-solid fa-computer w-4 text-center text-slate-400"></i>Tes Online
+            </a>
+            @endif
             <div class="sg-dd-border border-t border-slate-100">
               <form method="POST" action="{{ route('logout') }}">
                 @csrf

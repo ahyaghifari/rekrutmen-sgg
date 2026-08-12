@@ -24,6 +24,8 @@ class JobOpening extends Model
         'is_active',
         'description',
         'requirements',
+        'requires_psychotest',
+        'quiz_id',
     ];
 
     protected $casts = [
@@ -31,6 +33,7 @@ class JobOpening extends Model
         'quota'                 => 'integer',
         'max_applicants'        => 'integer',
         'applications_deadline' => 'date',
+        'requires_psychotest'   => 'boolean',
     ];
 
     public function company(): BelongsTo
@@ -41,6 +44,11 @@ class JobOpening extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    public function quiz(): BelongsTo
+    {
+        return $this->belongsTo(Quiz::class);
     }
 
     /**

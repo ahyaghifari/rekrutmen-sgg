@@ -68,6 +68,9 @@ class ApplicationNotification extends Model
         return match ($event) {
             CompanyMessageTemplate::EVENT_SCREENING_PASSED    => "Selamat! Kamu Lolos Seleksi Berkas – {$jobTitle}",
             CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED => "Undangan Wawancara – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_QUIZ_SENT           => "Tes Online Sudah Bisa Dikerjakan – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_MCU_SCHEDULED       => "Jadwal Medical Check Up – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_ONBOARDING_INVITE   => "Selamat Bergabung! Undangan TTD & Onboarding – {$jobTitle}",
             default                                           => "Update Lamaran Kamu – {$jobTitle}",
         };
     }
@@ -84,6 +87,22 @@ class ApplicationNotification extends Model
             $location = $extra['location'] ? "\nLokasi/Link: {$extra['location']}" : '';
             $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
             return "Halo {$name},\n\nSelamat! Kamu terpilih untuk mengikuti tahap wawancara posisi {$jobTitle}.\n\nWawancara dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
+        }
+
+        if ($event === CompanyMessageTemplate::EVENT_QUIZ_SENT) {
+            return "Halo {$name},\n\nSelamat! Kamu lolos ke tahap tes online untuk posisi {$jobTitle}.\n\nTes bisa kamu kerjakan kapan saja lewat dashboard akunmu. Perlu diperhatikan: begitu kamu menekan tombol \"Mulai Tes\", pengerjaan harus diselesaikan dalam batas waktu yang ditentukan — jadi pastikan waktumu cukup sebelum memulai.\n\nSemangat mengerjakan!\n\nSalam,\nTim Rekrutmen";
+        }
+
+        if ($event === CompanyMessageTemplate::EVENT_MCU_SCHEDULED) {
+            $date     = $extra['interview_date'] ?? '-';
+            $time     = $extra['interview_time'] ? " pukul {$extra['interview_time']}" : '';
+            $location = $extra['location'] ? "\nLokasi: {$extra['location']}" : '';
+            $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
+            return "Halo {$name},\n\nSelamat! Kamu lolos tahap wawancara untuk posisi {$jobTitle} dan diminta melakukan Medical Check Up (MCU).\n\nMCU dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
+        }
+
+        if ($event === CompanyMessageTemplate::EVENT_ONBOARDING_INVITE) {
+            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lolos seluruh tahap seleksi untuk posisi {$jobTitle} di Syifa Global Group.\n\nLangkah terakhir: penandatanganan kontrak dan onboarding. Tim rekrutmen kami akan segera menghubungimu untuk jadwal dan detail lebih lanjut.\n\nSelamat bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
         }
 
         return "Halo {$name},\n\nTerima kasih telah melamar untuk posisi {$jobTitle}.\n\nSetelah melalui proses seleksi berkas, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nJangan menyerah ya! Terus tingkatkan diri dan semoga kesuksesan selalu menyertaimu.\n\nSalam hangat,\nTim Rekrutmen";

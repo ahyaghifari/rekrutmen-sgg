@@ -1,9 +1,11 @@
 <?php
 
 use App\Exports\ApplicationsExport;
+use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\QuizController;
 use App\Models\JobOpening;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
@@ -29,6 +31,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/data-diri-kandidat', [CandidateProfileController::class, 'edit'])->name('data-diri.edit');
+    Route::patch('/data-diri-kandidat', [CandidateProfileController::class, 'update'])->name('data-diri.update');
+    Route::get('/data-diri-kandidat/dokumen/{document}', [CandidateProfileController::class, 'downloadDocument'])->name('data-diri.dokumen');
+
+    Route::get('/tes-online', [QuizController::class, 'show'])->name('tes-online.show');
+    Route::post('/tes-online/mulai', [QuizController::class, 'start'])->name('tes-online.mulai');
+    Route::get('/tes-online/kerjakan', [QuizController::class, 'work'])->name('tes-online.kerjakan');
+    Route::post('/tes-online/submit', [QuizController::class, 'submit'])->middleware('throttle:6,1')->name('tes-online.submit');
 });
 
 // Admin export — protected by Filament auth guard

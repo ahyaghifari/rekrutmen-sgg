@@ -20,6 +20,7 @@ class CompanyResource extends BaseResource
     protected static ?string $navigationLabel = 'Perusahaan';
     protected static ?string $modelLabel = 'Perusahaan';
     protected static ?string $pluralModelLabel = 'Perusahaan';
+    protected static ?string $navigationGroup = 'Perusahaan & Lowongan';
     protected static ?int $navigationSort = 1;
 
     public static function getEloquentQuery(): Builder
@@ -196,7 +197,7 @@ class CompanyResource extends BaseResource
             ]);
     }
 
-    public static function getRelationManagers(): array
+    public static function getRelations(): array
     {
         return [
             FormSectionsRelationManager::class,
