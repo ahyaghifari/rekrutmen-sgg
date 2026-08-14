@@ -67,13 +67,6 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
                 ->minItems(2)
                 ->addActionLabel('Tambah Pilihan')
                 ->columnSpanFull(),
-
-            Forms\Components\TextInput::make('points')
-                ->label('Poin')
-                ->numeric()
-                ->default(1)
-                ->minValue(1)
-                ->required(),
         ];
     }
 
@@ -97,7 +90,6 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
                 Tables\Columns\ImageColumn::make('image_path')->label('Gambar')->disk('public')->height(40),
                 Tables\Columns\TextColumn::make('question')->label('Pertanyaan')->limit(60),
                 Tables\Columns\TextColumn::make('correct_option')->label('Jawaban Benar')->badge()->color('success'),
-                Tables\Columns\TextColumn::make('points')->label('Poin'),
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')

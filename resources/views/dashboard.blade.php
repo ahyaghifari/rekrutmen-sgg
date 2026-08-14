@@ -3,14 +3,16 @@
 
 @php
 $statusMap = [
-    'applied'     => ['label' => 'Lamaran Masuk',    'badge' => 'badge-applied',      'icon' => 'fa-paper-plane'],
-    'screening'   => ['label' => 'Peninjauan Berkas','badge' => 'badge-screening',    'icon' => 'fa-magnifying-glass'],
-    'shortlisted' => ['label' => 'Lolos Seleksi Berkas','badge' => 'badge-interview', 'icon' => 'fa-clipboard-check'],
-    'interview'   => ['label' => 'Wawancara',        'badge' => 'badge-interview',    'icon' => 'fa-comments'],
-    'passed'      => ['label' => 'Diterima',         'badge' => 'badge-passed',       'icon' => 'fa-circle-check'],
-    'rejected'    => ['label' => 'Tidak Dilanjutkan','badge' => 'badge-rejected',     'icon' => 'fa-circle-xmark'],
+    'applied'     => ['label' => 'Lamaran Masuk',      'badge' => 'badge-applied',   'icon' => 'fa-paper-plane'],
+    'screening'   => ['label' => 'Peninjauan Berkas',  'badge' => 'badge-screening', 'icon' => 'fa-magnifying-glass'],
+    'shortlisted' => ['label' => 'Tes Online',         'badge' => 'badge-interview', 'icon' => 'fa-laptop'],
+    'interview'   => ['label' => 'Wawancara',          'badge' => 'badge-interview', 'icon' => 'fa-comments'],
+    'mcu'         => ['label' => 'Medical Check Up',   'badge' => 'badge-interview', 'icon' => 'fa-heart-pulse'],
+    'onboarding'  => ['label' => 'TTD & Onboarding',   'badge' => 'badge-passed',    'icon' => 'fa-signature'],
+    'passed'      => ['label' => 'Diterima',           'badge' => 'badge-passed',    'icon' => 'fa-circle-check'],
+    'rejected'    => ['label' => 'Tidak Dilanjutkan',  'badge' => 'badge-rejected',  'icon' => 'fa-circle-xmark'],
 ];
-$activeApp = $applications->first(fn($a) => in_array($a->status, ['applied','screening','shortlisted','interview']));
+$activeApp = $applications->first(fn($a) => in_array($a->status, ['applied','screening','shortlisted','interview','mcu','onboarding']));
 $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rejected']));
 
 
@@ -65,22 +67,22 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
 
     {{-- Mini timeline --}}
     @php
-      $tlBrand = $activeApp->jobOpening->company?->brand_color ?? '#042c6c';
+      $tlBrand      = $activeApp->jobOpening->company?->brand_color ?? '#042c6c';
+      $tlRequiresMcu = $activeApp->jobOpening->company?->requires_mcu ?? true;
+
       $tlSteps = [
-        ['label' => 'Lamaran Masuk',     'icon' => 'fa-paper-plane',      'sub' => 'Formulir terkirim'],
-        ['label' => 'Peninjauan Berkas', 'icon' => 'fa-magnifying-glass', 'sub' => 'Tinjauan awal'],
-        ['label' => 'Seleksi Berkas',    'icon' => 'fa-clipboard-check',  'sub' => 'Keputusan lanjut'],
-        ['label' => 'Wawancara',         'icon' => 'fa-comments',          'sub' => 'Jadwal dikirim'],
-        ['label' => 'Keputusan',         'icon' => 'fa-award',             'sub' => 'Hasil akhir'],
+        ['status' => 'applied',     'label' => 'Lamaran Masuk',     'icon' => 'fa-paper-plane',      'sub' => 'Formulir terkirim'],
+        ['status' => 'screening',   'label' => 'Peninjauan Berkas', 'icon' => 'fa-magnifying-glass', 'sub' => 'Tinjauan awal'],
+        ['status' => 'shortlisted', 'label' => 'Tes Online',        'icon' => 'fa-laptop',           'sub' => 'Kerjakan tes'],
+        ['status' => 'interview',   'label' => 'Wawancara',         'icon' => 'fa-comments',         'sub' => 'Jadwal dikirim'],
       ];
-      $curStep = match($activeApp->status) {
-        'applied'            => 0,
-        'screening'          => 1,
-        'shortlisted'        => 2,
-        'interview'          => 3,
-        'passed', 'rejected' => 4,
-        default              => 0,
-      };
+      if ($tlRequiresMcu) {
+        $tlSteps[] = ['status' => 'mcu', 'label' => 'MCU', 'icon' => 'fa-heart-pulse', 'sub' => 'Medical check up'];
+      }
+      $tlSteps[] = ['status' => 'onboarding', 'label' => 'TTD & Onboarding', 'icon' => 'fa-signature', 'sub' => 'Kontrak & orientasi'];
+
+      $curStep = collect($tlSteps)->search(fn ($s) => $s['status'] === $activeApp->status);
+      if ($curStep === false) $curStep = 0;
       $lastIdx = count($tlSteps) - 1;
     @endphp
     <div class="sg-tl-widget mt-5 pt-5 sg-dd-border border-t" style="display:flex;gap:0;">
@@ -110,6 +112,14 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
       @endforeach
     </div>
     <div class="mt-3 text-[12px] text-slate-400">Dikirim {{ $activeApp->created_at->translatedFormat('j F Y') }}</div>
+
+    @if($activeApp->status === 'shortlisted' && $activeApp->quiz_sent_at && ! $activeApp->quiz_result)
+    <a href="{{ route('tes-online.show') }}"
+       class="mt-4 flex items-center justify-center gap-2 w-full py-[12px] rounded-[12px] text-white text-[13.5px] font-bold no-underline transition-opacity duration-150 hover:opacity-90"
+       style="background:{{ $tlBrand }};">
+      <i class="fa-solid fa-laptop text-xs"></i>Laksanakan Tes Online
+    </a>
+    @endif
   </div>
 </div>
 @endif

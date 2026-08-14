@@ -3,39 +3,43 @@
 
 @php
 $statusMap = [
-    'applied'     => ['label' => 'Lamaran Masuk',        'badge' => 'badge-applied',   'icon' => 'fa-paper-plane'],
-    'screening'   => ['label' => 'Peninjauan Berkas',    'badge' => 'badge-screening', 'icon' => 'fa-magnifying-glass'],
-    'shortlisted' => ['label' => 'Lolos Seleksi Berkas', 'badge' => 'badge-interview', 'icon' => 'fa-clipboard-check'],
-    'interview'   => ['label' => 'Wawancara',            'badge' => 'badge-interview', 'icon' => 'fa-comments'],
-    'passed'      => ['label' => 'Diterima',             'badge' => 'badge-passed',    'icon' => 'fa-circle-check'],
-    'rejected'    => ['label' => 'Tidak Dilanjutkan',    'badge' => 'badge-rejected',  'icon' => 'fa-circle-xmark'],
+    'applied'     => ['label' => 'Lamaran Masuk',      'badge' => 'badge-applied',   'icon' => 'fa-paper-plane'],
+    'screening'   => ['label' => 'Peninjauan Berkas',  'badge' => 'badge-screening', 'icon' => 'fa-magnifying-glass'],
+    'shortlisted' => ['label' => 'Tes Online',         'badge' => 'badge-interview', 'icon' => 'fa-laptop'],
+    'interview'   => ['label' => 'Wawancara',          'badge' => 'badge-interview', 'icon' => 'fa-comments'],
+    'mcu'         => ['label' => 'Medical Check Up',   'badge' => 'badge-interview', 'icon' => 'fa-heart-pulse'],
+    'onboarding'  => ['label' => 'TTD & Onboarding',   'badge' => 'badge-passed',    'icon' => 'fa-signature'],
+    'passed'      => ['label' => 'Diterima',           'badge' => 'badge-passed',    'icon' => 'fa-circle-check'],
+    'rejected'    => ['label' => 'Tidak Dilanjutkan',  'badge' => 'badge-rejected',  'icon' => 'fa-circle-xmark'],
 ];
-$steps = [
-    ['label' => 'Lamaran Masuk',     'sub' => 'Formulir terkirim',         'icon' => 'fa-paper-plane'],
-    ['label' => 'Peninjauan Berkas', 'sub' => 'Tinjauan berkas awal',      'icon' => 'fa-magnifying-glass'],
-    ['label' => 'Seleksi Berkas',    'sub' => 'Keputusan lanjut/terhenti', 'icon' => 'fa-clipboard-check'],
-    ['label' => 'Wawancara',         'sub' => 'Jadwal akan dikirim',       'icon' => 'fa-comments'],
-    ['label' => 'Keputusan',         'sub' => match($application->status) {
-        'passed'   => 'Selamat, diterima!',
-        'rejected' => 'Tidak dilanjutkan',
-        default    => 'Menunggu keputusan',
-    }, 'icon' => match($application->status) {
-        'passed'   => 'fa-circle-check',
-        'rejected' => 'fa-circle-xmark',
-        default    => 'fa-award',
-    }],
-];
-$currentStep = match($application->status) {
-    'applied'            => 0,
-    'screening'          => 1,
-    'shortlisted'        => 2,
-    'interview'          => 3,
-    'passed', 'rejected' => 4,
-    default              => 0,
-};
-$isRejected  = $application->status === 'rejected';
-$answers     = $application->answersMap();
 $co          = $application->jobOpening->company;
+$requiresMcu = $co?->requires_mcu ?? true;
+
+$steps = [
+    ['status' => 'applied',     'label' => 'Lamaran Masuk',     'sub' => 'Formulir terkirim',    'icon' => 'fa-paper-plane'],
+    ['status' => 'screening',   'label' => 'Peninjauan Berkas', 'sub' => 'Tinjauan berkas awal', 'icon' => 'fa-magnifying-glass'],
+    ['status' => 'shortlisted', 'label' => 'Tes Online',        'sub' => 'Kerjakan tes',         'icon' => 'fa-laptop'],
+    ['status' => 'interview',   'label' => 'Wawancara',         'sub' => 'Jadwal dikirim',       'icon' => 'fa-comments'],
+];
+if ($requiresMcu) {
+    $steps[] = ['status' => 'mcu', 'label' => 'MCU', 'sub' => 'Medical check up', 'icon' => 'fa-heart-pulse'];
+}
+$steps[] = ['status' => 'onboarding', 'label' => 'TTD & Onboarding', 'sub' => 'Kontrak & orientasi', 'icon' => 'fa-signature'];
+$steps[] = ['status' => 'passed', 'label' => 'Keputusan', 'sub' => match ($application->status) {
+    'passed'   => 'Selamat, diterima!',
+    'rejected' => 'Tidak dilanjutkan',
+    default    => 'Menunggu keputusan',
+}, 'icon' => match ($application->status) {
+    'passed'   => 'fa-circle-check',
+    'rejected' => 'fa-circle-xmark',
+    default    => 'fa-award',
+}];
+
+$isRejected  = $application->status === 'rejected';
+$currentStep = $isRejected
+    ? count($steps) - 1
+    : (collect($steps)->search(fn ($s) => $s['status'] === $application->status) ?: 0);
+$answers     = $application->answersMap();
 $brand       = $co?->brand_color ?? '#042c6c';
 $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#0f6e3d'];
 @endphp

@@ -8,10 +8,10 @@ use App\Models\Company;
 use App\Models\CompanyMessageTemplate;
 use App\Models\JobApplication;
 use App\Models\JobOpening;
+use App\Mail\ApplicantNotificationMail;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -21,6 +21,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Mail;
 
 class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
 {
@@ -94,46 +95,51 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
             ->where('status', 'shortlisted')->whereNull('quiz_sent_at')->count();
     }
 
-    /** Aktifkan tes untuk semua kandidat lolos berkas yang belum diaktifkan. */
+    /** Aktifkan tes untuk semua kandidat lolos berkas yang belum diaktifkan, langsung kirim email. */
+    private function activateAndNotify(JobApplication $app): void
+    {
+        $app->update(['quiz_sent_at' => now()]);
+        ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_QUIZ_SENT);
+
+        $notif = ApplicationNotification::where('job_application_id', $app->id)
+            ->where('event', CompanyMessageTemplate::EVENT_QUIZ_SENT)
+            ->where('status', 'draft')
+            ->latest()->first();
+
+        if ($notif && $app->user) {
+            Mail::to($app->user->email)->send(new ApplicantNotificationMail($notif));
+            $notif->update(['status' => 'sent', 'sent_at' => now()]);
+        }
+    }
+
     public function aktifkanTesAction(): Action
     {
-        $candidates = $this->jobOpeningId
-            ? JobApplication::with(['answers' => fn ($q) => $q->where('field_key', 'full_name')])
-                ->where('job_opening_id', $this->jobOpeningId)
-                ->where('status', 'shortlisted')->whereNull('quiz_sent_at')
-                ->get()
-            : collect();
-
-        $options = $candidates->mapWithKeys(fn ($app) => [
-            $app->id => $app->answers->firstWhere('field_key', 'full_name')?->value ?? '(tanpa nama)',
-        ])->all();
+        $count = $this->getBelumDiaktifkanCount();
 
         return Action::make('aktifkanTes')
-            ->label('Aktifkan Tes (' . count($options) . ' kandidat)')
+            ->label("Aktifkan Tes untuk Semua ({$count} kandidat)")
             ->icon('heroicon-m-play')
             ->color('info')
-            ->fillForm(['invited_ids' => array_keys($options)])
-            ->form([
-                CheckboxList::make('invited_ids')
-                    ->label('Pilih Kandidat')
-                    ->options($options)->searchable()->bulkToggleable()->columns(1),
-            ])
+            ->requiresConfirmation()
             ->modalHeading('Aktifkan Tes Online')
-            ->modalSubmitActionLabel('Aktifkan & Kirim Notifikasi')
+            ->modalDescription("Tes akan langsung diaktifkan untuk {$count} kandidat lolos seleksi berkas yang belum diaktifkan, dan email pemberitahuan langsung terkirim ke masing-masing kandidat.")
+            ->modalSubmitActionLabel('Aktifkan & Kirim Email')
             ->modalCancelActionLabel('Batal')
-            ->modalWidth('lg')
-            ->action(function (array $data): void {
-                $ids = $data['invited_ids'] ?? [];
-                $apps = JobApplication::whereIn('id', $ids)->with('jobOpening')->get();
+            ->action(function (): void {
+                if (! $this->jobOpeningId) return;
+
+                $apps = JobApplication::where('job_opening_id', $this->jobOpeningId)
+                    ->where('status', 'shortlisted')->whereNull('quiz_sent_at')
+                    ->with(['user', 'jobOpening'])
+                    ->get();
 
                 foreach ($apps as $app) {
-                    $app->update(['quiz_sent_at' => now()]);
-                    ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_QUIZ_SENT);
+                    $this->activateAndNotify($app);
                 }
 
                 $this->resetTable();
                 \Filament\Notifications\Notification::make()
-                    ->title(count($apps) . ' kandidat diaktifkan tesnya. Draft notifikasi siap dikirim dari halaman Notifikasi.')
+                    ->title(count($apps) . ' kandidat diaktifkan tesnya. Email terkirim.')
                     ->success()->send();
             });
     }
@@ -169,8 +175,7 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
                     ->with(['answers' => fn ($q) => $q->where('field_key', 'full_name'), 'quizAttempt'])
                     ->when(
                         $this->jobOpeningId && $this->isJobOpeningAllowed($this->jobOpeningId),
-                        fn (Builder $q) => $q->where('job_opening_id', $this->jobOpeningId)
-                            ->where('status', 'shortlisted')->whereNotNull('quiz_sent_at'),
+                        fn (Builder $q) => $q->where('job_opening_id', $this->jobOpeningId)->where('status', 'shortlisted'),
                         fn (Builder $q) => $q->whereRaw('1 = 0')
                     )
                     ->latest()
@@ -180,7 +185,7 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
                     ->label('Nama Lengkap')
                     ->getStateUsing(fn ($record) => $record->answers->firstWhere('field_key', 'full_name')?->value ?? '—'),
 
-                Tables\Columns\TextColumn::make('quiz_sent_at')->label('Diaktifkan')->dateTime('d M Y, H:i'),
+                Tables\Columns\TextColumn::make('quiz_sent_at')->label('Diaktifkan')->dateTime('d M Y, H:i')->placeholder('Belum diaktifkan'),
 
                 Tables\Columns\TextColumn::make('attempt_status')
                     ->label('Status Pengerjaan')
@@ -217,11 +222,11 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
                     }),
             ])
             ->actions([
-                $this->tandaiHasilTesAction()->visible(fn ($record) => $record->quiz_result === null),
+                $this->tandaiHasilTesAction()->visible(fn ($record) => $record->quiz_sent_at !== null && $record->quiz_result === null),
             ])
             ->bulkActions([])
             ->emptyStateHeading('Pilih perusahaan & lowongan')
-            ->emptyStateDescription('Kandidat yang sudah diaktifkan tesnya akan muncul di sini.')
+            ->emptyStateDescription('Kandidat yang lolos seleksi berkas untuk lowongan ini akan muncul di sini.')
             ->emptyStateIcon('heroicon-o-computer-desktop');
     }
 }

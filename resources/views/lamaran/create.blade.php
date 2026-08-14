@@ -18,25 +18,17 @@
         @auth
           <a href="{{ route('dashboard') }}" class="ml-2 px-5 py-[10px] rounded-[11px] text-white text-sm font-bold no-underline transition-opacity duration-150 hover:opacity-90" style="background:{{ $brand }};">Dashboard</a>
         @endauth
-        <button onclick="sgToggleTheme()" aria-label="Ganti tema" class="ml-2 w-9 h-9 rounded-[10px] border border-slate-200 grid place-items-center text-slate-500 hover:border-slate-300 transition-colors duration-150" style="touch-action:manipulation;">
-          <i class="fa-solid fa-moon sg-icon-dark" aria-hidden="true"></i>
-          <i class="fa-solid fa-sun sg-icon-light" aria-hidden="true" style="display:none;"></i>
-        </button>
       </nav>
       <div class="sg-mob ml-auto" style="display:flex;align-items:center;gap:8px;">
         @auth
           <a href="{{ route('dashboard') }}" class="px-4 py-[9px] rounded-[11px] text-white text-[13.5px] font-bold no-underline" style="background:{{ $brand }};">Dashboard</a>
         @endauth
-        <button onclick="sgToggleTheme()" aria-label="Ganti tema" class="w-9 h-9 rounded-[10px] border border-slate-200 grid place-items-center text-slate-500" style="touch-action:manipulation;">
-          <i class="fa-solid fa-moon sg-icon-dark" aria-hidden="true"></i>
-          <i class="fa-solid fa-sun sg-icon-light" aria-hidden="true" style="display:none;"></i>
-        </button>
       </div>
     </div>
   </header>
 
   {{-- Main --}}
-  <main class="max-w-[1000px] mx-auto px-5 pt-7 pb-24">
+  <main class="lg:w-11/12 mx-auto px-5 pt-7 pb-24">
 
     {{-- Position card --}}
     <div class="relative overflow-hidden rounded-[20px] text-white px-[30px] py-7" style="background:linear-gradient(135deg,{{ $brand }} 0%,{{ $brandDark }} 100%);">
@@ -67,6 +59,12 @@
       </ul>
     </div>
     @endif
+
+    {{-- Ringkasan error validasi client-side, diisi JS saat submit --}}
+    <div id="client-error-banner" style="display:none;" class="mt-4 rounded-[14px] px-5 py-4 border border-red-200 bg-red-600/[0.07]">
+      <div class="text-[13.5px] font-bold text-red-600 mb-2"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Lengkapi dulu isian berikut sebelum mengirim:</div>
+      <ul id="client-error-list" class="m-0 pl-[18px] text-[13px] text-red-600 flex flex-col gap-1"></ul>
+    </div>
 
     {{-- Banner: gunakan data lamaran sebelumnya --}}
     @if(isset($previousApp) && $previousApp)
@@ -188,7 +186,7 @@
                 </div>
                 @endif
                 <input type="file" name="{{ $inputName }}" accept="{{ $accept }}"
-                  {{ $field->is_required ? 'required' : '' }} class="hidden"
+                  {{ $field->is_required ? 'required' : '' }} class="sr-only"
                   onchange="document.getElementById('{{ $lblId }}').textContent = this.files[0]?.name || 'Pilih file...'" />
               </label>
 
@@ -243,70 +241,175 @@
 
     </form>
 
-    {{-- Confirmation Modal --}}
-    <div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:9999;padding:16px;" class="flex items-center justify-center">
-      <div onclick="closeConfirm()" style="position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(3px);"></div>
-      <div class="relative sg-card rounded-[22px] shadow-2xl w-full max-w-sm mx-auto px-7 py-7" style="z-index:1;">
-        <div class="flex flex-col items-center text-center gap-3">
-          <div class="w-14 h-14 rounded-full flex items-center justify-center mb-1" style="background:rgba(4,44,108,0.1);">
-            <i class="fa-solid fa-paper-plane text-xl" style="color:{{ $brand }};"></i>
-          </div>
-          <h3 class="m-0 text-[18px] font-extrabold text-slate-800 tracking-[-0.3px]">Kirim Lamaran?</h3>
-          <p class="m-0 text-[13.5px] text-slate-500 leading-relaxed">
-            Pastikan semua data yang kamu isi sudah benar.<br>
-            Lamaran yang sudah dikirim <strong>tidak dapat diubah</strong>.
-          </p>
-        </div>
-        <div class="mt-6 flex gap-[10px]">
-          <button type="button" onclick="closeConfirm()"
-            class="flex-1 px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 text-[13.5px] font-bold cursor-pointer transition-colors duration-150 hover:border-slate-400">
-            Periksa Kembali
-          </button>
-          <button type="button" onclick="submitLamaran()"
-            class="flex-1 px-4 py-3 rounded-xl border-0 text-white text-[13.5px] font-bold cursor-pointer transition-colors duration-150"
-            style="background:{{ $brand }};">
-            <i class="fa-solid fa-paper-plane mr-1.5 text-xs"></i>Ya, Kirim!
-          </button>
-        </div>
-      </div>
-    </div>
-
     <script>
     function openConfirm() {
       var form = document.getElementById('lamaran-form');
-      if (!form.checkValidity()) { form.reportValidity(); return; }
-      document.getElementById('confirm-modal').style.display = 'flex';
+      var banner = document.getElementById('client-error-banner');
+      var list = document.getElementById('client-error-list');
+
+      if (!form.checkValidity()) {
+        var invalids = form.querySelectorAll(':invalid');
+        var seen = {};
+        var items = [];
+        invalids.forEach(function (el) {
+          var wrap = el.closest('.sg-fields > div, .sg-agreement');
+          var text;
+          if (wrap && wrap.classList.contains('sg-agreement')) {
+            text = 'Persetujuan data';
+          } else {
+            var label = wrap ? wrap.querySelector('label') : null;
+            text = label ? label.textContent.replace('*', '').trim() : (el.name || 'Isian');
+          }
+          if (seen[text]) return;
+          seen[text] = true;
+          items.push(text);
+        });
+
+        list.innerHTML = '';
+        items.forEach(function (text) {
+          var li = document.createElement('li');
+          li.textContent = text + ' belum diisi/dipilih.';
+          list.appendChild(li);
+        });
+        banner.style.display = 'block';
+        banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        form.reportValidity();
+        return;
+      }
+
+      banner.style.display = 'none';
+      var modal = document.getElementById('confirm-modal');
+      modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { modal.classList.add('is-open'); });
+      });
     }
     function closeConfirm() {
-      document.getElementById('confirm-modal').style.display = 'none';
+      var modal = document.getElementById('confirm-modal');
+      modal.classList.remove('is-open');
       document.body.style.overflow = '';
+      setTimeout(function () { modal.style.display = 'none'; }, 180);
     }
     function submitLamaran() {
+      var btn = document.getElementById('submit-lamaran-btn');
+      if (btn) {
+        if (btn.disabled) return; // cegah klik ganda / spam submit
+        btn.disabled = true;
+        var label = document.getElementById('submit-lamaran-label');
+        if (label) label.textContent = 'Mengirim...';
+      }
+      clearDraft();
       document.getElementById('lamaran-form').submit();
     }
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') closeConfirm();
     });
     </script>
+
+    {{-- Draft otomatis: isian tersimpan di browser (localStorage) supaya tidak hilang kalau di-refresh.
+         File upload tidak bisa dipulihkan (batasan keamanan browser) — pelamar perlu pilih ulang filenya. --}}
+    <script>
+    (function () {
+      var DRAFT_KEY = 'lamaran-draft-{{ $jobOpening->id }}';
+      var form = document.getElementById('lamaran-form');
+
+      function collectDraft() {
+        var data = {};
+        form.querySelectorAll('[name^="fields["]').forEach(function (el) {
+          if (el.type === 'file') return;
+          if (el.type === 'radio' || el.type === 'checkbox') {
+            if (el.checked) data[el.name] = el.value;
+          } else {
+            data[el.name] = el.value;
+          }
+        });
+        var agreement = document.getElementById('agreement');
+        if (agreement) data['__agreement'] = agreement.checked;
+        return data;
+      }
+
+      function saveDraft() {
+        try { localStorage.setItem(DRAFT_KEY, JSON.stringify(collectDraft())); } catch (e) {}
+      }
+
+      window.clearDraft = function () {
+        try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+      };
+
+      function restoreDraft() {
+        var raw;
+        try { raw = localStorage.getItem(DRAFT_KEY); } catch (e) { return; }
+        if (!raw) return;
+        var data;
+        try { data = JSON.parse(raw); } catch (e) { return; }
+
+        Object.keys(data).forEach(function (name) {
+          if (name === '__agreement') {
+            var agreement = document.getElementById('agreement');
+            if (agreement && data[name]) { agreement.checked = true; agreement.dispatchEvent(new Event('change')); }
+            return;
+          }
+          var val = data[name];
+          if (!val) return;
+          var radio = form.querySelector('[name="' + name + '"][value="' + CSS.escape(val) + '"]');
+          if (radio && (radio.type === 'radio' || radio.type === 'checkbox')) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change'));
+            return;
+          }
+          var el = form.querySelector('[name="' + name + '"]:not([type="radio"]):not([type="checkbox"]):not([type="file"])');
+          if (el) el.value = val;
+        });
+      }
+
+      @if($errors->isEmpty())
+      window.addEventListener('load', restoreDraft);
+      @endif
+
+      form.addEventListener('input', saveDraft);
+      form.addEventListener('change', saveDraft);
+    })();
+    </script>
   </main>
 </div>
 
-<script>
-(function(){
-  function syncIcons(){
-    var dark=document.documentElement.getAttribute('data-theme')==='dark';
-    document.querySelectorAll('.sg-icon-dark').forEach(function(i){i.style.display=dark?'none':'';});
-    document.querySelectorAll('.sg-icon-light').forEach(function(i){i.style.display=dark?'':'none';});
-  }
-  window.sgToggleTheme=function(){
-    var next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
-    document.documentElement.setAttribute('data-theme',next);
-    localStorage.setItem('sg-theme',next);
-    syncIcons();
-  };
-  syncIcons();
-})();
-</script>
+{{-- Confirmation Modal — sengaja di luar .sg-rise: elemen ber-animasi transform
+     jadi containing block untuk position:fixed, bikin modal ini nge-center ke
+     tinggi seluruh halaman alih-alih ke viewport kalau ditaruh di dalamnya. --}}
+<style>
+  #confirm-modal { opacity: 0; transition: opacity .18s ease; }
+  #confirm-modal.is-open { opacity: 1; }
+  #confirm-modal .sg-card { transform: scale(.95) translateY(6px); transition: transform .18s ease; }
+  #confirm-modal.is-open .sg-card { transform: scale(1) translateY(0); }
+</style>
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:9999;padding:16px;" class="flex items-center justify-center">
+  <div onclick="closeConfirm()" style="position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(3px);"></div>
+  <div class="relative sg-card rounded-[22px] shadow-2xl w-full max-w-sm mx-auto px-7 py-7" style="z-index:1;">
+    <div class="flex flex-col items-center text-center gap-3">
+      <div class="w-14 h-14 rounded-full flex items-center justify-center mb-1" style="background:rgba(4,44,108,0.1);">
+        <i class="fa-solid fa-paper-plane text-xl" style="color:{{ $brand }};"></i>
+      </div>
+      <h3 class="m-0 text-[18px] font-extrabold text-slate-800 tracking-[-0.3px]">Kirim Lamaran?</h3>
+      <p class="m-0 text-[13.5px] text-slate-500 leading-relaxed">
+        Pastikan semua data yang kamu isi sudah benar.<br>
+        Lamaran yang sudah dikirim <strong>tidak dapat diubah</strong>.
+      </p>
+    </div>
+    <div class="mt-6 flex gap-[10px]">
+      <button type="button" onclick="closeConfirm()"
+        class="sg-auth-alt-btn flex-1 px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 text-[13.5px] font-bold cursor-pointer transition-colors duration-150 hover:border-slate-400">
+        Periksa Kembali
+      </button>
+      <button type="button" id="submit-lamaran-btn" onclick="submitLamaran()"
+        class="flex-1 px-4 py-3 rounded-xl border-0 text-white text-[13.5px] font-bold cursor-pointer transition-colors duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
+        style="background:{{ $brand }};">
+        <i class="fa-solid fa-paper-plane mr-1.5 text-xs"></i>
+        <span id="submit-lamaran-label">Ya, Kirim!</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 </x-public-layout>

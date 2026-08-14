@@ -10,13 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script>
-    (function(){
-      var t=localStorage.getItem('sg-theme');
-      if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches))
-        document.documentElement.setAttribute('data-theme','dark');
-    })();
-    </script>
 </head>
 <body class="m-0">
 
@@ -58,11 +51,6 @@
 
       {{-- Desktop: user dropdown + dark toggle --}}
       <div class="sg-desk-flex ml-auto items-center gap-2">
-        <button onclick="sgToggleTheme()" aria-label="Ganti tema" class="sg-app-toggle w-9 h-9 rounded-[10px] border border-slate-200 grid place-items-center text-slate-500 hover:border-slate-300 transition-colors duration-150" style="touch-action:manipulation;">
-          <i class="fa-solid fa-moon sg-icon-dark text-sm" aria-hidden="true"></i>
-          <i class="fa-solid fa-sun sg-icon-light text-sm" aria-hidden="true" style="display:none;"></i>
-        </button>
-
         <div x-data="{ open: false }" class="relative">
           <button @click="open = !open"
                   class="sg-app-user-btn flex items-center gap-2 px-3 py-[7px] rounded-[11px] border border-slate-200 bg-white hover:border-slate-300 transition-colors duration-150 cursor-pointer outline-none">
@@ -102,11 +90,6 @@
 
       {{-- Mobile: dark toggle + avatar menu --}}
       <div class="sg-mob ml-auto" style="display:flex;align-items:center;gap:8px;">
-        <button onclick="sgToggleTheme()" aria-label="Ganti tema" class="sg-app-toggle w-9 h-9 rounded-[10px] border border-slate-200 grid place-items-center text-slate-500" style="touch-action:manipulation;">
-          <i class="fa-solid fa-moon sg-icon-dark text-sm" aria-hidden="true"></i>
-          <i class="fa-solid fa-sun sg-icon-light text-sm" aria-hidden="true" style="display:none;"></i>
-        </button>
-
         <div x-data="{ open: false }" class="relative">
           <button @click="open = !open"
                   class="w-[34px] h-[34px] rounded-full grid place-items-center text-[12px] font-extrabold text-white border-0 cursor-pointer outline-none"
@@ -156,28 +139,11 @@
   </header>
 
   {{-- Main --}}
-  <main class="max-w-[1000px] mx-auto px-5 pt-7 pb-[72px]">
+  <main class="lg:w-11/12 mx-auto px-5 pt-7 pb-[72px]">
     {{ $slot }}
   </main>
 
 </div>
-
-<script>
-(function(){
-  function syncIcons(){
-    var dark=document.documentElement.getAttribute('data-theme')==='dark';
-    document.querySelectorAll('.sg-icon-dark').forEach(function(i){i.style.display=dark?'none':'';});
-    document.querySelectorAll('.sg-icon-light').forEach(function(i){i.style.display=dark?'':'none';});
-  }
-  window.sgToggleTheme=function(){
-    var next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
-    document.documentElement.setAttribute('data-theme',next);
-    localStorage.setItem('sg-theme',next);
-    syncIcons();
-  };
-  syncIcons();
-})();
-</script>
 
 </body>
 </html>

@@ -40,16 +40,16 @@ class QuizAttempt extends Model
      */
     public function gradeAndSubmit(array $answers): void
     {
-        $questions   = QuizQuestion::whereIn('id', array_keys($answers))->get()->keyBy('id');
-        $totalPoints = QuizQuestion::where('quiz_id', $this->jobApplication->jobOpening->quiz_id)->sum('points') ?: 1;
-        $earned      = 0;
+        $questions     = QuizQuestion::whereIn('id', array_keys($answers))->get()->keyBy('id');
+        $totalQuestions = QuizQuestion::where('quiz_id', $this->jobApplication->jobOpening->quiz_id)->count() ?: 1;
+        $correctCount  = 0;
 
         foreach ($answers as $questionId => $selected) {
             $question  = $questions->get($questionId);
             if (! $question) continue;
 
             $isCorrect = $selected !== null && $selected === $question->correct_option;
-            if ($isCorrect) $earned += $question->points;
+            if ($isCorrect) $correctCount++;
 
             $this->answers()->create([
                 'quiz_question_id' => $questionId,
@@ -60,7 +60,7 @@ class QuizAttempt extends Model
 
         $this->update([
             'submitted_at' => now(),
-            'score'        => round($earned / $totalPoints * 100, 2),
+            'score'        => round($correctCount / $totalQuestions * 100, 2),
             'status'       => 'submitted',
         ]);
     }

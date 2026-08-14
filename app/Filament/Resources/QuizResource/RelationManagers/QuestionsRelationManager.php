@@ -27,7 +27,6 @@ class QuestionsRelationManager extends RelationManager
                 Tables\Columns\ImageColumn::make('image_path')->label('Gambar')->disk('public')->height(40),
                 Tables\Columns\TextColumn::make('question')->label('Pertanyaan')->limit(60),
                 Tables\Columns\TextColumn::make('correct_option')->label('Jawaban Benar')->badge()->color('success'),
-                Tables\Columns\TextColumn::make('points')->label('Poin'),
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')

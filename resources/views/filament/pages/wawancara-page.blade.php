@@ -2,7 +2,8 @@
 
     {{-- Filter: Perusahaan + Lowongan --}}
     <div class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 p-6">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 @if($this->isSuperAdmin()) md:grid-cols-2 @endif gap-4">
+            @if($this->isSuperAdmin())
             <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Perusahaan</label>
                 <select wire:model.live="companyId"
@@ -13,6 +14,7 @@
                     @endforeach
                 </select>
             </div>
+            @endif
             <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Lowongan</label>
                 <select wire:model.live="jobOpeningId" @if(!$this->companyId) disabled @endif

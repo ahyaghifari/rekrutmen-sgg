@@ -38,7 +38,7 @@ class FormSectionsSeeder extends Seeder
                     ['name' => 'whatsapp_number',   'label' => 'No WA',                   'type' => 'text',     'is_required' => true,  'sort_order' => 3],
                     // ['name' => 'usia',              'label' => 'Usia',                    'type' => 'number',   'is_required' => true,  'sort_order' => 4],
                     ['name' => 'domicile_address',  'label' => 'Alamat Domisili',         'type' => 'textarea', 'is_required' => true,  'sort_order' => 4],
-                    ['name' => 'birth_place',       'label' => 'Tempat Lahir',            'type' => 'text',     'is_required' => false, 'sort_order' => 5],
+                    ['name' => 'birth_place',       'label' => 'Tempat Lahir',            'type' => 'text',     'is_required' => true,  'sort_order' => 5],
                     ['name' => 'birth_date',        'label' => 'Tanggal Lahir',           'type' => 'date',     'is_required' => true,  'sort_order' => 7],
                     ['name' => 'instagram_handle',  'label' => 'Instagram',               'type' => 'text',     'is_required' => true,  'sort_order' => 6],
                     ['name' => 'linkedin_url',      'label' => 'Akun LinkedIn',           'type' => 'text',     'is_required' => false, 'sort_order' => 7],

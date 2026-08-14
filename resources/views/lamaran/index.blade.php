@@ -10,15 +10,29 @@ $statusMap = [
     'passed'      => ['label' => 'Diterima',             'badge' => 'badge-passed'],
     'rejected'    => ['label' => 'Tidak Dilanjutkan',    'badge' => 'badge-rejected'],
 ];
+$needsQuiz = $applications->first(fn ($a) => $a->status === 'shortlisted' && $a->quiz_sent_at && ! $a->quiz_result);
 @endphp
 
-<div style="max-width:860px;margin:0 auto;padding:20px 16px;">
+<div style="margin:0 auto;padding:20px 16px;">
 
   {{-- Header --}}
   <div style="margin-bottom:16px;">
     <h1 class="text-slate-800" style="font-size:20px;font-weight:800;margin:0 0 2px;">Lamaran Saya</h1>
     <p class="text-slate-500" style="font-size:13px;margin:0;">Seluruh riwayat lamaran yang pernah kamu kirimkan.</p>
   </div>
+
+  @if($needsQuiz)
+  <a href="{{ route('tes-online.show') }}" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;margin-bottom:16px;background:rgba(4,44,108,.06);border:1px solid rgba(4,44,108,.15);">
+    <div style="flex-shrink:0;width:36px;height:36px;border-radius:10px;background:#042c6c;display:flex;align-items:center;justify-content:center;">
+      <i class="fa-solid fa-laptop" style="color:#fff;font-size:14px;"></i>
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div class="text-slate-800" style="font-size:13.5px;font-weight:700;">Tes online sudah bisa dikerjakan</div>
+      <div class="text-slate-500" style="font-size:12px;margin-top:1px;">{{ $needsQuiz->jobOpening->title }}</div>
+    </div>
+    <span style="flex-shrink:0;padding:8px 14px;background:#042c6c;color:#fff;border-radius:9px;font-size:12.5px;font-weight:700;">Laksanakan Tes</span>
+  </a>
+  @endif
 
   @if ($applications->isEmpty())
     {{-- Empty state --}}

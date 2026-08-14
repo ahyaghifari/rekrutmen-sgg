@@ -27,10 +27,6 @@
         @else
           <a href="{{ route('login') }}" class="ml-2 px-5 py-[10px] rounded-[11px] text-white text-sm font-bold no-underline transition-colors duration-150" style="background:{{ $brand }};">Masuk</a>
         @endauth
-        <button onclick="sgToggleTheme()" aria-label="Ganti tema gelap/terang" class="ml-2 w-9 h-9 rounded-[10px] border border-slate-200 grid place-items-center text-slate-500 hover:border-slate-300 transition-colors duration-150" style="touch-action:manipulation;">
-          <i class="fa-solid fa-moon sg-icon-dark" aria-hidden="true"></i>
-          <i class="fa-solid fa-sun sg-icon-light" aria-hidden="true" style="display:none;"></i>
-        </button>
       </nav>
 
       {{-- Mobile --}}
@@ -40,10 +36,6 @@
         @else
           <a href="{{ route('login') }}" class="px-4 py-[9px] rounded-[11px] text-white text-[13.5px] font-bold no-underline" style="background:{{ $brand }};">Masuk</a>
         @endauth
-        <button onclick="sgToggleTheme()" aria-label="Ganti tema" class="w-9 h-9 rounded-[10px] border border-slate-200 grid place-items-center text-slate-500" style="touch-action:manipulation;">
-          <i class="fa-solid fa-moon sg-icon-dark" aria-hidden="true"></i>
-          <i class="fa-solid fa-sun sg-icon-light" aria-hidden="true" style="display:none;"></i>
-        </button>
       </div>
     </div>
   </header>
@@ -127,12 +119,19 @@
             <i class="fa-solid fa-route mr-2 text-[13px]" style="color:{{ $brand }};"></i>Alur Seleksi
           </h2>
           <div class="flex flex-col gap-3">
-            @foreach([
-              ['icon' => 'fa-paper-plane',     'label' => 'Kirim Lamaran',    'desc' => 'Isi formulir dan unggah CV'],
-              ['icon' => 'fa-magnifying-glass', 'label' => 'Seleksi Berkas',   'desc' => 'Tim HR meninjau dokumen'],
-              ['icon' => 'fa-comments',         'label' => 'Wawancara',        'desc' => 'Jadwal dikirim via WhatsApp'],
-              ['icon' => 'fa-circle-check',     'label' => 'Keputusan',        'desc' => 'Offering letter & onboarding'],
-            ] as $s)
+            @php
+              $alurSeleksi = [
+                ['icon' => 'fa-paper-plane',      'label' => 'Kirim Lamaran',    'desc' => 'Isi formulir dan unggah CV'],
+                ['icon' => 'fa-magnifying-glass', 'label' => 'Seleksi Berkas',   'desc' => 'Tim HR meninjau dokumen'],
+                ['icon' => 'fa-laptop',           'label' => 'Tes Online',       'desc' => 'Kerjakan tes lewat portal'],
+                ['icon' => 'fa-comments',         'label' => 'Wawancara',        'desc' => 'Jadwal dikirim via WhatsApp'],
+              ];
+              if ($co?->requires_mcu ?? true) {
+                $alurSeleksi[] = ['icon' => 'fa-heart-pulse', 'label' => 'Medical Check Up', 'desc' => 'Pemeriksaan kesehatan'];
+              }
+              $alurSeleksi[] = ['icon' => 'fa-circle-check', 'label' => 'TTD & Onboarding', 'desc' => 'Kontrak kerja & orientasi'];
+            @endphp
+            @foreach($alurSeleksi as $s)
             <div class="flex items-center gap-4">
               <div class="w-9 h-9 shrink-0 rounded-[11px] grid place-items-center text-[13px]"
                    style="background:rgba({{ $r }},{{ $g }},{{ $b }},0.09);color:{{ $brand }};">
@@ -232,22 +231,5 @@
 
   </main>
 </div>
-
-<script>
-(function(){
-  function syncIcons() {
-    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    document.querySelectorAll('.sg-icon-dark').forEach(function(i){ i.style.display = dark ? 'none' : ''; });
-    document.querySelectorAll('.sg-icon-light').forEach(function(i){ i.style.display = dark ? '' : 'none'; });
-  }
-  window.sgToggleTheme = function() {
-    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('sg-theme', next);
-    syncIcons();
-  };
-  syncIcons();
-})();
-</script>
 
 </x-public-layout>

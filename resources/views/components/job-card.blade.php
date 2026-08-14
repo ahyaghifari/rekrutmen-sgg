@@ -39,7 +39,7 @@
       <a href="{{ route('lowongan.show', $opening) }}" class="sg-job-card-btn"
          style="background:rgba({{ $r }},{{ $g }},{{ $b }},0.10);color:{{ $color }};">Detail</a>
       @if($hasActiveApp)
-        <span class="sg-job-card-btn" style="background:#e2e8f0;color:#94a3b8;cursor:not-allowed;">Lamar</span>
+        <span class="sg-job-card-btn sg-btn-subtle" style="cursor:not-allowed;">Lamar</span>
       @else
         <a href="{{ route('lamaran.create', $opening) }}" class="sg-job-card-btn"
            style="background:{{ $color }};color:#fff;">Lamar</a>

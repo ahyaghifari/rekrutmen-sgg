@@ -8,11 +8,11 @@ use App\Models\Company;
 use App\Models\FormSection;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
-class FormSectionResource extends Resource
+class FormSectionResource extends BaseResource
 {
     protected static ?string $model = FormSection::class;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
@@ -22,15 +22,31 @@ class FormSectionResource extends Resource
     protected static ?string $navigationGroup = 'Perusahaan & Lowongan';
     protected static ?int $navigationSort = 2;
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (static::isSuperAdmin()) {
+            return $query;
+        }
+
+        return $query->where('company_id', static::companyId());
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
             Forms\Components\Section::make()->schema([
                 Forms\Components\Select::make('company_id')
                     ->label('Perusahaan')
-                    ->options(Company::orderBy('name')->pluck('name', 'id'))
+                    ->options(fn () => static::isSuperAdmin()
+                        ? Company::orderBy('name')->pluck('name', 'id')
+                        : Company::where('id', static::companyId())->pluck('name', 'id'))
                     ->required()
-                    ->searchable(),
+                    ->searchable()
+                    ->default(fn () => static::isSuperAdmin() ? null : static::companyId())
+                    ->hidden(fn () => ! static::isSuperAdmin())
+                    ->dehydrated(),
 
                 Forms\Components\TextInput::make('title')
                     ->label('Judul Bagian')
@@ -64,11 +80,11 @@ class FormSectionResource extends Resource
                     ->badge(),
             ])
             ->defaultSort('company_id')
-            ->filters([
+            ->filters(static::isSuperAdmin() ? [
                 Tables\Filters\SelectFilter::make('company_id')
                     ->label('Perusahaan')
                     ->options(Company::orderBy('name')->pluck('name', 'id')),
-            ])
+            ] : [])
             ->reorderable('sort_order')
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -77,7 +93,7 @@ class FormSectionResource extends Resource
             ->bulkActions([]);
     }
 
-    public static function getRelations(): array
+    public static function getRelationManagers(): array
     {
         return [
             FieldsRelationManager::class,

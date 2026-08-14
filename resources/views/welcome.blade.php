@@ -25,10 +25,6 @@
         @else
           <a href="{{ route('login') }}" class="ml-1 px-5 py-[10px] rounded-[11px] bg-navy text-white text-sm font-bold no-underline hover:bg-navy-dark transition-colors duration-150">Masuk</a>
         @endauth
-        <button onclick="sgToggleTheme()" aria-label="Ganti tema gelap/terang" class="ml-2 w-9 h-9 rounded-[10px] border border-slate-200 grid place-items-center text-slate-500 hover:border-slate-300 transition-colors duration-150" style="touch-action:manipulation;">
-          <i class="fa-solid fa-moon sg-icon-dark" aria-hidden="true"></i>
-          <i class="fa-solid fa-sun sg-icon-light" aria-hidden="true" style="display:none;"></i>
-        </button>
       </nav>
 
       {{-- Mobile --}}
@@ -38,10 +34,6 @@
         @else
           <a href="{{ route('login') }}" class="px-4 py-[9px] rounded-[11px] bg-navy text-white text-[13.5px] font-bold no-underline">Masuk</a>
         @endauth
-        <button onclick="sgToggleTheme()" aria-label="Ganti tema" class="w-9 h-9 rounded-[10px] border border-slate-200 grid place-items-center text-slate-500" style="touch-action:manipulation;">
-          <i class="fa-solid fa-moon sg-icon-dark" aria-hidden="true"></i>
-          <i class="fa-solid fa-sun sg-icon-light" aria-hidden="true" style="display:none;"></i>
-        </button>
       </div>
     </div>
   </header>
@@ -174,16 +166,17 @@
     <section class="mt-24" aria-labelledby="alur-heading">
       <div class="sg-fade text-center max-w-[620px] mx-auto mb-[34px]">
         <div class="text-[11.5px] font-bold tracking-[0.1em] uppercase text-slate-500">Alur Rekrutmen</div>
-        <h2 id="alur-heading" class="mt-2.5 mb-2 text-[26px] font-extrabold text-slate-800 tracking-[-0.6px]" style="text-wrap: balance;">Lima tahap yang jelas dan terstruktur</h2>
+        <h2 id="alur-heading" class="mt-2.5 mb-2 text-[26px] font-extrabold text-slate-800 tracking-[-0.6px]" style="text-wrap: balance;">Enam tahap yang jelas dan terstruktur</h2>
         <p class="m-0 text-[14.5px] leading-[1.6] text-slate-500">Setiap perpindahan tahap dapat dipantau kapan saja dari dashboard kandidat.</p>
       </div>
       <div class="sg-tl">
         @foreach([
           ['icon' => 'fa-plus',         'bg' => 'bg-navy',      'border' => '',                    'color' => 'text-white', 'label' => 'Daftar &amp; Lamar',  'desc' => 'Buat akun dan isi formulir lamaran',     'last' => false],
           ['icon' => 'fa-circle-check', 'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'Seleksi Berkas',       'desc' => 'Tim HR meninjau kelengkapan dokumen',    'last' => false, 'regular' => true],
+          ['icon' => 'fa-laptop',       'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'Tes Online',           'desc' => 'Kerjakan tes lewat portal',              'last' => false],
           ['icon' => 'fa-user-group',   'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'Wawancara',            'desc' => 'Jadwal dikirim via WhatsApp',            'last' => false],
-          ['icon' => 'fa-file-lines',   'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'Surat Penawaran',      'desc' => 'Offering letter dan negosiasi',          'last' => false, 'regular' => true],
-          ['icon' => 'fa-circle-check', 'bg' => 'bg-sgg-green', 'border' => '',                    'color' => 'text-white', 'label' => 'Bergabung',            'desc' => 'Onboarding dan mulai berkarier',         'last' => true],
+          ['icon' => 'fa-heart-pulse',  'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'MCU',                  'desc' => 'Medical check up',                       'last' => false, 'regular' => true],
+          ['icon' => 'fa-circle-check', 'bg' => 'bg-sgg-green', 'border' => '',                    'color' => 'text-white', 'label' => 'TTD &amp; Onboarding', 'desc' => 'Kontrak dan mulai berkarier',            'last' => true],
         ] as $i => $step)
         <div class="sg-fade relative text-center" style="transition-delay: {{ $i * 0.1 }}s;">
           @if(!$step['last'])
@@ -258,23 +251,5 @@ document.addEventListener('alpine:init', () => {
     goTo(i) { clearInterval(this.timer); this.active = i; this.timer = setInterval(() => this.next(), 8000); }
   }));
 });
-</script>
-
-<script>
-(function () {
-  // Dark mode
-  function syncIcons() {
-    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    document.querySelectorAll('.sg-icon-dark').forEach(function(i){ i.style.display = dark ? 'none' : ''; });
-    document.querySelectorAll('.sg-icon-light').forEach(function(i){ i.style.display = dark ? '' : 'none'; });
-  }
-  window.sgToggleTheme = function() {
-    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('sg-theme', next);
-    syncIcons();
-  };
-  syncIcons();
-})();
 </script>
 </x-public-layout>
