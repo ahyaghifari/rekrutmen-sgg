@@ -68,6 +68,7 @@ class ApplicationNotification extends Model
         return match ($event) {
             CompanyMessageTemplate::EVENT_SCREENING_PASSED    => "Selamat! Kamu Lolos Seleksi Berkas – {$jobTitle}",
             CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED => "Undangan Wawancara – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED  => "Update Lamaran Kamu – {$jobTitle}",
             CompanyMessageTemplate::EVENT_QUIZ_SENT           => "Tes Online Sudah Bisa Dikerjakan – {$jobTitle}",
             CompanyMessageTemplate::EVENT_MCU_SCHEDULED       => "Jadwal Medical Check Up – {$jobTitle}",
             CompanyMessageTemplate::EVENT_ONBOARDING_INVITE   => "Selamat Bergabung! Undangan TTD & Onboarding – {$jobTitle}",
@@ -99,6 +100,10 @@ class ApplicationNotification extends Model
             $location = $extra['location'] ? "\nLokasi: {$extra['location']}" : '';
             $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
             return "Halo {$name},\n\nSelamat! Kamu lolos tahap wawancara untuk posisi {$jobTitle} dan diminta melakukan Medical Check Up (MCU).\n\nMCU dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
+        }
+
+        if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED) {
+            return "Halo {$name},\n\nTerima kasih telah meluangkan waktu untuk mengikuti proses wawancara posisi {$jobTitle}.\n\nSetelah melalui pertimbangan, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nKami sangat menghargai antusiasme dan usahamu. Jangan menyerah — terus tingkatkan diri dan kami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_ONBOARDING_INVITE) {

@@ -230,7 +230,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
             ->modalWidth('lg')
             ->extraModalFooterActions([
                 Action::make('applyAndNotify')
-                    ->label('Terapkan & Beritahu')
+                    ->label('Terapkan & Beritahu yang Lolos')
                     ->icon('heroicon-m-paper-airplane')
                     ->color('primary')
                     ->action(function (): void {
@@ -238,13 +238,12 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
 
                         [$passedCount, $rejectedCount] = ScreeningDecision::applyForOpening($this->jobOpeningId);
 
-                        // Kirim email: lolos dulu, lalu tidak lolos
-                        $this->sendNotificationsForOpening($this->jobOpeningId);
+                        $this->sendPassedNotificationsForOpening($this->jobOpeningId);
 
                         $this->resetTable();
 
                         \Filament\Notifications\Notification::make()
-                            ->title("{$passedCount} lolos, {$rejectedCount} tidak dilanjutkan. Email terkirim.")
+                            ->title("{$passedCount} lolos (email terkirim), {$rejectedCount} tidak dilanjutkan (email ditahan).")
                             ->success()
                             ->send();
                     }),
@@ -263,12 +262,12 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
             });
     }
 
-    private function sendNotificationsForOpening(string $jobOpeningId): void
+    private function sendPassedNotificationsForOpening(string $jobOpeningId): void
     {
         $drafts = ApplicationNotification::with(['jobApplication.user'])
             ->whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $jobOpeningId))
             ->where('status', 'draft')
-            ->orderByRaw("FIELD(event, 'screening_passed', 'screening_rejected')")
+            ->where('event', \App\Models\CompanyMessageTemplate::EVENT_SCREENING_PASSED)
             ->get();
 
         foreach ($drafts as $notif) {
@@ -276,6 +275,47 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
             \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\ApplicantNotificationMail($notif));
             $notif->update(['status' => 'sent', 'sent_at' => now()]);
         }
+    }
+
+    public function kirimNotifPenolakanBerkasAction(): Action
+    {
+        $pendingCount = $this->jobOpeningId
+            ? ApplicationNotification::whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))
+                ->where('status', 'draft')
+                ->where('event', \App\Models\CompanyMessageTemplate::EVENT_SCREENING_REJECTED)
+                ->count()
+            : 0;
+
+        return Action::make('kirimNotifPenolakanBerkas')
+            ->label("Kirim Notif Penolakan ({$pendingCount})")
+            ->icon('heroicon-m-envelope')
+            ->color('danger')
+            ->visible(fn () => $pendingCount > 0)
+            ->requiresConfirmation()
+            ->modalHeading('Kirim Pemberitahuan Penolakan Seleksi Berkas?')
+            ->modalDescription("Email penolakan akan dikirim ke {$pendingCount} pelamar yang tidak lolos seleksi berkas. Tindakan ini tidak bisa dibatalkan.")
+            ->modalSubmitActionLabel('Ya, Kirim Sekarang')
+            ->action(function (): void {
+                if (! $this->jobOpeningId) return;
+
+                $drafts = ApplicationNotification::with(['jobApplication.user'])
+                    ->whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))
+                    ->where('status', 'draft')
+                    ->where('event', \App\Models\CompanyMessageTemplate::EVENT_SCREENING_REJECTED)
+                    ->get();
+
+                $count = 0;
+                foreach ($drafts as $notif) {
+                    $email = $notif->jobApplication->user->email;
+                    \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\ApplicantNotificationMail($notif));
+                    $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    $count++;
+                }
+
+                \Filament\Notifications\Notification::make()
+                    ->title("Email penolakan terkirim ke {$count} pelamar.")
+                    ->success()->send();
+            });
     }
 
     public function bulkMoveToScreeningAction(): Action

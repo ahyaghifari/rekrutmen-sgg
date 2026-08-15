@@ -71,6 +71,27 @@
     </div>
     @endif
 
+    {{-- Banner: ada draft notif penolakan wawancara yang belum dikirim --}}
+    @if($this->jobOpeningId)
+    @php $pendingWawancaraRejection = \App\Models\ApplicationNotification::whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))->where('status', 'draft')->where('event', \App\Models\CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED)->count(); @endphp
+    @if($pendingWawancaraRejection > 0)
+    <div class="fi-section rounded-xl bg-red-50 dark:bg-red-950/30 ring-1 ring-red-200 dark:ring-red-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-envelope class="w-4 h-4 text-red-700 dark:text-red-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Penolakan Wawancara Ditahan</div>
+                <div class="text-xs text-red-700 dark:text-red-400 mt-0.5">
+                    <strong>{{ $pendingWawancaraRejection }}</strong> kandidat belum menerima pemberitahuan tidak lolos wawancara. Kirim kapan saja kamu siap.
+                </div>
+            </div>
+        </div>
+        {{ ($this->kirimNotifPenolakanWawancaraAction) }}
+    </div>
+    @endif
+    @endif
+
     {{-- Table --}}
     {{ $this->table }}
 

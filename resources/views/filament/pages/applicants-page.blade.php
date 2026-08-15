@@ -95,6 +95,27 @@
     </div>
     @endif
 
+    {{-- Banner: ada draft notif penolakan berkas yang belum dikirim --}}
+    @if($this->jobOpeningId)
+    @php $pendingRejectionCount = \App\Models\ApplicationNotification::whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))->where('status', 'draft')->where('event', \App\Models\CompanyMessageTemplate::EVENT_SCREENING_REJECTED)->count(); @endphp
+    @if($pendingRejectionCount > 0)
+    <div class="fi-section rounded-xl bg-red-50 dark:bg-red-950/30 ring-1 ring-red-200 dark:ring-red-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-envelope class="w-4 h-4 text-red-700 dark:text-red-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Penolakan Berkas Ditahan</div>
+                <div class="text-xs text-red-700 dark:text-red-400 mt-0.5">
+                    <strong>{{ $pendingRejectionCount }}</strong> pelamar belum menerima pemberitahuan penolakan. Kirim kapan saja kamu siap.
+                </div>
+            </div>
+        </div>
+        {{ ($this->kirimNotifPenolakanBerkasAction) }}
+    </div>
+    @endif
+    @endif
+
     {{-- Bulk: pindahkan semua Lamaran Masuk ke Screening --}}
     @if($this->jobOpeningId && in_array($this->statusFilter, ['', 'applied']) && $this->getAppliedCount() > 0)
     @php $appliedCount = $this->getAppliedCount(); @endphp

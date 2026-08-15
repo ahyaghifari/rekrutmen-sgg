@@ -202,6 +202,47 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
     }
 
     /** Catat hasil wawancara: lulus lanjut MCU (kalau perusahaan mewajibkan) atau langsung onboarding; tidak lulus → rejected. */
+    public function kirimNotifPenolakanWawancaraAction(): Action
+    {
+        $pendingCount = $this->jobOpeningId
+            ? \App\Models\ApplicationNotification::whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))
+                ->where('status', 'draft')
+                ->where('event', \App\Models\CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED)
+                ->count()
+            : 0;
+
+        return Action::make('kirimNotifPenolakanWawancara')
+            ->label("Kirim Notif Penolakan ({$pendingCount})")
+            ->icon('heroicon-m-envelope')
+            ->color('danger')
+            ->visible(fn () => $pendingCount > 0)
+            ->requiresConfirmation()
+            ->modalHeading('Kirim Pemberitahuan Tidak Lolos Wawancara?')
+            ->modalDescription("Email penolakan akan dikirim ke {$pendingCount} kandidat yang tidak lolos wawancara. Tindakan ini tidak bisa dibatalkan.")
+            ->modalSubmitActionLabel('Ya, Kirim Sekarang')
+            ->action(function (): void {
+                if (! $this->jobOpeningId) return;
+
+                $drafts = \App\Models\ApplicationNotification::with(['jobApplication.user'])
+                    ->whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))
+                    ->where('status', 'draft')
+                    ->where('event', \App\Models\CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED)
+                    ->get();
+
+                $count = 0;
+                foreach ($drafts as $notif) {
+                    $email = $notif->jobApplication->user->email;
+                    \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\ApplicantNotificationMail($notif));
+                    $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    $count++;
+                }
+
+                \Filament\Notifications\Notification::make()
+                    ->title("Email penolakan wawancara terkirim ke {$count} kandidat.")
+                    ->success()->send();
+            });
+    }
+
     public function tandaiHasilWawancaraAction(): Tables\Actions\Action
     {
         return Tables\Actions\Action::make('tandaiHasilWawancara')
@@ -222,6 +263,11 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
                     $record->update(['interview_result' => 'lulus', 'status' => $nextStatus]);
                 } else {
                     $record->update(['interview_result' => 'tidak_lulus', 'status' => 'rejected']);
+                    // Buat draft notif penolakan — TIDAK langsung dikirim, admin kirim manual nanti
+                    \App\Models\ApplicationNotification::createDraftFor(
+                        $record,
+                        \App\Models\CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED
+                    );
                 }
 
                 \Filament\Notifications\Notification::make()->title('Hasil wawancara tersimpan')->success()->send();
