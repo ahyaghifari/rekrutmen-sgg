@@ -127,25 +127,19 @@ class JobOpeningResource extends BaseResource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('company.logo_path')
-                    ->label('Logo')
-                    ->disk('public')
-                    ->height(32)
-                    ->width(32)
-                    ->defaultImageUrl(asset('logo-sgg.png')),
-
-                Tables\Columns\TextColumn::make('title')
-                    ->label('Posisi')
-                    ->searchable()
-                    ->sortable(),
-
                 Tables\Columns\TextColumn::make('company_display')
                     ->label('Perusahaan')
                     ->getStateUsing(fn ($record) => $record->company?->name ?? $record->company_name)
                     ->searchable(query: fn ($query, $search) =>
                         $query->whereHas('company', fn ($q) => $q->where('name', 'like', "%$search%"))
                               ->orWhere('company_name', 'like', "%$search%")
-                    ),
+                    )
+                    ->visible(fn () => static::isSuperAdmin()),
+
+                Tables\Columns\TextColumn::make('title')
+                    ->label('Posisi')
+                    ->searchable()
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('quota')
                     ->label('Kuota')
@@ -194,6 +188,11 @@ class JobOpeningResource extends BaseResource
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_active')->label('Status'),
+
+                Tables\Filters\SelectFilter::make('company_id')
+                    ->label('Perusahaan')
+                    ->options(fn () => Company::orderBy('name')->pluck('name', 'id'))
+                    ->visible(fn () => static::isSuperAdmin()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
