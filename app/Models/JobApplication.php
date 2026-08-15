@@ -59,10 +59,23 @@ class JobApplication extends Model
      * kandidat — row Candidate dibuat otomatis di sini supaya konsisten
      * berapa pun jalur yang mengubah status ke shortlisted (ScreeningDecision,
      * perubahan manual dari detail halaman, dst).
+     *
+     * Setiap perubahan status (termasuk status awal saat lamaran dibuat) juga
+     * otomatis dicatat ke job_application_status_logs, satu titik untuk semua
+     * jalur perubahan status — jadi riwayat lengkap tiap lamaran selalu ada
+     * tanpa perlu tiap Filament action menulis log-nya sendiri-sendiri.
      */
     protected static function booted(): void
     {
+        static::created(function (JobApplication $app) {
+            $app->logStatusChange(null, $app->status);
+        });
+
         static::updated(function (JobApplication $app) {
+            if ($app->wasChanged('status')) {
+                $app->logStatusChange($app->getOriginal('status'), $app->status);
+            }
+
             if (! $app->wasChanged('status') || $app->status !== self::STATUS_SHORTLISTED) {
                 return;
             }
@@ -76,6 +89,22 @@ class JobApplication extends Model
                 $candidate->update(['job_application_id' => $app->id]);
             }
         });
+    }
+
+    private function logStatusChange(?string $from, string $to): void
+    {
+        JobApplicationStatusLog::create([
+            'job_application_id' => $this->id,
+            'from_status'        => $from,
+            'to_status'          => $to,
+            'changed_by'         => auth()->id(),
+            'changed_at'         => now(),
+        ]);
+    }
+
+    public function statusLogs(): HasMany
+    {
+        return $this->hasMany(JobApplicationStatusLog::class)->orderBy('changed_at');
     }
 
     public function answers(): HasMany
@@ -109,9 +138,9 @@ class JobApplication extends Model
         return $this->hasOne(OfferingLetter::class);
     }
 
-    public function quizAttempt(): HasOne
+    public function quizAttempts(): HasMany
     {
-        return $this->hasOne(QuizAttempt::class);
+        return $this->hasMany(QuizAttempt::class);
     }
 
     public function mcuInvitee(): HasOne

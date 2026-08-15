@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\JobOpeningResource\Pages;
 use App\Models\Company;
 use App\Models\JobOpening;
-use App\Models\Quiz;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Tables;
@@ -96,12 +95,14 @@ class JobOpeningResource extends BaseResource
             ])->columns(2),
 
             Forms\Components\Section::make('Tes Online')->schema([
-                Forms\Components\Select::make('quiz_id')
+                Forms\Components\Select::make('quizzes')
                     ->label('Kuis')
-                    ->options(Quiz::query()->pluck('name', 'id'))
+                    ->relationship('quizzes', 'name')
+                    ->multiple()
                     ->searchable()
-                    ->nullable()
-                    ->helperText('Pilih kuis yang dipakai untuk lowongan ini. Kelola bank soal di menu Kuis.'),
+                    ->preload()
+                    ->helperText('Pilih satu atau lebih kuis yang dipakai untuk lowongan ini. Kelola bank soal di menu Kuis.')
+                    ->columnSpanFull(),
 
                 Forms\Components\Toggle::make('requires_psychotest')
                     ->label('Wajib Psikotes Offline')
@@ -179,6 +180,16 @@ class JobOpeningResource extends BaseResource
                     ->label('Dibuat')
                     ->dateTime('d M Y')
                     ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('creator.name')
+                    ->label('Dibuat oleh')
+                    ->default('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('updater.name')
+                    ->label('Terakhir diubah oleh')
+                    ->default('—')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([

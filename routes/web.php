@@ -36,10 +36,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/data-diri-kandidat', [CandidateProfileController::class, 'update'])->name('data-diri.update');
     Route::get('/data-diri-kandidat/dokumen/{document}', [CandidateProfileController::class, 'downloadDocument'])->name('data-diri.dokumen');
 
-    Route::get('/tes-online', [QuizController::class, 'show'])->name('tes-online.show');
-    Route::post('/tes-online/mulai', [QuizController::class, 'start'])->name('tes-online.mulai');
-    Route::get('/tes-online/kerjakan', [QuizController::class, 'work'])->name('tes-online.kerjakan');
-    Route::post('/tes-online/submit', [QuizController::class, 'submit'])->middleware('throttle:6,1')->name('tes-online.submit');
+    Route::get('/tes-online', [QuizController::class, 'index'])->name('tes-online.show');
+    Route::get('/tes-online/{quiz}', [QuizController::class, 'show'])->name('tes-online.detail');
+    Route::post('/tes-online/{quiz}/mulai', [QuizController::class, 'start'])->name('tes-online.mulai');
+    Route::get('/tes-online/{quiz}/kerjakan', [QuizController::class, 'work'])->name('tes-online.kerjakan');
+    Route::post('/tes-online/{quiz}/submit', [QuizController::class, 'submit'])->middleware('throttle:6,1')->name('tes-online.submit');
 });
 
 // Admin export — protected by Filament auth guard

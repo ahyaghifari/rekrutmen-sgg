@@ -11,7 +11,7 @@ class QuizAttempt extends Model
 {
     use HasUlids;
 
-    protected $fillable = ['job_application_id', 'started_at', 'deadline_at', 'submitted_at', 'score', 'status'];
+    protected $fillable = ['job_application_id', 'quiz_id', 'started_at', 'deadline_at', 'submitted_at', 'score', 'status'];
 
     protected $casts = [
         'started_at'   => 'datetime',
@@ -23,6 +23,11 @@ class QuizAttempt extends Model
     public function jobApplication(): BelongsTo
     {
         return $this->belongsTo(JobApplication::class);
+    }
+
+    public function quiz(): BelongsTo
+    {
+        return $this->belongsTo(Quiz::class);
     }
 
     public function answers(): HasMany
@@ -40,9 +45,9 @@ class QuizAttempt extends Model
      */
     public function gradeAndSubmit(array $answers): void
     {
-        $questions     = QuizQuestion::whereIn('id', array_keys($answers))->get()->keyBy('id');
-        $totalQuestions = QuizQuestion::where('quiz_id', $this->jobApplication->jobOpening->quiz_id)->count() ?: 1;
-        $correctCount  = 0;
+        $questions      = QuizQuestion::whereIn('id', array_keys($answers))->get()->keyBy('id');
+        $totalQuestions = QuizQuestion::where('quiz_id', $this->quiz_id)->count() ?: 1;
+        $correctCount   = 0;
 
         foreach ($answers as $questionId => $selected) {
             $question  = $questions->get($questionId);

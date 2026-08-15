@@ -10,6 +10,8 @@ $statusMap   = [
     'screening'   => ['label' => 'Peninjauan Berkas',    'color' => 'info',    'icon' => 'heroicon-m-magnifying-glass'],
     'shortlisted' => ['label' => 'Lolos Seleksi Berkas', 'color' => 'warning', 'icon' => 'heroicon-m-clipboard-document-check'],
     'interview'   => ['label' => 'Wawancara',            'color' => 'warning', 'icon' => 'heroicon-m-chat-bubble-left-right'],
+    'mcu'         => ['label' => 'Medical Check Up',     'color' => 'warning', 'icon' => 'heroicon-m-heart'],
+    'onboarding'  => ['label' => 'TTD & Onboarding',     'color' => 'success', 'icon' => 'heroicon-m-pencil-square'],
     'passed'      => ['label' => 'Diterima',             'color' => 'success', 'icon' => 'heroicon-m-check-badge'],
     'rejected'    => ['label' => 'Tidak Dilanjutkan',    'color' => 'danger',  'icon' => 'heroicon-m-x-circle'],
 ];
@@ -130,6 +132,38 @@ $s = $statusMap[$application->status] ?? ['label' => $application->status, 'colo
         </button>
         @endforeach
     </div>
+</div>
+
+{{-- Riwayat status --}}
+<div class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 px-6 py-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">Riwayat Status</div>
+    @php $logs = $application->statusLogs; @endphp
+    @if($logs->isEmpty())
+    <div class="text-sm text-gray-400">Belum ada riwayat.</div>
+    @else
+    <div class="flex flex-col gap-3">
+        @foreach($logs as $log)
+        <div class="flex items-start gap-3">
+            <div class="w-2 h-2 rounded-full mt-1.5 shrink-0" style="background:{{ $statusMap[$log->to_status]['color'] ?? 'gray' }}"></div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm text-gray-700 dark:text-gray-200">
+                    @if($log->from_status)
+                        <span class="font-semibold">{{ $statusMap[$log->from_status]['label'] ?? $log->from_status }}</span>
+                        →
+                    @endif
+                    <span class="font-semibold">{{ $statusMap[$log->to_status]['label'] ?? $log->to_status }}</span>
+                </div>
+                <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    {{ $log->changed_at->translatedFormat('j F Y, H:i') }} WIB
+                    @if($log->changedBy)
+                        · oleh {{ $log->changedBy->name }}
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+    @endif
 </div>
 
 {{-- Answer sections --}}

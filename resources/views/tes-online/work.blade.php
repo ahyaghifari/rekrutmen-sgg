@@ -1,5 +1,5 @@
 <x-app-layout>
-<x-slot name="title">Mengerjakan Tes — Syifa Global Group</x-slot>
+<x-slot name="title">{{ $quiz->name }} — Syifa Global Group</x-slot>
 
 <div style="max-width:640px;margin:0 auto;padding:20px 16px;"
      x-data="{ deadline: new Date('{{ $attempt->deadline_at->toIso8601String() }}').getTime(), remaining: 0, tick() { this.remaining = Math.max(0, Math.floor((this.deadline - Date.now()) / 1000)); if (this.remaining <= 0) { document.getElementById('quiz-form').submit(); } }, init() { this.tick(); setInterval(() => this.tick(), 1000); } }"
@@ -11,7 +11,7 @@
          x-text="String(Math.floor(remaining/60)).padStart(2,'0') + ':' + String(remaining%60).padStart(2,'0')"></div>
   </div>
 
-  <form id="quiz-form" method="POST" action="{{ route('tes-online.submit') }}" class="flex flex-col gap-4">
+  <form id="quiz-form" method="POST" action="{{ route('tes-online.submit', $quiz) }}" class="flex flex-col gap-4">
     @csrf
 
     @foreach($questions as $i => $q)

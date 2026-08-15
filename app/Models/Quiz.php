@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Quiz extends Model
@@ -19,8 +20,8 @@ class Quiz extends Model
         return $this->hasMany(QuizQuestion::class)->orderBy('sort_order');
     }
 
-    public function jobOpenings(): HasMany
+    public function jobOpenings(): BelongsToMany
     {
-        return $this->hasMany(JobOpening::class);
+        return $this->belongsToMany(JobOpening::class, 'job_opening_quiz');
     }
 }

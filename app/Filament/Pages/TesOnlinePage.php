@@ -172,7 +172,7 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
         return $table
             ->query(
                 JobApplication::query()
-                    ->with(['answers' => fn ($q) => $q->where('field_key', 'full_name'), 'quizAttempt'])
+                    ->with(['answers' => fn ($q) => $q->where('field_key', 'full_name'), 'quizAttempts'])
                     ->when(
                         $this->jobOpeningId && $this->isJobOpeningAllowed($this->jobOpeningId),
                         fn (Builder $q) => $q->where('job_opening_id', $this->jobOpeningId)->where('status', 'shortlisted'),
@@ -187,25 +187,33 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
 
                 Tables\Columns\TextColumn::make('quiz_sent_at')->label('Diaktifkan')->dateTime('d M Y, H:i')->placeholder('Belum diaktifkan'),
 
-                Tables\Columns\TextColumn::make('attempt_status')
-                    ->label('Status Pengerjaan')
-                    ->getStateUsing(fn ($record) => match ($record->quizAttempt?->status) {
-                        'submitted'   => 'Selesai',
-                        'in_progress' => 'Sedang mengerjakan',
-                        'expired'     => 'Waktu habis',
-                        default       => 'Belum mulai',
+                Tables\Columns\TextColumn::make('attempt_progress')
+                    ->label('Progres Tes')
+                    ->getStateUsing(function ($record) {
+                        $total = $this->getSelectedJobOpening()?->quizzes->count() ?? 0;
+                        $done  = $record->quizAttempts->where('status', 'submitted')->count();
+
+                        return "{$done}/{$total} selesai";
                     })
                     ->badge()
-                    ->color(fn ($record) => match ($record->quizAttempt?->status) {
-                        'submitted'   => 'success',
-                        'in_progress' => 'warning',
-                        'expired'     => 'danger',
-                        default       => 'gray',
+                    ->color(function ($record) {
+                        $total = $this->getSelectedJobOpening()?->quizzes->count() ?? 0;
+                        $done  = $record->quizAttempts->where('status', 'submitted')->count();
+
+                        return match (true) {
+                            $total > 0 && $done === $total => 'success',
+                            $done > 0                      => 'warning',
+                            default                         => 'gray',
+                        };
                     }),
 
                 Tables\Columns\TextColumn::make('score')
-                    ->label('Skor')
-                    ->getStateUsing(fn ($record) => $record->quizAttempt?->score !== null ? $record->quizAttempt->score . '%' : '—'),
+                    ->label('Skor Rata-rata')
+                    ->getStateUsing(function ($record) {
+                        $scores = $record->quizAttempts->where('status', 'submitted')->pluck('score');
+
+                        return $scores->isEmpty() ? '—' : round($scores->avg(), 2) . '%';
+                    }),
 
                 Tables\Columns\TextColumn::make('quiz_result')
                     ->label('Keputusan')
