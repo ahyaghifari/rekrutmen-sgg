@@ -69,6 +69,11 @@ class JobOpening extends Model
         return $this->hasMany(JobApplication::class);
     }
 
+    public function stageLogs(): HasMany
+    {
+        return $this->hasMany(JobOpeningStageLog::class)->orderBy('done_at');
+    }
+
     public function quizzes(): BelongsToMany
     {
         return $this->belongsToMany(Quiz::class, 'job_opening_quiz');

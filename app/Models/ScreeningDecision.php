@@ -48,11 +48,16 @@ class ScreeningDecision extends Model
                 ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_SCREENING_PASSED);
                 $passed++;
             } else {
-                $app->update(['status' => 'rejected']);
+                // Status tetap 'screening' — tidak langsung ditolak.
+                // Draft notif penolakan dibuat agar bisa dikirim manual nanti.
                 ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_SCREENING_REJECTED);
                 $rejected++;
             }
             $d->delete();
+        }
+
+        if ($passed > 0) {
+            JobOpeningStageLog::record($jobOpeningId, 'screening', 'shortlisted', $passed);
         }
 
         return [$passed, $rejected];

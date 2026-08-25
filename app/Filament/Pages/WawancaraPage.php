@@ -24,7 +24,12 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use App\Mail\ApplicantNotificationMail;
+use App\Models\ApplicationNotification;
+use App\Models\CompanyMessageTemplate;
+use App\Models\JobOpeningStageLog;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\HtmlString;
 
 class WawancaraPage extends Page implements HasTable, HasActions, HasForms
@@ -193,10 +198,87 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
             ->action(function (): void {
                 $draft = $this->getInterviewDraft();
                 if (! $draft) return;
+                $count = $draft->invitees()->count();
                 $draft->apply();
+                if ($this->jobOpeningId) {
+                    \App\Models\JobOpeningStageLog::record($this->jobOpeningId, 'shortlisted', 'interview', $count);
+                }
                 $this->resetTable();
                 \Filament\Notifications\Notification::make()
                     ->title('Jadwal diterapkan. Undangan wawancara terkirim.')
+                    ->success()->send();
+            });
+    }
+
+    public function getPassedInterviewCount(): int
+    {
+        if (! $this->jobOpeningId) return 0;
+        return JobApplication::where('job_opening_id', $this->jobOpeningId)
+            ->whereIn('status', ['mcu', 'onboarding', 'passed'])->count();
+    }
+
+    public function getPendingInterviewCount(): int
+    {
+        if (! $this->jobOpeningId) return 0;
+        return JobApplication::where('job_opening_id', $this->jobOpeningId)
+            ->where('status', 'interview')->whereNull('interview_result')->count();
+    }
+
+    public function tandaiTidakLulusWawancaraAction(): Action
+    {
+        $pending = $this->jobOpeningId
+            ? JobApplication::with(['answers' => fn ($q) => $q->where('field_key', 'full_name')])
+                ->where('job_opening_id', $this->jobOpeningId)
+                ->where('status', 'interview')->whereNull('interview_result')
+                ->get()
+            : collect();
+
+        $options = $pending->mapWithKeys(fn ($app) => [
+            $app->id => $app->answers->firstWhere('field_key', 'full_name')?->value ?? '(tanpa nama)',
+        ])->all();
+
+        $count = count($options);
+
+        return Action::make('tandaiTidakLulusWawancara')
+            ->label("Tandai & Beritahu Tidak Lolos ({$count})")
+            ->icon('heroicon-m-x-circle')
+            ->color('danger')
+            ->form([
+                CheckboxList::make('selected_ids')
+                    ->label('Pilih kandidat yang TIDAK LOLOS wawancara')
+                    ->helperText('Kandidat dipilih akan diubah statusnya ke Tidak Dilanjutkan dan langsung dikirim email.')
+                    ->options($options)->searchable()->bulkToggleable()->columns(1),
+            ])
+            ->modalHeading('Tandai Tidak Lolos Wawancara & Kirim Pemberitahuan')
+            ->modalSubmitActionLabel('Tandai & Kirim Email')
+            ->modalCancelActionLabel('Batal')
+            ->modalWidth('lg')
+            ->action(function (array $data): void {
+                if (! $this->jobOpeningId) return;
+                $selectedIds = $data['selected_ids'] ?? [];
+                if (empty($selectedIds)) return;
+
+                $apps = JobApplication::with(['user', 'jobOpening'])
+                    ->whereIn('id', $selectedIds)
+                    ->where('job_opening_id', $this->jobOpeningId)
+                    ->where('status', 'interview')->get();
+
+                $count = 0;
+                foreach ($apps as $app) {
+                    $app->update(['interview_result' => 'tidak_lulus', 'status' => 'rejected']);
+                    $notif = ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED);
+                    if ($notif && $app->user) {
+                        Mail::to($app->user->email)->send(new ApplicantNotificationMail($notif));
+                        $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    }
+                    $count++;
+                }
+
+                JobOpeningStageLog::record($this->jobOpeningId, 'interview', 'rejected', $count);
+                $this->resetTable();
+
+                \Filament\Notifications\Notification::make()
+                    ->title("{$count} kandidat ditandai tidak lolos wawancara dan email terkirim.")
                     ->success()->send();
             });
     }
@@ -261,8 +343,10 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
                 if ($data['hasil'] === 'lulus') {
                     $nextStatus = ($company && ! $company->requires_mcu) ? 'onboarding' : 'mcu';
                     $record->update(['interview_result' => 'lulus', 'status' => $nextStatus]);
+                    \App\Models\JobOpeningStageLog::record($record->job_opening_id, 'interview', $nextStatus, 1);
                 } else {
                     $record->update(['interview_result' => 'tidak_lulus', 'status' => 'rejected']);
+                    \App\Models\JobOpeningStageLog::record($record->job_opening_id, 'interview', 'rejected', 1);
                     // Buat draft notif penolakan — TIDAK langsung dikirim, admin kirim manual nanti
                     \App\Models\ApplicationNotification::createDraftFor(
                         $record,

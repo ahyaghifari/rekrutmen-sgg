@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -17,11 +18,11 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser, MustVerifyEmailContract
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, MustVerifyEmailTrait;
+    use HasFactory, Notifiable, HasRoles, MustVerifyEmailTrait, SoftDeletes;
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->hasAnyRole(['super_admin', 'Super Admin', 'Admin']);
+        return $this->hasAnyRole(['super_admin', 'Super Admin', 'Admin', 'Perawat', 'Staff Lab', 'Staff Radiologi', 'Dokter']);
     }
 
     public function sendEmailVerificationNotification(): void

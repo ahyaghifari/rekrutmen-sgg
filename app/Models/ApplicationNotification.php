@@ -24,10 +24,10 @@ class ApplicationNotification extends Model
         return $this->status === 'draft';
     }
 
-    public static function createDraftFor(JobApplication $app, string $event, array $extra = []): void
+    public static function createDraftFor(JobApplication $app, string $event, array $extra = []): static|null
     {
         $exists = static::where('job_application_id', $app->id)->where('event', $event)->exists();
-        if ($exists) return;
+        if ($exists) return null;
 
         $app->loadMissing('jobOpening');
         $companyId     = $app->jobOpening->company_id;
@@ -54,7 +54,7 @@ class ApplicationNotification extends Model
             ? $replace($template->body)
             : static::defaultBody($event, $applicantName, $jobTitle, $extra);
 
-        static::create([
+        return static::create([
             'job_application_id' => $app->id,
             'event'              => $event,
             'subject'            => $subject,
@@ -67,10 +67,12 @@ class ApplicationNotification extends Model
     {
         return match ($event) {
             CompanyMessageTemplate::EVENT_SCREENING_PASSED    => "Selamat! Kamu Lolos Seleksi Berkas – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_QUIZ_SENT           => "Tes Online Sudah Bisa Dikerjakan – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_QUIZ_REJECTED       => "Update Lamaran Kamu – {$jobTitle}",
             CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED => "Undangan Wawancara – {$jobTitle}",
             CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED  => "Update Lamaran Kamu – {$jobTitle}",
-            CompanyMessageTemplate::EVENT_QUIZ_SENT           => "Tes Online Sudah Bisa Dikerjakan – {$jobTitle}",
             CompanyMessageTemplate::EVENT_MCU_SCHEDULED       => "Jadwal Medical Check Up – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_MCU_REJECTED        => "Update Lamaran Kamu – {$jobTitle}",
             CompanyMessageTemplate::EVENT_ONBOARDING_INVITE   => "Selamat Bergabung! Undangan TTD & Onboarding – {$jobTitle}",
             default                                           => "Update Lamaran Kamu – {$jobTitle}",
         };
@@ -102,8 +104,16 @@ class ApplicationNotification extends Model
             return "Halo {$name},\n\nSelamat! Kamu lolos tahap wawancara untuk posisi {$jobTitle} dan diminta melakukan Medical Check Up (MCU).\n\nMCU dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
         }
 
+        if ($event === CompanyMessageTemplate::EVENT_QUIZ_REJECTED) {
+            return "Halo {$name},\n\nTerima kasih telah mengikuti proses seleksi untuk posisi {$jobTitle}.\n\nSetelah meninjau hasil tes online, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nJangan menyerah — terus tingkatkan kemampuanmu dan kami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
+        }
+
         if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED) {
             return "Halo {$name},\n\nTerima kasih telah meluangkan waktu untuk mengikuti proses wawancara posisi {$jobTitle}.\n\nSetelah melalui pertimbangan, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nKami sangat menghargai antusiasme dan usahamu. Jangan menyerah — terus tingkatkan diri dan kami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
+        }
+
+        if ($event === CompanyMessageTemplate::EVENT_MCU_REJECTED) {
+            return "Halo {$name},\n\nTerima kasih telah menjalani proses Medical Check Up (MCU) untuk posisi {$jobTitle}.\n\nSetelah melalui evaluasi hasil MCU, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nKami sangat menghargai kesungguhanmu selama proses seleksi. Kami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_ONBOARDING_INVITE) {

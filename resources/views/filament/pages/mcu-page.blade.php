@@ -71,6 +71,45 @@
     </div>
     @endif
 
+    {{-- Banner: ada yang lulus MCU tapi masih ada yang pending --}}
+    @if($this->jobOpeningId && $this->getPassedMcuCount() > 0 && $this->getPendingMcuCount() > 0)
+    <div class="fi-section rounded-xl bg-orange-50 dark:bg-orange-950/30 ring-1 ring-orange-200 dark:ring-orange-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-x-circle class="w-4 h-4 text-orange-700 dark:text-orange-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-orange-900 dark:text-orange-100">Ada Kandidat Belum Diputuskan</div>
+                <div class="text-xs text-orange-700 dark:text-orange-400 mt-0.5">
+                    <strong>{{ $this->getPendingMcuCount() }}</strong> kandidat masih di tahap MCU sementara yang lain sudah lanjut. Tandai yang tidak lolos dan beritahu mereka.
+                </div>
+            </div>
+        </div>
+        {{ ($this->tandaiTidakLulusMcuAction) }}
+    </div>
+    @endif
+
+    {{-- Banner: ada draft notif penolakan MCU yang belum dikirim --}}
+    @if($this->jobOpeningId)
+    @php $pendingMcuDraft = \App\Models\ApplicationNotification::whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))->where('status', 'draft')->where('event', \App\Models\CompanyMessageTemplate::EVENT_MCU_REJECTED)->count(); @endphp
+    @if($pendingMcuDraft > 0)
+    <div class="fi-section rounded-xl bg-red-50 dark:bg-red-950/30 ring-1 ring-red-200 dark:ring-red-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-envelope class="w-4 h-4 text-red-700 dark:text-red-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Penolakan MCU Ditahan</div>
+                <div class="text-xs text-red-700 dark:text-red-400 mt-0.5">
+                    <strong>{{ $pendingMcuDraft }}</strong> kandidat belum menerima pemberitahuan tidak lolos MCU. Kirim kapan saja.
+                </div>
+            </div>
+        </div>
+        {{ ($this->kirimNotifPenolakanMcuAction) }}
+    </div>
+    @endif
+    @endif
+
     {{-- Table --}}
     {{ $this->table }}
 

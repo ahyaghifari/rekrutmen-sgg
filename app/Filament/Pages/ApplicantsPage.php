@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\CompanyMessageTemplate;
 use App\Models\JobApplication;
 use App\Models\JobOpening;
+use App\Models\JobOpeningStageLog;
 use App\Models\ScreeningDecision;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -148,7 +149,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
             ->form([
                 CheckboxList::make('passed_ids')
                     ->label('Centang pelamar yang LOLOS seleksi berkas')
-                    ->helperText('Yang tidak dicentang = Tidak Dilanjutkan. Keputusan disimpan sebagai draft — status pelamar belum berubah sampai kamu terapkan.')
+                    ->helperText('Yang tidak dicentang = tetap di Peninjauan Berkas. Notif penolakan dibuat sebagai draft — bisa dikirim manual kapan saja. Status berubah hanya setelah kamu terapkan.')
                     ->options($options)
                     ->searchable()
                     ->bulkToggleable()
@@ -174,7 +175,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                 $rejected = count($allIds) - $passed;
 
                 \Filament\Notifications\Notification::make()
-                    ->title("Draft tersimpan: {$passed} lolos, {$rejected} tidak dilanjutkan. Belum diterapkan ke pelamar.")
+                    ->title("Draft tersimpan: {$passed} lolos, {$rejected} tidak lolos. Belum diterapkan ke pelamar.")
                     ->warning()
                     ->send();
             });
@@ -218,10 +219,10 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                         . '</ul>'
                     )),
                 Placeholder::make('ditolak')
-                    ->label("Tidak Dilanjutkan — {$rejectedCount} orang")
+                    ->label("Tidak Lolos — {$rejectedCount} orang")
                     ->content(new HtmlString(
-                        '<p style="font-size:13px;color:#dc2626;">'
-                        . "{$rejectedCount} pelamar akan ditandai Tidak Dilanjutkan."
+                        '<p style="font-size:13px;color:#d97706;">'
+                        . "{$rejectedCount} pelamar tetap di status Peninjauan Berkas. Draft email penolakan dibuat — kirim manual kapan saja."
                         . '</p>'
                     )),
             ])
@@ -243,7 +244,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                         $this->resetTable();
 
                         \Filament\Notifications\Notification::make()
-                            ->title("{$passedCount} lolos (email terkirim), {$rejectedCount} tidak dilanjutkan (email ditahan).")
+                            ->title("{$passedCount} lolos (email terkirim). {$rejectedCount} tetap di Peninjauan Berkas — draft notif penolakan siap dikirim manual.")
                             ->success()
                             ->send();
                     }),
@@ -256,7 +257,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                 $this->resetTable();
 
                 \Filament\Notifications\Notification::make()
-                    ->title("{$passedCount} lolos, {$rejectedCount} tidak dilanjutkan. Draft email siap di halaman Notifikasi.")
+                    ->title("{$passedCount} lolos. {$rejectedCount} tetap di Peninjauan Berkas — draft notif penolakan siap dikirim manual.")
                     ->success()
                     ->send();
             });
@@ -318,6 +319,81 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
             });
     }
 
+    public function tandaiTidakLolosBerkasAction(): Action
+    {
+        $screeningApplicants = $this->jobOpeningId
+            ? JobApplication::with(['answers' => fn ($q) => $q->where('field_key', 'full_name')])
+                ->where('job_opening_id', $this->jobOpeningId)
+                ->where('status', 'screening')
+                ->get()
+            : collect();
+
+        $options = $screeningApplicants->mapWithKeys(fn ($app) => [
+            $app->id => $app->answers->firstWhere('field_key', 'full_name')?->value ?? '(tanpa nama)',
+        ])->all();
+
+        $count = count($options);
+
+        return Action::make('tandaiTidakLolosBerkas')
+            ->label("Tandai & Beritahu Tidak Lolos ({$count})")
+            ->icon('heroicon-m-x-circle')
+            ->color('danger')
+            ->form([
+                CheckboxList::make('selected_ids')
+                    ->label('Pilih pelamar yang TIDAK LOLOS seleksi berkas')
+                    ->helperText('Pelamar yang dipilih akan diubah statusnya ke Tidak Dilanjutkan dan langsung dikirim email pemberitahuan.')
+                    ->options($options)
+                    ->searchable()
+                    ->bulkToggleable()
+                    ->columns(1),
+            ])
+            ->modalHeading('Tandai Tidak Lolos & Kirim Pemberitahuan')
+            ->modalDescription('Pilih pelamar yang tidak lolos seleksi berkas. Email akan langsung dikirim setelah kamu konfirmasi.')
+            ->modalSubmitActionLabel('Tandai & Kirim Email')
+            ->modalCancelActionLabel('Batal')
+            ->modalWidth('lg')
+            ->action(function (array $data): void {
+                if (! $this->jobOpeningId) return;
+
+                $selectedIds = $data['selected_ids'] ?? [];
+                if (empty($selectedIds)) return;
+
+                $apps = JobApplication::with(['user', 'answers'])
+                    ->whereIn('id', $selectedIds)
+                    ->where('job_opening_id', $this->jobOpeningId)
+                    ->where('status', 'screening')
+                    ->get();
+
+                $count = 0;
+                foreach ($apps as $app) {
+                    $app->update(['status' => 'rejected']);
+
+                    // Gunakan draft yang sudah ada, atau buat baru
+                    $notif = ApplicationNotification::where('job_application_id', $app->id)
+                        ->where('event', CompanyMessageTemplate::EVENT_SCREENING_REJECTED)
+                        ->where('status', 'draft')
+                        ->first()
+                        ?? ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_SCREENING_REJECTED);
+
+                    if ($notif) {
+                        \Illuminate\Support\Facades\Mail::to($app->user->email)
+                            ->send(new \App\Mail\ApplicantNotificationMail($notif));
+                        $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    }
+
+                    $count++;
+                }
+
+                JobOpeningStageLog::record($this->jobOpeningId, 'screening', 'rejected', $count);
+
+                $this->resetTable();
+
+                \Filament\Notifications\Notification::make()
+                    ->title("{$count} pelamar ditandai tidak lolos dan email terkirim.")
+                    ->success()->send();
+            });
+    }
+
     public function bulkMoveToScreeningAction(): Action
     {
         $count = $this->getAppliedCount();
@@ -339,6 +415,8 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                 $count = JobApplication::where('job_opening_id', $this->jobOpeningId)
                     ->where('status', 'applied')
                     ->update(['status' => 'screening']);
+
+                \App\Models\JobOpeningStageLog::record($this->jobOpeningId, 'applied', 'screening', $count);
 
                 $this->resetTable();
 

@@ -12,6 +12,7 @@ use App\Mail\ApplicantNotificationMail;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -144,6 +145,111 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
             });
     }
 
+    public function getLulusTesCount(): int
+    {
+        if (! $this->jobOpeningId) return 0;
+        return JobApplication::where('job_opening_id', $this->jobOpeningId)
+            ->where('status', 'shortlisted')->where('quiz_result', 'lulus')->count();
+    }
+
+    public function getBelumDiputuskanCount(): int
+    {
+        if (! $this->jobOpeningId) return 0;
+        return JobApplication::where('job_opening_id', $this->jobOpeningId)
+            ->where('status', 'shortlisted')->whereNotNull('quiz_sent_at')->whereNull('quiz_result')->count();
+    }
+
+    public function tandaiTidakLulusTesAction(): Action
+    {
+        $pending = $this->jobOpeningId
+            ? JobApplication::with(['answers' => fn ($q) => $q->where('field_key', 'full_name')])
+                ->where('job_opening_id', $this->jobOpeningId)
+                ->where('status', 'shortlisted')->whereNotNull('quiz_sent_at')->whereNull('quiz_result')
+                ->get()
+            : collect();
+
+        $options = $pending->mapWithKeys(fn ($app) => [
+            $app->id => $app->answers->firstWhere('field_key', 'full_name')?->value ?? '(tanpa nama)',
+        ])->all();
+
+        $count = count($options);
+
+        return Action::make('tandaiTidakLulusTes')
+            ->label("Tandai & Beritahu Tidak Lolos ({$count})")
+            ->icon('heroicon-m-x-circle')
+            ->color('danger')
+            ->form([
+                CheckboxList::make('selected_ids')
+                    ->label('Pilih kandidat yang TIDAK LOLOS tes online')
+                    ->helperText('Kandidat dipilih akan diubah statusnya ke Tidak Dilanjutkan dan langsung dikirim email.')
+                    ->options($options)->searchable()->bulkToggleable()->columns(1),
+            ])
+            ->modalHeading('Tandai Tidak Lolos Tes Online & Kirim Pemberitahuan')
+            ->modalSubmitActionLabel('Tandai & Kirim Email')
+            ->modalCancelActionLabel('Batal')
+            ->modalWidth('lg')
+            ->action(function (array $data): void {
+                if (! $this->jobOpeningId) return;
+                $selectedIds = $data['selected_ids'] ?? [];
+                if (empty($selectedIds)) return;
+
+                $apps = JobApplication::with(['user', 'jobOpening'])
+                    ->whereIn('id', $selectedIds)
+                    ->where('job_opening_id', $this->jobOpeningId)
+                    ->where('status', 'shortlisted')->get();
+
+                $count = 0;
+                foreach ($apps as $app) {
+                    $app->update(['quiz_result' => 'tidak_lulus', 'status' => 'rejected']);
+                    $notif = ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_QUIZ_REJECTED);
+                    if ($notif && $app->user) {
+                        Mail::to($app->user->email)->send(new ApplicantNotificationMail($notif));
+                        $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    }
+                    $count++;
+                }
+
+                \App\Models\JobOpeningStageLog::record($this->jobOpeningId, 'shortlisted', 'rejected', $count);
+                $this->resetTable();
+
+                \Filament\Notifications\Notification::make()
+                    ->title("{$count} kandidat ditandai tidak lolos tes dan email terkirim.")
+                    ->success()->send();
+            });
+    }
+
+    public function kirimNotifPenolakanTesAction(): Action
+    {
+        $pendingCount = $this->jobOpeningId
+            ? ApplicationNotification::whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))
+                ->where('status', 'draft')->where('event', CompanyMessageTemplate::EVENT_QUIZ_REJECTED)->count()
+            : 0;
+
+        return Action::make('kirimNotifPenolakanTes')
+            ->label("Kirim Notif Penolakan ({$pendingCount})")
+            ->icon('heroicon-m-envelope')
+            ->color('danger')
+            ->visible(fn () => $pendingCount > 0)
+            ->requiresConfirmation()
+            ->modalHeading('Kirim Pemberitahuan Tidak Lolos Tes Online?')
+            ->modalDescription("Email akan dikirim ke {$pendingCount} kandidat. Tidak bisa dibatalkan.")
+            ->modalSubmitActionLabel('Ya, Kirim Sekarang')
+            ->action(function (): void {
+                if (! $this->jobOpeningId) return;
+                $drafts = ApplicationNotification::with(['jobApplication.user'])
+                    ->whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))
+                    ->where('status', 'draft')->where('event', CompanyMessageTemplate::EVENT_QUIZ_REJECTED)->get();
+
+                $count = 0;
+                foreach ($drafts as $notif) {
+                    Mail::to($notif->jobApplication->user->email)->send(new ApplicantNotificationMail($notif));
+                    $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    $count++;
+                }
+                \Filament\Notifications\Notification::make()->title("Email terkirim ke {$count} kandidat.")->success()->send();
+            });
+    }
+
     public function tandaiHasilTesAction(): Tables\Actions\Action
     {
         return Tables\Actions\Action::make('tandaiHasilTes')
@@ -161,6 +267,7 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
                     $record->update(['quiz_result' => 'lulus']);
                 } else {
                     $record->update(['quiz_result' => 'tidak_lulus', 'status' => 'rejected']);
+                    ApplicationNotification::createDraftFor($record, CompanyMessageTemplate::EVENT_QUIZ_REJECTED);
                 }
 
                 \Filament\Notifications\Notification::make()->title('Keputusan tersimpan')->success()->send();

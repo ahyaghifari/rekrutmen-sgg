@@ -55,15 +55,10 @@ class JobApplication extends Model
     ];
 
     /**
-     * Begitu status jadi shortlisted (lulus berkas), pelamar resmi jadi
-     * kandidat — row Candidate dibuat otomatis di sini supaya konsisten
-     * berapa pun jalur yang mengubah status ke shortlisted (ScreeningDecision,
-     * perubahan manual dari detail halaman, dst).
+     * Setiap perubahan status dicatat otomatis ke job_application_status_logs.
      *
-     * Setiap perubahan status (termasuk status awal saat lamaran dibuat) juga
-     * otomatis dicatat ke job_application_status_logs, satu titik untuk semua
-     * jalur perubahan status — jadi riwayat lengkap tiap lamaran selalu ada
-     * tanpa perlu tiap Filament action menulis log-nya sendiri-sendiri.
+     * Row Candidate dibuat otomatis saat status → onboarding/passed (bukan shortlisted),
+     * karena pengisian data kandidat baru relevan di tahap akhir rekrutmen.
      */
     protected static function booted(): void
     {
@@ -72,21 +67,19 @@ class JobApplication extends Model
         });
 
         static::updated(function (JobApplication $app) {
-            if ($app->wasChanged('status')) {
-                $app->logStatusChange($app->getOriginal('status'), $app->status);
-            }
+            if (! $app->wasChanged('status')) return;
 
-            if (! $app->wasChanged('status') || $app->status !== self::STATUS_SHORTLISTED) {
-                return;
-            }
+            $app->logStatusChange($app->getOriginal('status'), $app->status);
 
-            $candidate = Candidate::firstOrCreate(
-                ['user_id' => $app->user_id],
-                ['job_application_id' => $app->id, 'name' => $app->answersMap()['full_name'] ?? $app->user->name]
-            );
+            if (in_array($app->status, [self::STATUS_ONBOARDING, self::STATUS_PASSED])) {
+                $candidate = Candidate::firstOrCreate(
+                    ['user_id' => $app->user_id],
+                    ['job_application_id' => $app->id, 'name' => $app->answersMap()['full_name'] ?? $app->user->name]
+                );
 
-            if ($candidate->job_application_id !== $app->id) {
-                $candidate->update(['job_application_id' => $app->id]);
+                if ($candidate->job_application_id !== $app->id) {
+                    $candidate->update(['job_application_id' => $app->id]);
+                }
             }
         });
     }

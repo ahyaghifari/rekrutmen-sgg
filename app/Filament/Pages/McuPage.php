@@ -24,7 +24,12 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use App\Mail\ApplicantNotificationMail;
+use App\Models\ApplicationNotification;
+use App\Models\CompanyMessageTemplate;
+use App\Models\JobOpeningStageLog;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\HtmlString;
 
 class McuPage extends Page implements HasTable, HasActions, HasForms
@@ -192,21 +197,131 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
             });
     }
 
-    /** Catat hasil MCU: lulus/tidak + saran dokter/rekruter terkait kesehatan kandidat. */
-    public function tandaiHasilMcuAction(): Tables\Actions\Action
+    public function getPassedMcuCount(): int
     {
-        return Tables\Actions\Action::make('tandaiHasilMcu')
-            ->label('Catat Hasil MCU')
+        if (! $this->jobOpeningId) return 0;
+        return JobApplication::where('job_opening_id', $this->jobOpeningId)
+            ->whereIn('status', ['onboarding', 'passed'])->count();
+    }
+
+    public function getPendingMcuCount(): int
+    {
+        if (! $this->jobOpeningId) return 0;
+        return JobApplication::where('job_opening_id', $this->jobOpeningId)
+            ->where('status', 'mcu')
+            ->whereDoesntHave('mcuInvitee', fn ($q) => $q->where('status_mcu', '!=', 'pending'))
+            ->count();
+    }
+
+    public function tandaiTidakLulusMcuAction(): Action
+    {
+        $pending = $this->jobOpeningId
+            ? JobApplication::with(['answers' => fn ($q) => $q->where('field_key', 'full_name'), 'mcuInvitee'])
+                ->where('job_opening_id', $this->jobOpeningId)
+                ->where('status', 'mcu')
+                ->whereDoesntHave('mcuInvitee', fn ($q) => $q->where('status_mcu', '!=', 'pending'))
+                ->get()
+            : collect();
+
+        $options = $pending->mapWithKeys(fn ($app) => [
+            $app->id => $app->answers->firstWhere('field_key', 'full_name')?->value ?? '(tanpa nama)',
+        ])->all();
+
+        $count = count($options);
+
+        return Action::make('tandaiTidakLulusMcu')
+            ->label("Tandai & Beritahu Tidak Lolos MCU ({$count})")
+            ->icon('heroicon-m-x-circle')
+            ->color('danger')
+            ->form([
+                CheckboxList::make('selected_ids')
+                    ->label('Pilih kandidat yang TIDAK LOLOS MCU')
+                    ->helperText('Kandidat dipilih akan diubah statusnya ke Tidak Dilanjutkan dan langsung dikirim email.')
+                    ->options($options)->searchable()->bulkToggleable()->columns(1),
+            ])
+            ->modalHeading('Tandai Tidak Lolos MCU & Kirim Pemberitahuan')
+            ->modalSubmitActionLabel('Tandai & Kirim Email')
+            ->modalCancelActionLabel('Batal')
+            ->modalWidth('lg')
+            ->action(function (array $data): void {
+                if (! $this->jobOpeningId) return;
+                $selectedIds = $data['selected_ids'] ?? [];
+                if (empty($selectedIds)) return;
+
+                $apps = JobApplication::with(['user', 'jobOpening'])
+                    ->whereIn('id', $selectedIds)
+                    ->where('job_opening_id', $this->jobOpeningId)
+                    ->where('status', 'mcu')->get();
+
+                $count = 0;
+                foreach ($apps as $app) {
+                    $app->update(['status' => 'rejected']);
+                    $notif = ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_MCU_REJECTED);
+                    if ($notif && $app->user) {
+                        Mail::to($app->user->email)->send(new ApplicantNotificationMail($notif));
+                        $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    }
+                    $count++;
+                }
+
+                JobOpeningStageLog::record($this->jobOpeningId, 'mcu', 'rejected', $count);
+                $this->resetTable();
+
+                \Filament\Notifications\Notification::make()
+                    ->title("{$count} kandidat ditandai tidak lolos MCU dan email terkirim.")
+                    ->success()->send();
+            });
+    }
+
+    public function kirimNotifPenolakanMcuAction(): Action
+    {
+        $pendingCount = $this->jobOpeningId
+            ? ApplicationNotification::whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))
+                ->where('status', 'draft')->where('event', CompanyMessageTemplate::EVENT_MCU_REJECTED)->count()
+            : 0;
+
+        return Action::make('kirimNotifPenolakanMcu')
+            ->label("Kirim Notif Penolakan MCU ({$pendingCount})")
+            ->icon('heroicon-m-envelope')
+            ->color('danger')
+            ->visible(fn () => $pendingCount > 0)
+            ->requiresConfirmation()
+            ->modalHeading('Kirim Pemberitahuan Tidak Lolos MCU?')
+            ->modalDescription("Email akan dikirim ke {$pendingCount} kandidat. Tidak bisa dibatalkan.")
+            ->modalSubmitActionLabel('Ya, Kirim Sekarang')
+            ->action(function (): void {
+                if (! $this->jobOpeningId) return;
+                $drafts = ApplicationNotification::with(['jobApplication.user'])
+                    ->whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))
+                    ->where('status', 'draft')->where('event', CompanyMessageTemplate::EVENT_MCU_REJECTED)->get();
+
+                $count = 0;
+                foreach ($drafts as $notif) {
+                    Mail::to($notif->jobApplication->user->email)->send(new ApplicantNotificationMail($notif));
+                    $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    $count++;
+                }
+                \Filament\Notifications\Notification::make()->title("Email terkirim ke {$count} kandidat.")->success()->send();
+            });
+    }
+
+    /** Keputusan final fit/unfit oleh HRD — gate: pemeriksaan dokter harus sudah diisi. Rekomendasi dokter cuma saran, bukan penentu otomatis. */
+    public function putuskanHasilMcuAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('putuskanHasilMcu')
+            ->label('Putuskan Hasil MCU')
             ->icon('heroicon-m-clipboard-document-check')
             ->color('gray')
-            ->form([
-                Radio::make('hasil')->label('Hasil MCU')->options([
-                    'lulus'       => 'Lulus',
-                    'tidak_lulus' => 'Tidak Lulus',
+            ->form(fn ($record) => [
+                Placeholder::make('rekomendasi_dokter')
+                    ->label('Rekomendasi Dokter')
+                    ->content($record->mcuInvitee?->doctorExamination?->rekomendasi ?: '—'),
+                Radio::make('hasil')->label('Keputusan MCU')->options([
+                    'fit'   => 'Fit (Lulus)',
+                    'unfit' => 'Unfit (Tidak Lulus)',
                 ])->required(),
-                Textarea::make('health_notes')
-                    ->label('Catatan / Saran Dokter atau Rekruter')
-                    ->helperText('Terkait kondisi kesehatan kandidat, misal anjuran pemeriksaan lanjutan atau catatan medis relevan.')
+                Textarea::make('catatan_mcu')
+                    ->label('Catatan Keputusan')
                     ->rows(3),
             ])
             ->action(function (array $data, $record): void {
@@ -214,13 +329,20 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
                 if (! $invitee) return;
 
                 $invitee->update([
-                    'result'       => $data['hasil'],
-                    'health_notes' => $data['health_notes'] ?? null,
+                    'status_mcu'  => $data['hasil'],
+                    'catatan_mcu' => $data['catatan_mcu'] ?? null,
                 ]);
 
-                $record->update(['status' => $data['hasil'] === 'lulus' ? 'onboarding' : 'rejected']);
+                $nextStatus = $data['hasil'] === 'fit' ? 'onboarding' : 'rejected';
+                $record->update(['status' => $nextStatus]);
+                JobOpeningStageLog::record($record->job_opening_id, 'mcu', $nextStatus, 1);
 
-                \Filament\Notifications\Notification::make()->title('Hasil MCU tersimpan')->success()->send();
+                if ($nextStatus === 'rejected') {
+                    ApplicationNotification::createDraftFor($record, CompanyMessageTemplate::EVENT_MCU_REJECTED);
+                    // draft ditahan — admin kirim manual via banner
+                }
+
+                \Filament\Notifications\Notification::make()->title('Keputusan MCU tersimpan')->success()->send();
             });
     }
 
@@ -229,7 +351,7 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
         return $table
             ->query(
                 JobApplication::query()
-                    ->with(['answers' => fn ($q) => $q->where('field_key', 'full_name'), 'mcuInvitee'])
+                    ->with(['answers' => fn ($q) => $q->where('field_key', 'full_name'), 'mcuInvitee.nurseAssessment', 'mcuInvitee.labResult', 'mcuInvitee.radiologyResult', 'mcuInvitee.doctorExamination'])
                     ->when(
                         $this->jobOpeningId && $this->isJobOpeningAllowed($this->jobOpeningId),
                         fn (Builder $q) => $q->where('job_opening_id', $this->jobOpeningId)->where('status', 'mcu'),
@@ -242,24 +364,33 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
                     ->label('Nama Lengkap')
                     ->getStateUsing(fn ($record) => $record->answers->firstWhere('field_key', 'full_name')?->value ?? '—'),
 
-                Tables\Columns\TextColumn::make('mcu_result')
-                    ->label('Hasil')
+                Tables\Columns\IconColumn::make('nurse_done')->label('Perawat')
+                    ->getStateUsing(fn ($record) => (bool) $record->mcuInvitee?->nurseAssessment)->boolean(),
+                Tables\Columns\IconColumn::make('lab_done')->label('Lab')
+                    ->getStateUsing(fn ($record) => (bool) $record->mcuInvitee?->labResult)->boolean(),
+                Tables\Columns\IconColumn::make('radiology_done')->label('Radiologi')
+                    ->getStateUsing(fn ($record) => (bool) $record->mcuInvitee?->radiologyResult)->boolean(),
+                Tables\Columns\IconColumn::make('doctor_done')->label('Dokter')
+                    ->getStateUsing(fn ($record) => (bool) $record->mcuInvitee?->doctorExamination)->boolean(),
+
+                Tables\Columns\TextColumn::make('status_mcu')
+                    ->label('Keputusan MCU')
                     ->badge()
-                    ->getStateUsing(fn ($record) => $record->mcuInvitee?->result)
+                    ->getStateUsing(fn ($record) => $record->mcuInvitee?->status_mcu)
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'lulus'       => 'Lulus',
-                        'tidak_lulus' => 'Tidak Lulus',
-                        default       => 'Belum dicatat',
+                        'fit'   => 'Fit',
+                        'unfit' => 'Unfit',
+                        default => 'Belum diputuskan',
                     })
                     ->color(fn ($state) => match ($state) {
-                        'lulus'       => 'success',
-                        'tidak_lulus' => 'danger',
-                        default       => 'gray',
+                        'fit'   => 'success',
+                        'unfit' => 'danger',
+                        default => 'gray',
                     }),
 
-                Tables\Columns\TextColumn::make('health_notes')
-                    ->label('Catatan Kesehatan')
-                    ->getStateUsing(fn ($record) => $record->mcuInvitee?->health_notes ?? '—')
+                Tables\Columns\TextColumn::make('catatan_mcu')
+                    ->label('Catatan Keputusan')
+                    ->getStateUsing(fn ($record) => $record->mcuInvitee?->catatan_mcu ?? '—')
                     ->limit(60)
                     ->toggleable(),
             ])
@@ -268,7 +399,9 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
                     ->label('Lihat')
                     ->icon('heroicon-m-eye')
                     ->url(fn ($record) => route('filament.admin.pages.applicant-detail-page') . '?application=' . $record->id),
-                $this->tandaiHasilMcuAction()->visible(fn ($record) => $record->mcuInvitee && $record->mcuInvitee->result === null),
+                $this->putuskanHasilMcuAction()->visible(fn ($record) => $record->mcuInvitee
+                    && $record->mcuInvitee->status_mcu === 'pending'
+                    && $record->mcuInvitee->doctorExamDone()),
             ])
             ->bulkActions([])
             ->emptyStateHeading('Pilih perusahaan & lowongan')

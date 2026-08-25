@@ -95,6 +95,30 @@
     </div>
     @endif
 
+    {{-- Banner: ada shortlisted + masih ada yang screening (belum diputuskan tidak lolos) --}}
+    @if($this->jobOpeningId)
+    @php
+        $shortlistedCount2 = \App\Models\JobApplication::where('job_opening_id', $this->jobOpeningId)->where('status', 'shortlisted')->count();
+        $screeningRemaining = \App\Models\JobApplication::where('job_opening_id', $this->jobOpeningId)->where('status', 'screening')->count();
+    @endphp
+    @if($shortlistedCount2 > 0 && $screeningRemaining > 0)
+    <div class="fi-section rounded-xl bg-orange-50 dark:bg-orange-950/30 ring-1 ring-orange-200 dark:ring-orange-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-x-circle class="w-4 h-4 text-orange-700 dark:text-orange-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-orange-900 dark:text-orange-100">Ada Pelamar yang Belum Diputuskan</div>
+                <div class="text-xs text-orange-700 dark:text-orange-400 mt-0.5">
+                    <strong>{{ $screeningRemaining }}</strong> pelamar masih di Peninjauan Berkas sementara yang lain sudah lolos. Pilih siapa yang tidak lolos dan beritahu mereka.
+                </div>
+            </div>
+        </div>
+        {{ ($this->tandaiTidakLolosBerkasAction) }}
+    </div>
+    @endif
+    @endif
+
     {{-- Banner: ada draft notif penolakan berkas yang belum dikirim --}}
     @if($this->jobOpeningId)
     @php $pendingRejectionCount = \App\Models\ApplicationNotification::whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))->where('status', 'draft')->where('event', \App\Models\CompanyMessageTemplate::EVENT_SCREENING_REJECTED)->count(); @endphp
@@ -150,7 +174,7 @@
         </select>
         <a href="{{ route('admin.export.applications', array_filter(['job_opening_id' => $this->jobOpeningId, 'status' => $this->statusFilter ?: null])) }}"
            target="_blank"
-           class="inline-flex items-center gap-1.5 rounded-lg bg-success-600 hover:bg-success-700 px-4 py-2 text-sm font-semibold text-white transition shrink-0">
+           class="inline-flex items-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-700 px-4 py-2 text-sm font-semibold text-white transition shrink-0">
             <x-heroicon-m-arrow-down-tray class="w-4 h-4" />
             Export Excel
         </a>

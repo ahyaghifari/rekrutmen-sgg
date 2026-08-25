@@ -71,6 +71,24 @@
     </div>
     @endif
 
+    {{-- Banner: ada yang lulus wawancara tapi masih ada yang pending di tahap interview --}}
+    @if($this->jobOpeningId && $this->getPassedInterviewCount() > 0 && $this->getPendingInterviewCount() > 0)
+    <div class="fi-section rounded-xl bg-orange-50 dark:bg-orange-950/30 ring-1 ring-orange-200 dark:ring-orange-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center shrink-0">
+                <x-heroicon-m-x-circle class="w-4 h-4 text-orange-700 dark:text-orange-400" />
+            </div>
+            <div>
+                <div class="text-sm font-bold text-orange-900 dark:text-orange-100">Ada Kandidat Belum Diputuskan</div>
+                <div class="text-xs text-orange-700 dark:text-orange-400 mt-0.5">
+                    <strong>{{ $this->getPendingInterviewCount() }}</strong> kandidat masih di tahap Wawancara sementara yang lain sudah lanjut. Tandai yang tidak lolos dan beritahu mereka.
+                </div>
+            </div>
+        </div>
+        {{ ($this->tandaiTidakLulusWawancaraAction) }}
+    </div>
+    @endif
+
     {{-- Banner: ada draft notif penolakan wawancara yang belum dikirim --}}
     @if($this->jobOpeningId)
     @php $pendingWawancaraRejection = \App\Models\ApplicationNotification::whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))->where('status', 'draft')->where('event', \App\Models\CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED)->count(); @endphp

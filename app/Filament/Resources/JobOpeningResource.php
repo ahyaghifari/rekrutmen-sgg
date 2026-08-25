@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 
 class JobOpeningResource extends BaseResource
 {
@@ -195,6 +196,75 @@ class JobOpeningResource extends BaseResource
                     ->visible(fn () => static::isSuperAdmin()),
             ])
             ->actions([
+                Tables\Actions\Action::make('stageLogs')
+                    ->label('Riwayat')
+                    ->icon('heroicon-m-chart-bar')
+                    ->color('gray')
+                    ->modalHeading(fn ($record) => 'Riwayat Proses — ' . $record->title)
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup')
+                    ->modalContent(function ($record): HtmlString {
+                        $logs = $record->stageLogs()->with('actor')->get();
+
+                        $labelMap = [
+                            'applied'     => 'Lamaran Masuk',
+                            'screening'   => 'Peninjauan Berkas',
+                            'shortlisted' => 'Lolos Seleksi Berkas',
+                            'interview'   => 'Wawancara',
+                            'mcu'         => 'MCU',
+                            'onboarding'  => 'TTD & Onboarding',
+                            'passed'      => 'Diterima',
+                            'rejected'    => 'Tidak Dilanjutkan',
+                        ];
+
+                        $colorMap = [
+                            'shortlisted' => '#047C54',
+                            'interview'   => '#0284c7',
+                            'mcu'         => '#7c3aed',
+                            'onboarding'  => '#d97706',
+                            'passed'      => '#16a34a',
+                            'rejected'    => '#dc2626',
+                            'screening'   => '#64748b',
+                            'applied'     => '#94a3b8',
+                        ];
+
+                        if ($logs->isEmpty()) {
+                            return new HtmlString('<p style="color:#94a3b8;font-size:13px;padding:16px 0;">Belum ada riwayat proses untuk lowongan ini.</p>');
+                        }
+
+                        $rows = $logs->map(function ($log) use ($labelMap, $colorMap) {
+                            $from  = $log->from_status ? ($labelMap[$log->from_status] ?? $log->from_status) : '—';
+                            $to    = $labelMap[$log->to_status] ?? $log->to_status;
+                            $color = $colorMap[$log->to_status] ?? '#64748b';
+                            $actor = $log->actor?->name ?? 'Sistem';
+                            $date  = $log->done_at->translatedFormat('d M Y, H:i');
+                            return "<tr style=\"border-bottom:1px solid #f1f5f9;\">
+                                <td style=\"padding:10px 12px;font-size:12px;color:#64748b;white-space:nowrap;\">{$date}</td>
+                                <td style=\"padding:10px 12px;font-size:12px;color:#334155;\">{$from}</td>
+                                <td style=\"padding:10px 12px;\"><span style=\"background:{$color}20;color:{$color};font-weight:700;font-size:11px;padding:3px 10px;border-radius:999px;\">{$to}</span></td>
+                                <td style=\"padding:10px 12px;font-size:13px;font-weight:700;color:#1e293b;text-align:center;\">{$log->count}</td>
+                                <td style=\"padding:10px 12px;font-size:12px;color:#64748b;\">{$actor}</td>
+                            </tr>";
+                        })->join('');
+
+                        return new HtmlString("
+                            <div style=\"overflow-x:auto;\">
+                            <table style=\"width:100%;border-collapse:collapse;\">
+                                <thead>
+                                    <tr style=\"background:#f8fafc;border-bottom:2px solid #e2e8f0;\">
+                                        <th style=\"padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;text-align:left;\">Waktu</th>
+                                        <th style=\"padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;text-align:left;\">Dari</th>
+                                        <th style=\"padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;text-align:left;\">Ke Tahap</th>
+                                        <th style=\"padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;text-align:center;\">Jumlah</th>
+                                        <th style=\"padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;text-align:left;\">Oleh</th>
+                                    </tr>
+                                </thead>
+                                <tbody>{$rows}</tbody>
+                            </table>
+                            </div>
+                        ");
+                    }),
+
                 Tables\Actions\EditAction::make()
                     ->visible(fn ($record) => $record->company?->management_mode !== 'hris'),
                 Tables\Actions\DeleteAction::make()
