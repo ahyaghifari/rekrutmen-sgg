@@ -14,6 +14,8 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class QuizQuestionsPage extends Page implements HasTable, HasForms
 {
@@ -149,6 +151,112 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
         $this->resetTable();
     }
 
+    public function templateAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('template')
+            ->label('Unduh Template')
+            ->icon('heroicon-m-arrow-down-tray')
+            ->color('gray')
+            ->visible(fn () => (bool) $this->quizId)
+            ->action(fn () => Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithColumnWidths {
+                public function array(): array
+                {
+                    return [
+                        ['Pertanyaan', 'A', 'B', 'C', 'D', 'E', 'Jawaban Benar'],
+                        ['Contoh: 2 + 2 = ?', '3', '4', '5', '6', '', 'B'],
+                    ];
+                }
+
+                public function columnWidths(): array
+                {
+                    return [
+                        'A' => 60,
+                        'B' => 15,
+                        'C' => 15,
+                        'D' => 15,
+                        'E' => 15,
+                        'F' => 15,
+                        'G' => 18,
+                    ];
+                }
+            }, 'template-soal.xlsx'));
+    }
+
+    /** Import soal dari Excel: kolom Pertanyaan, A..E, Jawaban Benar (isi hurufnya). Menambah, tidak menghapus soal lama. */
+    public function importAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('import')
+            ->label('Import Soal (Excel)')
+            ->icon('heroicon-m-arrow-up-tray')
+            ->color('gray')
+            ->visible(fn () => (bool) $this->quizId)
+            ->form([
+                Forms\Components\FileUpload::make('file')
+                    ->label('File Excel')
+                    ->directory('quiz-imports')
+                    ->acceptedFileTypes([
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'application/vnd.ms-excel',
+                    ])
+                    ->required()
+                    ->helperText('Kolom: Pertanyaan, A, B, C, D, E (kosongkan yang tidak dipakai), Jawaban Benar (isi hurufnya, mis. B). Baris pertama harus header. Soal baru ditambahkan, soal lama tidak dihapus.'),
+            ])
+            ->modalHeading('Import Soal dari Excel')
+            ->modalSubmitActionLabel('Import')
+            ->modalCancelActionLabel('Batal')
+            ->action(function (array $data): void {
+                $path = $data['file'];
+                $fullPath = Storage::disk('public')->path($path);
+                $rows = Excel::toArray(new class {}, $fullPath)[0] ?? [];
+                Storage::disk('public')->delete($path);
+
+                $header = array_map('trim', array_map('strtolower', array_shift($rows) ?? []));
+                $nextSort = (int) (QuizQuestion::where('quiz_id', $this->quizId)->max('sort_order') ?? -1) + 1;
+
+                $imported = 0;
+                $skipped  = 0;
+
+                foreach ($rows as $row) {
+                    if (empty(array_filter($row, fn ($v) => trim((string) $v) !== ''))) continue;
+
+                    $assoc = array_combine($header, array_pad($row, count($header), null));
+                    $question = trim((string) ($assoc['pertanyaan'] ?? ''));
+
+                    $optionsByLetter = [];
+                    foreach (['a', 'b', 'c', 'd', 'e'] as $letter) {
+                        $val = trim((string) ($assoc[$letter] ?? ''));
+                        if ($val !== '') $optionsByLetter[$letter] = $val;
+                    }
+
+                    $correctLetter = strtolower(trim((string) ($assoc['jawaban benar'] ?? '')));
+                    $correct = $optionsByLetter[$correctLetter] ?? null;
+
+                    if ($question === '' || count($optionsByLetter) < 2 || $correct === null) {
+                        $skipped++;
+                        continue;
+                    }
+
+                    $options = array_values($optionsByLetter);
+
+                    QuizQuestion::create([
+                        'quiz_id'        => $this->quizId,
+                        'question'       => $question,
+                        'options'        => $options,
+                        'correct_option' => $correct,
+                        'sort_order'     => $nextSort++,
+                    ]);
+                    $imported++;
+                }
+
+                $this->resetTable();
+
+                Notification::make()
+                    ->title("{$imported} soal berhasil diimport" . ($skipped > 0 ? ", {$skipped} baris dilewati (tidak lengkap/jawaban benar tidak cocok)." : '.'))
+                    ->color($skipped > 0 ? 'warning' : 'success')
+                    ->send();
+            });
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -165,7 +273,10 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')
-            ->headerActions([])
+            ->headerActions([
+                $this->templateAction(),
+                $this->importAction(),
+            ])
             ->actions([])
             ->bulkActions([])
             ->emptyStateHeading('Belum ada soal')

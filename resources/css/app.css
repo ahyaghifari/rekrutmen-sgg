@@ -13,6 +13,7 @@ body {
 a { color: #042c6c; text-decoration: none; }
 a:hover { color: #032356; }
 input, select, textarea, button { font-family: inherit; }
+[x-cloak] { display: none !important; }
 input::placeholder, textarea::placeholder { color: #94a3b8; }
 
 /* ── Animation ── */
@@ -51,8 +52,9 @@ input::placeholder, textarea::placeholder { color: #94a3b8; }
   .sg-stats { grid-template-columns: repeat(4, 1fr); }
   .sg-stats > div:nth-child(3), .sg-stats > div:nth-child(4) { border-top: 0; }
   .sg-stats > div:nth-child(3) { border-left: 1px solid #e2e8f0; }
-  .sg-tl { grid-template-columns: repeat(6, 1fr); gap: 0; }
-  .sg-tl-line { display: block; }
+  .sg-tl-snake { grid-template-columns: repeat(3, 1fr); column-gap: 0; row-gap: 56px; align-items: stretch; }
+  .sg-tl-line, .sg-tl-vline { display: block; }
+  .sg-tl-vline { height: calc(56px + 33px); }
   .sg-fields { grid-template-columns: 1fr 1fr; }
 }
 

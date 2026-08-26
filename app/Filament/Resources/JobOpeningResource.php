@@ -95,7 +95,7 @@ class JobOpeningResource extends BaseResource
                     ->columnSpanFull(),
             ])->columns(2),
 
-            Forms\Components\Section::make('Tes Online')->schema([
+            Forms\Components\Section::make('Tes')->schema([
                 Forms\Components\Select::make('quizzes')
                     ->label('Kuis')
                     ->relationship('quizzes', 'name')
@@ -107,7 +107,7 @@ class JobOpeningResource extends BaseResource
 
                 Forms\Components\Toggle::make('requires_psychotest')
                     ->label('Wajib Psikotes Offline')
-                    ->helperText('Tandai kalau posisi ini juga mewajibkan psikotes offline tambahan (di luar tes online sistem).'),
+                    ->helperText('Tandai kalau posisi ini juga mewajibkan psikotes offline tambahan (di luar Tes sistem).'),
             ])->columns(2),
 
             Forms\Components\Section::make('Detail')->schema([
@@ -141,6 +141,12 @@ class JobOpeningResource extends BaseResource
                     ->label('Posisi')
                     ->searchable()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('stage')
+                    ->label('Tahap')
+                    ->getStateUsing(fn ($record) => $record->currentStage()['label'])
+                    ->badge()
+                    ->color(fn ($record) => $record->currentStage()['color']),
 
                 Tables\Columns\TextColumn::make('quota')
                     ->label('Kuota')

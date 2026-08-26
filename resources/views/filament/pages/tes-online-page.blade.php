@@ -34,8 +34,31 @@
     </div>
     @endif
 
+    {{-- Kuis lowongan --}}
+    @if($this->jobOpeningId)
+    <div class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <div class="text-sm font-bold text-gray-900 dark:text-gray-100">Kuis Lowongan Ini</div>
+            <div class="mt-1.5 flex flex-wrap gap-1.5">
+                @forelse($this->getSelectedJobOpening()?->quizzes ?? [] as $quiz)
+                    <x-filament::badge color="success">{{ $quiz->name }}</x-filament::badge>
+                @empty
+                    <span class="text-xs text-gray-400">Belum ada kuis dipasang — tes belum bisa diaktifkan.</span>
+                @endforelse
+            </div>
+            @if($this->isQuizLocked())
+            <div class="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                <x-heroicon-m-lock-closed class="w-3.5 h-3.5 inline -mt-0.5" />
+                Terkunci — tes sudah diaktifkan untuk lowongan ini.
+            </div>
+            @endif
+        </div>
+        {{ ($this->pilihKuisAction) }}
+    </div>
+    @endif
+
     {{-- Banner: siap diaktifkan tesnya --}}
-    @if($this->jobOpeningId && $this->getBelumDiaktifkanCount() > 0)
+    @if($this->jobOpeningId && $this->hasQuizAssigned() && $this->getBelumDiaktifkanCount() > 0)
     <div class="fi-section rounded-xl bg-sky-50 dark:bg-sky-950/30 ring-1 ring-sky-200 dark:ring-sky-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-full bg-sky-100 dark:bg-sky-900 flex items-center justify-center shrink-0">
@@ -80,7 +103,7 @@
                 <x-heroicon-m-envelope class="w-4 h-4 text-red-700 dark:text-red-400" />
             </div>
             <div>
-                <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Penolakan Tes Online Ditahan</div>
+                <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Penolakan Tes Ditahan</div>
                 <div class="text-xs text-red-700 dark:text-red-400 mt-0.5">
                     <strong>{{ $pendingTesDraft }}</strong> kandidat belum menerima pemberitahuan tidak lolos tes. Kirim kapan saja.
                 </div>

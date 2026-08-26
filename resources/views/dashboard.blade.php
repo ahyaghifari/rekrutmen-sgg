@@ -5,15 +5,17 @@
 $statusMap = [
     'applied'     => ['label' => 'Lamaran Masuk',      'badge' => 'badge-applied',   'icon' => 'fa-paper-plane'],
     'screening'   => ['label' => 'Peninjauan Berkas',  'badge' => 'badge-screening', 'icon' => 'fa-magnifying-glass'],
-    'shortlisted' => ['label' => 'Tes Online',         'badge' => 'badge-interview', 'icon' => 'fa-laptop'],
+    'shortlisted' => ['label' => 'Tes',         'badge' => 'badge-interview', 'icon' => 'fa-laptop'],
     'interview'   => ['label' => 'Wawancara',          'badge' => 'badge-interview', 'icon' => 'fa-comments'],
-    'mcu'         => ['label' => 'Medical Check Up',   'badge' => 'badge-interview', 'icon' => 'fa-heart-pulse'],
+    'mcu'         => ['label' => 'Medical Check Up',   'badge' => 'badge-interview', 'icon' => 'fa-stethoscope'],
     'onboarding'  => ['label' => 'TTD & Onboarding',   'badge' => 'badge-passed',    'icon' => 'fa-signature'],
     'passed'      => ['label' => 'Diterima',           'badge' => 'badge-passed',    'icon' => 'fa-circle-check'],
     'rejected'    => ['label' => 'Tidak Dilanjutkan',  'badge' => 'badge-rejected',  'icon' => 'fa-circle-xmark'],
 ];
-$activeApp = $applications->first(fn($a) => in_array($a->status, ['applied','screening','shortlisted','interview','mcu','onboarding']));
-$pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rejected']));
+// ponytail: kalau tidak ada lamaran yang sedang berjalan, tetap tampilkan timeline untuk lamaran terakhir (meski sudah selesai/ditolak).
+$activeApp = $applications->first(fn($a) => in_array($a->status, ['applied','screening','shortlisted','interview','mcu','onboarding']))
+    ?? $applications->first();
+$pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rejected']) && (!$activeApp || $a->isNot($activeApp)));
 
 
 @endphp
@@ -47,8 +49,11 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
 @if($activeApp)
 <div class="sg-card mt-5 rounded-[18px] overflow-hidden">
   <div class="sg-dd-header px-6 py-[14px] border-b border-slate-100 flex items-center justify-between">
+    @php
+      $activeAppIsFinal = in_array($activeApp->status, ['passed', 'rejected']);
+    @endphp
     <div class="text-[12px] font-bold uppercase tracking-[0.06em] text-slate-500">
-      <i class="fa-solid fa-circle-dot mr-1.5 text-sgg-green text-[10px]"></i>Lamaran Sedang Berjalan
+      <i class="fa-solid fa-circle-dot mr-1.5 {{ $activeAppIsFinal ? 'text-slate-400' : 'text-sgg-green' }} text-[10px]"></i>{{ $activeAppIsFinal ? 'Lamaran Terakhir' : 'Lamaran Sedang Berjalan' }}
     </div>
     <a href="{{ route('lamaran.show', $activeApp) }}"
        class="text-[12.5px] font-bold text-navy no-underline hover:underline">Lihat detail →</a>
@@ -73,24 +78,33 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
       $tlSteps = [
         ['status' => 'applied',     'label' => 'Lamaran Masuk',     'icon' => 'fa-paper-plane',      'sub' => 'Formulir terkirim'],
         ['status' => 'screening',   'label' => 'Peninjauan Berkas', 'icon' => 'fa-magnifying-glass', 'sub' => 'Tinjauan awal'],
-        ['status' => 'shortlisted', 'label' => 'Tes Online',        'icon' => 'fa-laptop',           'sub' => 'Kerjakan tes'],
+        ['status' => 'shortlisted', 'label' => 'Tes',        'icon' => 'fa-laptop',           'sub' => 'Kerjakan tes'],
         ['status' => 'interview',   'label' => 'Wawancara',         'icon' => 'fa-comments',         'sub' => 'Jadwal dikirim'],
       ];
       if ($tlRequiresMcu) {
-        $tlSteps[] = ['status' => 'mcu', 'label' => 'MCU', 'icon' => 'fa-heart-pulse', 'sub' => 'Medical check up'];
+        $tlSteps[] = ['status' => 'mcu', 'label' => 'MCU', 'icon' => 'fa-stethoscope', 'sub' => 'Medical check up'];
       }
       $tlSteps[] = ['status' => 'onboarding', 'label' => 'TTD & Onboarding', 'icon' => 'fa-signature', 'sub' => 'Kontrak & orientasi'];
 
-      $curStep = collect($tlSteps)->search(fn ($s) => $s['status'] === $activeApp->status);
-      if ($curStep === false) $curStep = 0;
+      $tlIsRejected = $activeApp->status === 'rejected';
+      if ($activeApp->status === 'passed') {
+          $curStep = count($tlSteps);
+      } elseif ($tlIsRejected) {
+          $tlRejectedFromStatus = $activeApp->statusLogs()->where('to_status', 'rejected')->latest('changed_at')->first()?->from_status;
+          $curStep = collect($tlSteps)->search(fn ($s) => $s['status'] === $tlRejectedFromStatus) ?: 0;
+      } else {
+          $curStep = collect($tlSteps)->search(fn ($s) => $s['status'] === $activeApp->status);
+          if ($curStep === false) $curStep = 0;
+      }
       $lastIdx = count($tlSteps) - 1;
     @endphp
     <div class="sg-tl-widget mt-5 pt-5 sg-dd-border border-t" style="display:flex;gap:0;">
       @foreach($tlSteps as $i => $s)
       @php
-        $done    = $i < $curStep;
-        $current = $i === $curStep;
-        $future  = $i > $curStep;
+        $done         = $i < $curStep;
+        $current      = $i === $curStep;
+        $future       = $i > $curStep;
+        $tlActiveColor = ($tlIsRejected && $current) ? '#dc2626' : $tlBrand;
       @endphp
       <div style="flex:1;text-align:center;position:relative;padding:0 4px;">
         @if($i > 0)
@@ -102,11 +116,17 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
              style="position:absolute;top:19px;left:50%;right:0;height:2px;{{ $done ? 'background:'.$tlBrand : '' }};"></div>
         @endif
         <div class="{{ $future ? 'sg-tl-node-todo' : '' }}"
-             style="width:38px;height:38px;border-radius:50%;margin:0 auto;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-size:12px;{{ !$future ? 'background:'.$tlBrand.';color:#fff;' : '' }}">
-          <i class="fa-solid {{ $done ? 'fa-check' : $s['icon'] }}"></i>
+             style="width:38px;height:38px;border-radius:50%;margin:0 auto;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-size:12px;{{ !$future ? 'background:'.$tlActiveColor.';color:#fff;' : '' }}">
+          @if($done)
+            <i class="fa-solid fa-check"></i>
+          @elseif($current && $tlIsRejected)
+            <i class="fa-solid fa-xmark"></i>
+          @else
+            <i class="fa-solid {{ $s['icon'] }}"></i>
+          @endif
         </div>
         <div class="{{ $future ? 'sg-tl-label-todo' : '' }}"
-             style="margin-top:7px;font-size:11px;font-weight:700;line-height:1.3;{{ !$future ? 'color:'.$tlBrand : '' }};">{{ $s['label'] }}</div>
+             style="margin-top:7px;font-size:11px;font-weight:700;line-height:1.3;{{ !$future ? 'color:'.$tlActiveColor : '' }};">{{ $s['label'] }}</div>
         <div class="sg-tl-sub">{{ $s['sub'] }}</div>
       </div>
       @endforeach
@@ -117,7 +137,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
     <a href="{{ route('tes-online.show') }}"
        class="mt-4 flex items-center justify-center gap-2 w-full py-[12px] rounded-[12px] text-white text-[13.5px] font-bold no-underline transition-opacity duration-150 hover:opacity-90"
        style="background:{{ $tlBrand }};">
-      <i class="fa-solid fa-laptop text-xs"></i>Laksanakan Tes Online
+      <i class="fa-solid fa-laptop text-xs"></i>Laksanakan Tes
     </a>
     @endif
   </div>

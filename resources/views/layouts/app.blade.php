@@ -44,7 +44,7 @@
         </a>
         <a href="{{ route('tes-online.show') }}"
            class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('tes-online.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
-          <i class="fa-solid fa-computer mr-1.5 text-xs"></i>Tes Online
+          <i class="fa-solid fa-computer mr-1.5 text-xs"></i>Tes
         </a>
         @endif
       </nav>
@@ -119,7 +119,7 @@
             </a>
             <a href="{{ route('tes-online.show') }}"
                class="sg-dd-item flex items-center gap-2 px-4 py-[11px] text-[13px] font-semibold text-slate-700 no-underline transition-colors duration-150">
-              <i class="fa-solid fa-computer w-4 text-center text-slate-400"></i>Tes Online
+              <i class="fa-solid fa-computer w-4 text-center text-slate-400"></i>Tes
             </a>
             @endif
             <div class="sg-dd-border border-t border-slate-100">

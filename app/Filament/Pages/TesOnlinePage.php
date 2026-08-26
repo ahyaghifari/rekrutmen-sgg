@@ -8,12 +8,15 @@ use App\Models\Company;
 use App\Models\CompanyMessageTemplate;
 use App\Models\JobApplication;
 use App\Models\JobOpening;
+use App\Models\Quiz;
 use App\Mail\ApplicantNotificationMail;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
@@ -23,14 +26,15 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\HtmlString;
 
 class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
 {
     use InteractsWithTable, InteractsWithActions, InteractsWithForms, ScopedToCompany;
 
     protected static ?string $navigationIcon  = 'heroicon-o-computer-desktop';
-    protected static ?string $navigationLabel = 'Tes Online';
-    protected static ?string $title           = 'Tes Online';
+    protected static ?string $navigationLabel = 'Tes';
+    protected static ?string $title           = 'Tes';
     protected static ?string $navigationGroup = 'Kandidat';
     protected static ?int    $navigationSort  = 1;
     protected static string  $view            = 'filament.pages.tes-online-page';
@@ -96,6 +100,52 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
             ->where('status', 'shortlisted')->whereNull('quiz_sent_at')->count();
     }
 
+    /** Lowongan harus punya minimal 1 kuis terpasang sebelum tesnya bisa diaktifkan. */
+    public function hasQuizAssigned(): bool
+    {
+        return (bool) $this->getSelectedJobOpening()?->quizzes()->exists();
+    }
+
+    /** Kuis dikunci begitu tes sudah diaktifkan ke minimal 1 kandidat — supaya set soal tidak berubah di tengah jalan. */
+    public function isQuizLocked(): bool
+    {
+        if (! $this->jobOpeningId) return false;
+        return JobApplication::where('job_opening_id', $this->jobOpeningId)->whereNotNull('quiz_sent_at')->exists();
+    }
+
+    public function pilihKuisAction(): Action
+    {
+        return Action::make('pilihKuis')
+            ->label($this->hasQuizAssigned() ? 'Ubah Kuis' : 'Pilih Kuis')
+            ->icon('heroicon-m-clipboard-document-list')
+            ->color('gray')
+            ->visible(fn () => (bool) $this->jobOpeningId)
+            ->disabled(fn () => $this->isQuizLocked())
+            ->tooltip(fn () => $this->isQuizLocked() ? 'Tes sudah diaktifkan untuk lowongan ini, kuis tidak bisa diubah lagi.' : null)
+            ->form([
+                Select::make('quiz_ids')
+                    ->label('Kuis')
+                    ->options(fn () => Quiz::orderBy('name')->pluck('name', 'id'))
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->helperText('Pilih satu atau lebih kuis untuk lowongan ini. Kelola bank soal di menu Soal Kuis.'),
+            ])
+            ->fillForm(fn () => ['quiz_ids' => $this->getSelectedJobOpening()?->quizzes->pluck('id')->all() ?? []])
+            ->modalHeading('Pilih Kuis untuk Lowongan Ini')
+            ->modalSubmitActionLabel('Simpan')
+            ->modalCancelActionLabel('Batal')
+            ->action(function (array $data): void {
+                $opening = $this->getSelectedJobOpening();
+                if (! $opening) return;
+
+                $opening->quizzes()->sync($data['quiz_ids'] ?? []);
+
+                \Filament\Notifications\Notification::make()->title('Kuis lowongan tersimpan')->success()->send();
+            });
+    }
+
     /** Aktifkan tes untuk semua kandidat lolos berkas yang belum diaktifkan, langsung kirim email. */
     private function activateAndNotify(JobApplication $app): void
     {
@@ -121,8 +171,9 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
             ->label("Aktifkan Tes untuk Semua ({$count} kandidat)")
             ->icon('heroicon-m-play')
             ->color('info')
+            ->visible(fn () => $this->hasQuizAssigned())
             ->requiresConfirmation()
-            ->modalHeading('Aktifkan Tes Online')
+            ->modalHeading('Aktifkan Tes')
             ->modalDescription("Tes akan langsung diaktifkan untuk {$count} kandidat lolos seleksi berkas yang belum diaktifkan, dan email pemberitahuan langsung terkirim ke masing-masing kandidat.")
             ->modalSubmitActionLabel('Aktifkan & Kirim Email')
             ->modalCancelActionLabel('Batal')
@@ -180,11 +231,11 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
             ->color('danger')
             ->form([
                 CheckboxList::make('selected_ids')
-                    ->label('Pilih kandidat yang TIDAK LOLOS tes online')
+                    ->label('Pilih kandidat yang TIDAK LOLOS Tes')
                     ->helperText('Kandidat dipilih akan diubah statusnya ke Tidak Dilanjutkan dan langsung dikirim email.')
                     ->options($options)->searchable()->bulkToggleable()->columns(1),
             ])
-            ->modalHeading('Tandai Tidak Lolos Tes Online & Kirim Pemberitahuan')
+            ->modalHeading('Tandai Tidak Lolos Tes & Kirim Pemberitahuan')
             ->modalSubmitActionLabel('Tandai & Kirim Email')
             ->modalCancelActionLabel('Batal')
             ->modalWidth('lg')
@@ -231,7 +282,7 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
             ->color('danger')
             ->visible(fn () => $pendingCount > 0)
             ->requiresConfirmation()
-            ->modalHeading('Kirim Pemberitahuan Tidak Lolos Tes Online?')
+            ->modalHeading('Kirim Pemberitahuan Tidak Lolos Tes?')
             ->modalDescription("Email akan dikirim ke {$pendingCount} kandidat. Tidak bisa dibatalkan.")
             ->modalSubmitActionLabel('Ya, Kirim Sekarang')
             ->action(function (): void {
@@ -271,6 +322,38 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
                 }
 
                 \Filament\Notifications\Notification::make()->title('Keputusan tersimpan')->success()->send();
+            });
+    }
+
+    public function lihatHasilAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('lihatHasil')
+            ->label('Lihat Hasil')
+            ->icon('heroicon-m-document-magnifying-glass')
+            ->color('gray')
+            ->visible(fn ($record) => $record->quizAttempts->where('status', 'submitted')->isNotEmpty())
+            ->modalHeading('Hasil Tes')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Tutup')
+            ->form(function ($record) {
+                $attempts = $record->quizAttempts()->where('status', 'submitted')->with(['quiz', 'answers'])->get();
+
+                return $attempts->map(function ($attempt) {
+                    $correct = $attempt->answers->where('is_correct', true)->count();
+                    $total   = $attempt->answers->count();
+                    $duration = $attempt->durationLabel();
+
+                    return Placeholder::make('attempt_' . $attempt->id)
+                        ->label($attempt->quiz->name)
+                        ->content(new HtmlString(
+                            '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">'
+                            . '<span>' . $correct . ' dari ' . $total . ' benar'
+                            . ($duration ? ' &middot; dikerjakan ' . $duration : '')
+                            . ' &middot; dikumpulkan ' . $attempt->submitted_at->translatedFormat('d M Y, H:i') . '</span>'
+                            . '<a href="' . route('filament.admin.pages.hasil-tes-detail-page', ['attempt' => $attempt->id]) . '" style="font-weight:700;">Lihat Detail &rarr;</a>'
+                            . '</div>'
+                        ));
+                })->all();
             });
     }
 
@@ -337,6 +420,7 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
                     }),
             ])
             ->actions([
+                $this->lihatHasilAction(),
                 $this->tandaiHasilTesAction()->visible(fn ($record) => $record->quiz_sent_at !== null && $record->quiz_result === null),
             ])
             ->bulkActions([])

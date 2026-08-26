@@ -1,16 +1,15 @@
 <x-app-layout>
-<x-slot name="title">Tes Online — Syifa Global Group</x-slot>
+<x-slot name="title">Tes — Syifa Global Group</x-slot>
 
-<div style="max-width:640px;margin:0 auto;padding:20px 16px;">
+<div style="max-width:840px;margin:0 auto;padding:20px 16px;">
 
   @if(session('success'))
   <div class="mb-4 rounded-xl px-4 py-3 border border-green-200 bg-green-600/[0.07] text-sm font-semibold text-green-700">{{ session('success') }}</div>
   @endif
 
   <div class="mb-5">
-    <div class="text-[11.5px] font-bold tracking-[0.08em] uppercase text-slate-500 mb-1.5">Tes Online</div>
+    <div class="text-[11.5px] font-bold tracking-[0.08em] uppercase text-slate-500 mb-1.5">Tes</div>
     <h1 class="m-0 mb-1 text-[22px] font-extrabold text-slate-800">{{ $application->jobOpening->title }}</h1>
-    <p class="m-0 text-[13.5px] text-slate-500">{{ $quizzes->count() }} tes perlu kamu selesaikan untuk posisi ini.</p>
   </div>
 
   <div class="flex flex-col gap-3">

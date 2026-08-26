@@ -68,7 +68,7 @@
     @php $shortlistedCount = \App\Models\JobApplication::where('job_opening_id', $this->jobOpeningId)->where('status', 'shortlisted')->count(); @endphp
     @if($shortlistedCount > 0)
     <div class="fi-section rounded-xl bg-gray-50 dark:bg-gray-800/50 ring-1 ring-gray-200 dark:ring-gray-700 px-6 py-3 text-xs text-gray-600 dark:text-gray-400">
-        <strong>{{ $shortlistedCount }}</strong> pelamar sudah lolos seleksi berkas dan resmi jadi kandidat — lanjutkan prosesnya di grup sidebar <strong>Kandidat</strong> (Tes Online, Wawancara, MCU, TTD & Onboarding).
+        <strong>{{ $shortlistedCount }}</strong> pelamar sudah lolos seleksi berkas dan resmi jadi kandidat — lanjutkan prosesnya di grup sidebar <strong>Kandidat</strong> (Tes, Wawancara, MCU, TTD & Onboarding).
     </div>
     @endif
     @endif

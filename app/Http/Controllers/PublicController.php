@@ -22,7 +22,7 @@ class PublicController extends Controller
             $bBright = min(255, intval($b + (255 - $b) * 0.28));
             return [
                 'name'   => $company->name,
-                'image'  => $company->hero_image_path ? asset('storage/'.$company->hero_image_path) : asset('three-person.png'),
+                'image'  => $company->hero_image_path ? asset('storage/'.$company->hero_image_path) : asset('people.png'),
                 'logo'   => $company->logo_path ? asset('storage/'.$company->logo_path) : null,
                 'color1' => sprintf('#%02x%02x%02x', $rBright, $gBright, $bBright),
                 'color2' => sprintf('#%02x%02x%02x', intval($r * 0.65), intval($g * 0.65), intval($b * 0.65)),

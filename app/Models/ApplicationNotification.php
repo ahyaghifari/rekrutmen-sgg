@@ -67,7 +67,7 @@ class ApplicationNotification extends Model
     {
         return match ($event) {
             CompanyMessageTemplate::EVENT_SCREENING_PASSED    => "Selamat! Kamu Lolos Seleksi Berkas – {$jobTitle}",
-            CompanyMessageTemplate::EVENT_QUIZ_SENT           => "Tes Online Sudah Bisa Dikerjakan – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_QUIZ_SENT           => "Tes Sudah Bisa Dikerjakan – {$jobTitle}",
             CompanyMessageTemplate::EVENT_QUIZ_REJECTED       => "Update Lamaran Kamu – {$jobTitle}",
             CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED => "Undangan Wawancara – {$jobTitle}",
             CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED  => "Update Lamaran Kamu – {$jobTitle}",
@@ -93,7 +93,7 @@ class ApplicationNotification extends Model
         }
 
         if ($event === CompanyMessageTemplate::EVENT_QUIZ_SENT) {
-            return "Halo {$name},\n\nSelamat! Kamu lolos ke tahap tes online untuk posisi {$jobTitle}.\n\nTes bisa kamu kerjakan kapan saja lewat dashboard akunmu. Perlu diperhatikan: begitu kamu menekan tombol \"Mulai Tes\", pengerjaan harus diselesaikan dalam batas waktu yang ditentukan — jadi pastikan waktumu cukup sebelum memulai.\n\nSemangat mengerjakan!\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSelamat! Kamu lolos ke tahap Tes untuk posisi {$jobTitle}.\n\nTes bisa kamu kerjakan kapan saja lewat dashboard akunmu. Perlu diperhatikan: begitu kamu menekan tombol \"Mulai Tes\", pengerjaan harus diselesaikan dalam batas waktu yang ditentukan — jadi pastikan waktumu cukup sebelum memulai.\n\nSemangat mengerjakan!\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_MCU_SCHEDULED) {
@@ -105,7 +105,7 @@ class ApplicationNotification extends Model
         }
 
         if ($event === CompanyMessageTemplate::EVENT_QUIZ_REJECTED) {
-            return "Halo {$name},\n\nTerima kasih telah mengikuti proses seleksi untuk posisi {$jobTitle}.\n\nSetelah meninjau hasil tes online, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nJangan menyerah — terus tingkatkan kemampuanmu dan kami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
+            return "Halo {$name},\n\nTerima kasih telah mengikuti proses seleksi untuk posisi {$jobTitle}.\n\nSetelah meninjau hasil Tes, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nJangan menyerah — terus tingkatkan kemampuanmu dan kami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED) {

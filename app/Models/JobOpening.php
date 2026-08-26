@@ -101,4 +101,51 @@ class JobOpening extends Model
     {
         return $query->where('is_active', true);
     }
+
+    /**
+     * Tahap terjauh yang sudah dicapai kandidat di lowongan ini, dihitung langsung dari data
+     * (bukan kolom tersimpan) — supaya tidak pernah basi walau kandidat bergerak di banyak tahap sekaligus.
+     */
+    public function currentStage(): array
+    {
+        $counts = $this->applications()->selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status');
+
+        if ($counts->sum() === 0) {
+            return ['label' => 'Belum Ada Pelamar', 'color' => 'gray'];
+        }
+
+        if (($counts['onboarding'] ?? 0) > 0) {
+            return ['label' => 'TTD & Onboarding', 'color' => 'success'];
+        }
+
+        if (($counts['mcu'] ?? 0) > 0) {
+            return ['label' => 'MCU', 'color' => 'warning'];
+        }
+
+        if (($counts['interview'] ?? 0) > 0) {
+            return ['label' => 'Wawancara', 'color' => 'warning'];
+        }
+
+        if (($counts['shortlisted'] ?? 0) > 0) {
+            if (! $this->quizzes()->exists()) {
+                return ['label' => 'Tes: Kuis Belum Dipasang', 'color' => 'danger'];
+            }
+
+            $anyActivated = $this->applications()->where('status', 'shortlisted')->whereNotNull('quiz_sent_at')->exists();
+
+            return $anyActivated
+                ? ['label' => 'Tes: Berjalan', 'color' => 'info']
+                : ['label' => 'Tes: Belum Diaktifkan', 'color' => 'warning'];
+        }
+
+        if (($counts['applied'] ?? 0) > 0 || ($counts['screening'] ?? 0) > 0) {
+            return ['label' => 'Seleksi Berkas', 'color' => 'gray'];
+        }
+
+        if (($counts['passed'] ?? 0) > 0) {
+            return ['label' => 'Selesai', 'color' => 'success'];
+        }
+
+        return ['label' => 'Tidak Ada Kandidat Aktif', 'color' => 'gray'];
+    }
 }

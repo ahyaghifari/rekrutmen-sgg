@@ -40,6 +40,18 @@ class QuizAttempt extends Model
         return $this->status === 'in_progress' && now()->greaterThan($this->deadline_at);
     }
 
+    /** Lama pengerjaan dari mulai sampai dikumpulkan, mis. "12 menit 34 detik". */
+    public function durationLabel(): ?string
+    {
+        if (! $this->started_at || ! $this->submitted_at) return null;
+
+        $seconds = $this->started_at->diffInSeconds($this->submitted_at);
+        $minutes = intdiv($seconds, 60);
+        $rest    = $seconds % 60;
+
+        return $minutes > 0 ? "{$minutes} menit {$rest} detik" : "{$rest} detik";
+    }
+
     /**
      * Nilai jawaban yang disubmit dan simpan hasilnya. $answers: [quiz_question_id => selected_option].
      */

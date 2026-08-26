@@ -13,7 +13,7 @@
     <div class="max-w-[1180px] mx-auto px-6 py-[14px] flex items-center gap-7">
       <div class="flex items-center gap-3">
         <img src="/logo-sgg.png" alt="Syifa Global Group" class="h-9 w-auto" width="36" height="36" />
-        <div class="text-[11px] font-semibold tracking-[0.06em] uppercase text-slate-400">Karir & Rekrutmen</div>
+        <div class="text-[11px] font-bold tracking-[0.06em] uppercase text-navy">Karir & Rekrutmen</div>
       </div>
 
       {{-- Desktop nav --}}
@@ -169,18 +169,30 @@
         <h2 id="alur-heading" class="mt-2.5 mb-2 text-[26px] font-extrabold text-slate-800 tracking-[-0.6px]" style="text-wrap: balance;">Enam tahap yang jelas dan terstruktur</h2>
         <p class="m-0 text-[14.5px] leading-[1.6] text-slate-500">Setiap perpindahan tahap dapat dipantau kapan saja dari dashboard kandidat.</p>
       </div>
-      <div class="sg-tl">
+      @php $tlCols = 3; @endphp
+      <div class="sg-tl sg-tl-snake">
         @foreach([
           ['icon' => 'fa-plus',         'bg' => 'bg-navy',      'border' => '',                    'color' => 'text-white', 'label' => 'Daftar &amp; Lamar',  'desc' => 'Buat akun dan isi formulir lamaran',     'last' => false],
           ['icon' => 'fa-circle-check', 'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'Seleksi Berkas',       'desc' => 'Tim HR meninjau kelengkapan dokumen',    'last' => false, 'regular' => true],
-          ['icon' => 'fa-laptop',       'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'Tes Online',           'desc' => 'Kerjakan tes lewat portal',              'last' => false],
+          ['icon' => 'fa-laptop',       'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'Tes',           'desc' => 'Kerjakan tes lewat portal',              'last' => false],
           ['icon' => 'fa-user-group',   'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'Wawancara',            'desc' => 'Jadwal dikirim via WhatsApp',            'last' => false],
-          ['icon' => 'fa-heart-pulse',  'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'MCU',                  'desc' => 'Medical check up',                       'last' => false, 'regular' => true],
+          ['icon' => 'fa-stethoscope',  'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'MCU',                  'desc' => 'Medical check up',                       'last' => false],
           ['icon' => 'fa-circle-check', 'bg' => 'bg-sgg-green', 'border' => '',                    'color' => 'text-white', 'label' => 'TTD &amp; Onboarding', 'desc' => 'Kontrak dan mulai berkarier',            'last' => true],
         ] as $i => $step)
-        <div class="sg-fade relative text-center" style="transition-delay: {{ $i * 0.1 }}s;">
-          @if(!$step['last'])
-          <div class="sg-tl-line absolute top-[33px] border-t-2 border-dashed border-slate-300" style="left:calc(50% + 40px);right:calc(-50% + 40px);" aria-hidden="true"></div>
+        @php
+          $row = intdiv($i, $tlCols);
+          $posInRow = $i % $tlCols;
+          $rowIsEven = $row % 2 === 0;
+          $col = $rowIsEven ? $posInRow + 1 : $tlCols - $posInRow;
+          $isLastInRow = $posInRow === $tlCols - 1;
+        @endphp
+        <div class="sg-fade relative text-center" style="transition-delay: {{ $i * 0.1 }}s; grid-column: {{ $col }}; grid-row: {{ $row + 1 }};">
+          @if(!$step['last'] && !$isLastInRow)
+          <div class="sg-tl-line absolute top-[33px] border-t-2 border-dashed border-slate-300"
+               style="{{ $rowIsEven ? 'left:calc(50% + 40px);right:calc(-50% + 40px);' : 'right:calc(50% + 40px);left:calc(-50% + 40px);' }}" aria-hidden="true"></div>
+          @endif
+          @if(!$step['last'] && $isLastInRow)
+          <div class="sg-tl-vline absolute border-l-2 border-dashed border-slate-300" style="left:50%; top:100%; margin-left:-1px;" aria-hidden="true"></div>
           @endif
           <div class="relative z-[1] w-[66px] h-[66px] mx-auto rounded-full grid place-items-center text-[19px] {{ $step['bg'] }} {{ $step['border'] }} {{ $step['color'] }}" aria-hidden="true">
             <i class="{{ isset($step['regular']) ? 'fa-regular' : 'fa-solid' }} {{ $step['icon'] }}"></i>

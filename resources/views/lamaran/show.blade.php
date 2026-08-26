@@ -5,9 +5,9 @@
 $statusMap = [
     'applied'     => ['label' => 'Lamaran Masuk',      'badge' => 'badge-applied',   'icon' => 'fa-paper-plane'],
     'screening'   => ['label' => 'Peninjauan Berkas',  'badge' => 'badge-screening', 'icon' => 'fa-magnifying-glass'],
-    'shortlisted' => ['label' => 'Tes Online',         'badge' => 'badge-interview', 'icon' => 'fa-laptop'],
+    'shortlisted' => ['label' => 'Tes',         'badge' => 'badge-interview', 'icon' => 'fa-laptop'],
     'interview'   => ['label' => 'Wawancara',          'badge' => 'badge-interview', 'icon' => 'fa-comments'],
-    'mcu'         => ['label' => 'Medical Check Up',   'badge' => 'badge-interview', 'icon' => 'fa-heart-pulse'],
+    'mcu'         => ['label' => 'Medical Check Up',   'badge' => 'badge-interview', 'icon' => 'fa-stethoscope'],
     'onboarding'  => ['label' => 'TTD & Onboarding',   'badge' => 'badge-passed',    'icon' => 'fa-signature'],
     'passed'      => ['label' => 'Diterima',           'badge' => 'badge-passed',    'icon' => 'fa-circle-check'],
     'rejected'    => ['label' => 'Tidak Dilanjutkan',  'badge' => 'badge-rejected',  'icon' => 'fa-circle-xmark'],
@@ -18,11 +18,11 @@ $requiresMcu = $co?->requires_mcu ?? true;
 $steps = [
     ['status' => 'applied',     'label' => 'Lamaran Masuk',     'sub' => 'Formulir terkirim',    'icon' => 'fa-paper-plane'],
     ['status' => 'screening',   'label' => 'Peninjauan Berkas', 'sub' => 'Tinjauan berkas awal', 'icon' => 'fa-magnifying-glass'],
-    ['status' => 'shortlisted', 'label' => 'Tes Online',        'sub' => 'Kerjakan tes',         'icon' => 'fa-laptop'],
+    ['status' => 'shortlisted', 'label' => 'Tes',        'sub' => 'Kerjakan tes',         'icon' => 'fa-laptop'],
     ['status' => 'interview',   'label' => 'Wawancara',         'sub' => 'Jadwal dikirim',       'icon' => 'fa-comments'],
 ];
 if ($requiresMcu) {
-    $steps[] = ['status' => 'mcu', 'label' => 'MCU', 'sub' => 'Medical check up', 'icon' => 'fa-heart-pulse'];
+    $steps[] = ['status' => 'mcu', 'label' => 'MCU', 'sub' => 'Medical check up', 'icon' => 'fa-stethoscope'];
 }
 $steps[] = ['status' => 'onboarding', 'label' => 'TTD & Onboarding', 'sub' => 'Kontrak & orientasi', 'icon' => 'fa-signature'];
 $steps[] = ['status' => 'passed', 'label' => 'Keputusan', 'sub' => match ($application->status) {
@@ -36,8 +36,12 @@ $steps[] = ['status' => 'passed', 'label' => 'Keputusan', 'sub' => match ($appli
 }];
 
 $isRejected  = $application->status === 'rejected';
+// ponytail: kalau ditolak, berhenti di tahap terakhir yang benar-benar dijalani, bukan lompat ke node "Keputusan" di ujung.
+$rejectedFromStatus = $isRejected
+    ? $application->statusLogs()->where('to_status', 'rejected')->latest('changed_at')->first()?->from_status
+    : null;
 $currentStep = $isRejected
-    ? count($steps) - 1
+    ? (collect($steps)->search(fn ($s) => $s['status'] === $rejectedFromStatus) ?: 0)
     : (collect($steps)->search(fn ($s) => $s['status'] === $application->status) ?: 0);
 $answers     = $application->answersMap();
 $brand       = $co?->brand_color ?? '#042c6c';
@@ -85,7 +89,7 @@ $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#
       $done    = $i < $currentStep;
       $current = $i === $currentStep;
       $future  = $i > $currentStep;
-      $activeColor = ($isRejected && $current && $i === $lastIdx) ? '#dc2626' : $brand;
+      $activeColor = ($isRejected && $current) ? '#dc2626' : $brand;
     @endphp
     <div style="flex:1;text-align:center;position:relative;padding:0 4px;">
       @if($i > 0)
@@ -100,12 +104,14 @@ $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#
            style="width:38px;height:38px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;position:relative;z-index:1;{{ !$future ? 'background:'.$activeColor.';color:#fff;' : '' }}">
         @if($done)
           <i class="fa-solid fa-check"></i>
+        @elseif($current && $isRejected)
+          <i class="fa-solid fa-xmark"></i>
         @else
           <i class="fa-solid {{ $step['icon'] }}"></i>
         @endif
       </div>
       <div class="{{ $future ? 'sg-tl-label-todo' : '' }}"
-           style="margin-top:8px;font-size:11.5px;font-weight:700;line-height:1.3;{{ !$future ? 'color:'.$brand : '' }};">{{ $step['label'] }}</div>
+           style="margin-top:8px;font-size:11.5px;font-weight:700;line-height:1.3;{{ !$future ? 'color:'.$activeColor : '' }};">{{ $step['label'] }}</div>
       <div class="sg-tl-sub">{{ $step['sub'] }}</div>
     </div>
     @endforeach

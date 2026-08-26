@@ -123,7 +123,7 @@
               $alurSeleksi = [
                 ['icon' => 'fa-paper-plane',      'label' => 'Kirim Lamaran',    'desc' => 'Isi formulir dan unggah CV'],
                 ['icon' => 'fa-magnifying-glass', 'label' => 'Seleksi Berkas',   'desc' => 'Tim HR meninjau dokumen'],
-                ['icon' => 'fa-laptop',           'label' => 'Tes Online',       'desc' => 'Kerjakan tes lewat portal'],
+                ['icon' => 'fa-laptop',           'label' => 'Tes',       'desc' => 'Kerjakan tes lewat portal'],
                 ['icon' => 'fa-comments',         'label' => 'Wawancara',        'desc' => 'Jadwal dikirim via WhatsApp'],
               ];
               if ($co?->requires_mcu ?? true) {
