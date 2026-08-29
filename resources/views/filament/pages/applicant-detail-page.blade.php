@@ -64,6 +64,9 @@ $s = $statusMap[$application->status] ?? ['label' => $application->status, 'colo
                             (dari {{ $statusMap[$log->from_status]['label'] ?? $log->from_status }})
                         </span>
                     @endif
+                    @if($log->notes)
+                        <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 italic">"{{ $log->notes }}"</div>
+                    @endif
                 </div>
             </div>
             @endforeach
@@ -142,14 +145,7 @@ $s = $statusMap[$application->status] ?? ['label' => $application->status, 'colo
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
         Tandai pelamar ini tidak dilanjutkan di luar alur normal — misalnya kandidat mengundurkan diri di tengah proses, bukan karena gagal di salah satu tahap.
     </p>
-    <x-filament::button
-        wire:click="changeStatus('rejected')"
-        wire:confirm="Yakin ingin menandai pelamar ini tidak dilanjutkan?"
-        wire:loading.attr="disabled"
-        color="danger"
-        size="sm">
-        Tidak Dilanjutkan
-    </x-filament::button>
+    {{ ($this->tidakDilanjutkanAction) }}
 </x-filament::section>
 @endif
 

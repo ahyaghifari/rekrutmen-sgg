@@ -3,7 +3,9 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Concerns\ScopedToCompany;
+use App\Models\ApplicationNotification;
 use App\Models\Company;
+use App\Models\CompanyMessageTemplate;
 use App\Models\JobApplication;
 use App\Models\JobOpening;
 use App\Models\JobOpeningStageLog;
@@ -97,7 +99,9 @@ class OfferingLetterPage extends Page implements HasTable
                     'offering_letter_uploaded_at'  => now(),
                 ]);
 
-                Notification::make()->title('Surat penawaran diunggah — kandidat sudah bisa unduh dari portalnya')->success()->send();
+                ApplicationNotification::createAndSend($record, CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY);
+
+                Notification::make()->title('Surat penawaran diunggah — email dikirim, kandidat sudah bisa unduh dari portalnya')->success()->send();
             });
     }
 

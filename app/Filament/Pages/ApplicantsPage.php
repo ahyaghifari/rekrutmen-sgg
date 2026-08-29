@@ -443,12 +443,49 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
         ];
     }
 
+    /** Modal berisi link unduh tiap field bertipe file (KTP, CV, ijazah, dll — bebas per perusahaan). */
+    public function lihatBerkasAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('lihatBerkas')
+            ->label('Lihat Berkas')
+            ->icon('heroicon-m-paper-clip')
+            ->color('gray')
+            ->modalHeading('Berkas Pelamar')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Tutup')
+            ->form(function ($record) {
+                $fileFields = $record->jobOpening->company?->formSections->flatMap->fields->where('type', 'file') ?? collect();
+
+                if ($fileFields->isEmpty()) {
+                    return [
+                        Placeholder::make('none')->label('')->content('Tidak ada field berkas yang dikonfigurasi untuk perusahaan ini.'),
+                    ];
+                }
+
+                $answers = $record->answers()->whereIn('field_key', $fileFields->pluck('name'))->get()->keyBy('field_key');
+
+                return $fileFields->map(function ($field) use ($record, $answers) {
+                    $answer  = $answers->get($field->name);
+                    $hasFile = $answer && trim((string) $answer->value) !== '';
+
+                    $content = $hasFile
+                        ? new HtmlString('<a href="' . route('lamaran.attachment', ['application' => $record->id, 'field' => $field->name]) . '" target="_blank" style="font-weight:700;color:#042c6c;">Lihat Dokumen &rarr;</a>')
+                        : new HtmlString('<span style="color:#94a3b8;">— belum diupload —</span>');
+
+                    return Placeholder::make('field_' . $field->name)->label($field->label)->content($content);
+                })->values()->all();
+            });
+    }
+
     public function table(Table $table): Table
     {
         return $table
             ->query(
                 JobApplication::query()
-                    ->with(['answers' => fn ($q) => $q->whereIn('field_key', ['full_name', 'gender', 'whatsapp_number', 'education_level'])])
+                    ->with([
+                        'answers' => fn ($q) => $q->whereIn('field_key', ['full_name', 'gender', 'whatsapp_number', 'education_level']),
+                        'jobOpening.company.formSections.fields',
+                    ])
                     ->when(
                         $this->jobOpeningId && $this->isJobOpeningAllowed($this->jobOpeningId),
                         fn (Builder $q) => $q->where('job_opening_id', $this->jobOpeningId),
@@ -507,6 +544,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                     ->label('Lihat')
                     ->icon('heroicon-m-eye')
                     ->url(fn ($record) => route('filament.admin.pages.applicant-detail-page') . '?application=' . $record->id),
+                $this->lihatBerkasAction(),
             ])
             ->bulkActions([])
             ->emptyStateHeading('Pilih perusahaan & lowongan')

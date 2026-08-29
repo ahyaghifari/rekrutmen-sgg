@@ -340,6 +340,8 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
                 if ($nextStatus === 'rejected') {
                     ApplicationNotification::createDraftFor($record, CompanyMessageTemplate::EVENT_MCU_REJECTED);
                     // draft ditahan — admin kirim manual via banner
+                } else {
+                    ApplicationNotification::createAndSend($record, CompanyMessageTemplate::EVENT_MCU_PASSED);
                 }
 
                 \Filament\Notifications\Notification::make()->title('Keputusan MCU tersimpan')->success()->send();

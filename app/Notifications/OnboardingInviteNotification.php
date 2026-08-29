@@ -3,15 +3,14 @@
 namespace App\Notifications;
 
 use App\Models\JobApplication;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Queue\SerializesModels;
 
-class OnboardingInviteNotification extends Notification implements ShouldQueue
+// ponytail: TIDAK ShouldQueue — tidak ada queue worker yang jalan di server ini
+// (QUEUE_CONNECTION=database tanpa `queue:work`), jadi notifikasi queued cuma numpuk
+// di tabel `jobs` dan tidak pernah benar-benar terkirim. Kirim sinkron seperti event lain.
+class OnboardingInviteNotification extends Notification
 {
-    use Queueable, SerializesModels;
     public function __construct(protected JobApplication $application)
     {
     }

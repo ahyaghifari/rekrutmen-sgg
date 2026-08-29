@@ -6,12 +6,16 @@ use App\Filament\Concerns\ScopedToCompany;
 use App\Models\ApplicationNotification;
 use App\Models\CompanyMessageTemplate;
 use App\Models\JobApplication;
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 
-class ApplicantDetailPage extends Page
+class ApplicantDetailPage extends Page implements HasActions
 {
-    use ScopedToCompany;
+    use ScopedToCompany, InteractsWithActions;
 
     protected static ?string $navigationIcon         = 'heroicon-o-user';
     protected static string  $view                   = 'filament.pages.applicant-detail-page';
@@ -53,7 +57,7 @@ class ApplicantDetailPage extends Page
         return 'Detail Pelamar — ' . ($this->application?->answersMap()['full_name'] ?? '');
     }
 
-    public function changeStatus(string $status): void
+    public function changeStatus(string $status, ?string $reason = null): void
     {
         if (! $this->application) return;
 
@@ -62,6 +66,11 @@ class ApplicantDetailPage extends Page
 
         $prevStatus = $this->application->status;
         $this->application->update(['status' => $status]);
+
+        // "Tidak Dilanjutkan" manual (di luar alur normal) — catat alasannya di log status yang baru dibuat.
+        if ($status === 'rejected' && $reason && trim($reason) !== '') {
+            $this->application->statusLogs()->latest('changed_at')->first()?->update(['notes' => trim($reason)]);
+        }
 
         // Create draft notification when moving to shortlisted or rejected (from screening)
         $notifEvent = match (true) {
@@ -80,5 +89,28 @@ class ApplicantDetailPage extends Page
             ->send();
 
         $this->redirect(request()->fullUrl());
+    }
+
+    public function tidakDilanjutkanAction(): Action
+    {
+        return Action::make('tidakDilanjutkan')
+            ->label('Tidak Dilanjutkan')
+            ->icon('heroicon-m-x-circle')
+            ->color('danger')
+            ->visible(fn () => $this->application && ! in_array($this->application->status, ['rejected', 'passed']))
+            ->modalHeading('Tandai Tidak Dilanjutkan')
+            ->modalDescription('Dipakai di luar alur normal — misalnya kandidat mengundurkan diri di tengah proses, bukan karena gagal di salah satu tahap.')
+            ->modalSubmitActionLabel('Tidak Dilanjutkan')
+            ->modalCancelActionLabel('Batal')
+            ->form([
+                Textarea::make('reason')
+                    ->label('Alasan Tidak Dilanjutkan')
+                    ->placeholder('Mis. Kandidat mengundurkan diri karena sudah diterima di tempat lain.')
+                    ->rows(3)
+                    ->required(),
+            ])
+            ->action(function (array $data): void {
+                $this->changeStatus('rejected', $data['reason']);
+            });
     }
 }

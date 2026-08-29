@@ -129,10 +129,14 @@ class HrisIntegrationController extends Controller
             'status' => 'nullable|string|in:applied,screening,shortlisted,interview,offering,mcu,onboarding,passed,rejected',
         ]);
 
-        $opening = JobOpening::where('hris_job_opening_id', $hrisJobOpeningId)->first();
+        // Cocok by hris_job_opening_id (lowongan dari HRIS) ATAU id lowongan Rekrutmen sendiri
+        // (lowongan manual/belum terhubung — HRIS tetap bisa kelola pelamarnya).
+        $opening = JobOpening::where('hris_job_opening_id', $hrisJobOpeningId)
+            ->orWhere('id', $hrisJobOpeningId)
+            ->first();
 
         if (! $opening) {
-            return response()->json(['message' => 'Job opening not found for hris_job_opening_id: ' . $hrisJobOpeningId], 404);
+            return response()->json(['message' => 'Job opening not found: ' . $hrisJobOpeningId], 404);
         }
 
         $applications = $opening->applications()
@@ -142,6 +146,8 @@ class HrisIntegrationController extends Controller
             ->get(['id', 'user_id', 'status', 'updated_at']);
 
         return response()->json([
+            'job_opening_title' => $opening->title,
+            'hris_linked'       => $opening->hris_job_opening_id !== null,
             'data' => $applications->map(fn (JobApplication $a) => [
                 'job_application_id' => $a->id,
                 'status'             => $a->status,

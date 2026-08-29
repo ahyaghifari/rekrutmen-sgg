@@ -150,17 +150,7 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
     private function activateAndNotify(JobApplication $app): void
     {
         $app->update(['quiz_sent_at' => now()]);
-        ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_QUIZ_SENT);
-
-        $notif = ApplicationNotification::where('job_application_id', $app->id)
-            ->where('event', CompanyMessageTemplate::EVENT_QUIZ_SENT)
-            ->where('status', 'draft')
-            ->latest()->first();
-
-        if ($notif && $app->user) {
-            Mail::to($app->user->email)->send(new ApplicantNotificationMail($notif));
-            $notif->update(['status' => 'sent', 'sent_at' => now()]);
-        }
+        ApplicationNotification::createAndSend($app, CompanyMessageTemplate::EVENT_QUIZ_SENT);
     }
 
     public function aktifkanTesAction(): Action
@@ -317,6 +307,7 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
                 if ($data['hasil'] === 'lulus') {
                     $record->update(['quiz_result' => 'lulus']);
                     $record->logMilestone('quiz_lulus');
+                    ApplicationNotification::createAndSend($record, CompanyMessageTemplate::EVENT_QUIZ_PASSED);
                 } else {
                     $record->update(['quiz_result' => 'tidak_lulus', 'status' => 'rejected']);
                     ApplicationNotification::createDraftFor($record, CompanyMessageTemplate::EVENT_QUIZ_REJECTED);

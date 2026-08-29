@@ -59,7 +59,7 @@ class McuSchedule extends Model
 
         foreach ($invitees as $inv) {
             $inv->jobApplication->update(['status' => 'mcu']);
-            ApplicationNotification::createDraftFor($inv->jobApplication, CompanyMessageTemplate::EVENT_MCU_SCHEDULED, [
+            ApplicationNotification::createAndSend($inv->jobApplication, CompanyMessageTemplate::EVENT_MCU_SCHEDULED, [
                 'interview_date' => $this->mcu_date?->translatedFormat('d F Y'),
                 'interview_time' => $this->mcu_time ? substr($this->mcu_time, 0, 5) : null,
                 'location'       => $this->location,

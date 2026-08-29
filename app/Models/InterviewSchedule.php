@@ -60,7 +60,7 @@ class InterviewSchedule extends Model
 
         foreach ($invitees as $inv) {
             $inv->jobApplication->update(['status' => 'interview']);
-            ApplicationNotification::createDraftFor($inv->jobApplication, CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED, [
+            ApplicationNotification::createAndSend($inv->jobApplication, CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED, [
                 'interview_date' => $this->interview_date?->translatedFormat('d F Y'),
                 'interview_time' => $this->interview_time ? substr($this->interview_time, 0, 5) : null,
                 'location'       => $this->location,
