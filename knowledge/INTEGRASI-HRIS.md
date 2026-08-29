@@ -6,7 +6,7 @@
 > seluruh proses jadi data karyawan baru.
 >
 > Disusun berdasarkan kode aktual per tanggal dokumen ini dibuat, bukan dokumen desain
-> awal (`PRD.md`, `planning/*.md` sudah banyak yang basi dan tidak dipakai lagi).
+> awal (`PRD.md`, `planning/*.md` sudah banya yang basi dan tidak dipakai lagi).
 
 ---
 
