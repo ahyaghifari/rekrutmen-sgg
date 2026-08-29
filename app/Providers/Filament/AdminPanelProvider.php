@@ -30,6 +30,12 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->profile()
             ->topNavigation()
+            ->navigationGroups([
+                'Lowongan',
+                'Kandidat',
+                'Master',
+                'Pengguna',
+            ])
             ->colors([
                 'primary' => Color::hex('#c757b9'),
                 'gray'    => Color::Slate,
