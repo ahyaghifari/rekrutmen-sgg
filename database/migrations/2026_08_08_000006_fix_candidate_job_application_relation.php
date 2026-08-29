@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Drop FK + kolom dari sisi yang salah
+        // Drop FK + kolom dari sisi yang salah. dropIndex sebelum dropColumn — kolom dibuat
+        // dengan ->index() (migration 065501), SQLite gagal drop kolom yang masih ada indexnya.
         Schema::table('job_applications', function (Blueprint $table) {
             $table->dropForeign(['candidate_id']);
+            $table->dropIndex(['candidate_id']);
             $table->dropColumn('candidate_id');
         });
 
