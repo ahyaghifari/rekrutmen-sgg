@@ -316,6 +316,7 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
             ->action(function (array $data, $record): void {
                 if ($data['hasil'] === 'lulus') {
                     $record->update(['quiz_result' => 'lulus']);
+                    $record->logMilestone('quiz_lulus');
                 } else {
                     $record->update(['quiz_result' => 'tidak_lulus', 'status' => 'rejected']);
                     ApplicationNotification::createDraftFor($record, CompanyMessageTemplate::EVENT_QUIZ_REJECTED);

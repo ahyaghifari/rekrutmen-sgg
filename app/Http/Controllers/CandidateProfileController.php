@@ -195,8 +195,12 @@ class CandidateProfileController extends Controller
 
     public function downloadDocument(CandidateDocument $document)
     {
-        $candidate = $this->currentCandidate();
-        abort_unless($document->candidate_id === $candidate->id, 403);
+        $user = Auth::user();
+        $isOwner = $document->candidate->user_id === $user->id;
+        $isSuperAdmin = $user->hasAnyRole(['super_admin', 'Super Admin']);
+        $isCompanyStaff = $user->is_staff && $user->company_id === $document->candidate->jobApplication?->jobOpening?->company_id;
+
+        abort_unless($isOwner || $isSuperAdmin || $isCompanyStaff, 403);
 
         return Storage::disk('local')->response($document->file_path);
     }

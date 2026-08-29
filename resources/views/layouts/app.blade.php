@@ -11,16 +11,68 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="m-0">
+<body class="m-0" x-data="{ sidebarOpen: false }">
 
 <div class="sg-rise min-h-screen">
 
   {{-- Top gradient bar --}}
   <div class="h-1" style="background:linear-gradient(90deg,#042c6c 0%,#0b47a1 55%,#B9308C 100%);" aria-hidden="true"></div>
 
+  {{-- Mobile sidebar --}}
+  <div x-show="sidebarOpen" x-cloak class="sg-mob fixed inset-0 z-50" style="display:none;">
+    <div class="absolute inset-0 bg-slate-900/40" @click="sidebarOpen = false"
+         x-show="sidebarOpen"
+         x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
+    <div class="absolute inset-y-0 left-0 w-[78%] max-w-[300px] bg-white shadow-[0_0_30px_rgba(15,23,42,0.15)] flex flex-col"
+         x-show="sidebarOpen"
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full">
+      <div class="flex items-center justify-between px-5 py-[18px] border-b border-slate-100">
+        <img src="/logo-sgg.png" alt="Syifa Global Group" class="h-7 w-auto" />
+        <button @click="sidebarOpen = false" class="w-8 h-8 grid place-items-center rounded-lg border-0 bg-transparent cursor-pointer text-slate-400">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <nav class="flex-1 px-3 py-4 flex flex-col gap-1" aria-label="Navigasi">
+        <a href="{{ route('dashboard') }}" @click="sidebarOpen = false"
+           class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('dashboard') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
+          <i class="fa-solid fa-gauge-high w-4 text-center text-xs"></i>Dashboard
+        </a>
+        <a href="{{ route('lamaran.index') }}" @click="sidebarOpen = false"
+           class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('lamaran.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
+          <i class="fa-solid fa-file-lines w-4 text-center text-xs"></i>Lamaran Saya
+        </a>
+        @if(auth()->user()->candidate)
+        <a href="{{ route('data-diri.edit') }}" @click="sidebarOpen = false"
+           class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('data-diri.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
+          <i class="fa-solid fa-id-card w-4 text-center text-xs"></i>Data Diri Kandidat
+        </a>
+        <a href="{{ route('tes-online.show') }}" @click="sidebarOpen = false"
+           class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('tes-online.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
+          <i class="fa-solid fa-computer w-4 text-center text-xs"></i>Tes
+        </a>
+        @endif
+      </nav>
+      <div class="px-3 py-4 border-t border-slate-100">
+        <form method="POST" action="{{ route('logout') }}">
+          @csrf
+          <button type="submit" class="w-full text-left px-4 py-[11px] rounded-[10px] text-[14px] font-semibold text-red-500 transition-colors duration-150 cursor-pointer border-0 bg-transparent outline-none flex items-center gap-3">
+            <i class="fa-solid fa-right-from-bracket w-4 text-center"></i>Keluar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   {{-- Navbar --}}
   <header class="sg-app-navbar sticky top-0 z-40 border-b border-slate-200 backdrop-blur-[10px]">
     <div class="max-w-[1000px] mx-auto px-5 py-[14px] flex items-center gap-5">
+
+      {{-- Mobile: hamburger --}}
+      <button @click="sidebarOpen = true" class="sg-mob w-9 h-9 -ml-1 rounded-lg border-0 bg-transparent cursor-pointer text-slate-600" style="display:flex;align-items:center;justify-content:center;" aria-label="Buka navigasi">
+        <i class="fa-solid fa-bars text-lg"></i>
+      </button>
 
       {{-- Logo --}}
       <a href="{{ route('welcome') }}" class="flex items-center gap-3 no-underline">
@@ -104,24 +156,6 @@
               <div class="text-[12.5px] font-bold text-slate-800 truncate">{{ auth()->user()->name }}</div>
               <div class="text-[11.5px] text-slate-500 truncate">{{ auth()->user()->email }}</div>
             </div>
-            <a href="{{ route('dashboard') }}"
-               class="sg-dd-item flex items-center gap-2 px-4 py-[11px] text-[13px] font-semibold text-slate-700 no-underline transition-colors duration-150">
-              <i class="fa-solid fa-gauge-high w-4 text-center text-slate-400"></i>Dashboard
-            </a>
-            <a href="{{ route('lamaran.index') }}"
-               class="sg-dd-item flex items-center gap-2 px-4 py-[11px] text-[13px] font-semibold text-slate-700 no-underline transition-colors duration-150">
-              <i class="fa-solid fa-file-lines w-4 text-center text-slate-400"></i>Lamaran Saya
-            </a>
-            @if(auth()->user()->candidate)
-            <a href="{{ route('data-diri.edit') }}"
-               class="sg-dd-item flex items-center gap-2 px-4 py-[11px] text-[13px] font-semibold text-slate-700 no-underline transition-colors duration-150">
-              <i class="fa-solid fa-id-card w-4 text-center text-slate-400"></i>Data Diri Kandidat
-            </a>
-            <a href="{{ route('tes-online.show') }}"
-               class="sg-dd-item flex items-center gap-2 px-4 py-[11px] text-[13px] font-semibold text-slate-700 no-underline transition-colors duration-150">
-              <i class="fa-solid fa-computer w-4 text-center text-slate-400"></i>Tes
-            </a>
-            @endif
             <div class="sg-dd-border border-t border-slate-100">
               <form method="POST" action="{{ route('logout') }}">
                 @csrf

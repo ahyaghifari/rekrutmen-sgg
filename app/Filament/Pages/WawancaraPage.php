@@ -214,7 +214,7 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
     {
         if (! $this->jobOpeningId) return 0;
         return JobApplication::where('job_opening_id', $this->jobOpeningId)
-            ->whereIn('status', ['mcu', 'onboarding', 'passed'])->count();
+            ->whereIn('status', ['offering', 'mcu', 'onboarding', 'passed'])->count();
     }
 
     public function getPendingInterviewCount(): int
@@ -341,9 +341,10 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
                 $company = $record->jobOpening->company;
 
                 if ($data['hasil'] === 'lulus') {
-                    $nextStatus = ($company && ! $company->requires_mcu) ? 'onboarding' : 'mcu';
-                    $record->update(['interview_result' => 'lulus', 'status' => $nextStatus]);
-                    \App\Models\JobOpeningStageLog::record($record->job_opening_id, 'interview', $nextStatus, 1);
+                    // ponytail: semua yang lulus wawancara singgah dulu di tahap Offering Letter
+                    // sebelum lanjut MCU/onboarding — lihat OfferingLetterPage.
+                    $record->update(['interview_result' => 'lulus', 'status' => 'offering']);
+                    \App\Models\JobOpeningStageLog::record($record->job_opening_id, 'interview', 'offering', 1);
                 } else {
                     $record->update(['interview_result' => 'tidak_lulus', 'status' => 'rejected']);
                     \App\Models\JobOpeningStageLog::record($record->job_opening_id, 'interview', 'rejected', 1);

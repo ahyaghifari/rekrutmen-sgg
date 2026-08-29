@@ -47,4 +47,12 @@ class McuInvitee extends Model
     {
         return $this->doctorExamination()->exists();
     }
+
+    public function hasAnyMcuResult(): bool
+    {
+        return $this->nurseAssessment()->exists()
+            || $this->labResult()->exists()
+            || $this->radiologyResult()->exists()
+            || $this->doctorExamination()->exists();
+    }
 }

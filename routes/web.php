@@ -3,6 +3,7 @@
 use App\Exports\ApplicationsExport;
 use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\JobApplicationController;
+use App\Http\Controllers\OfferingLetterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\QuizController;
@@ -36,6 +37,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/data-diri-kandidat', [CandidateProfileController::class, 'update'])->name('data-diri.update');
     Route::get('/data-diri-kandidat/dokumen/{document}', [CandidateProfileController::class, 'downloadDocument'])->name('data-diri.dokumen');
 
+    Route::get('/offering-letter/unduh', [OfferingLetterController::class, 'downloadForCandidate'])->name('offering-letter.unduh');
+    Route::post('/offering-letter/upload-signed', [OfferingLetterController::class, 'uploadSigned'])->middleware('throttle:10,1')->name('offering-letter.upload-signed');
+
     Route::get('/tes-online', [QuizController::class, 'index'])->name('tes-online.show');
     Route::get('/tes-online/{quiz}', [QuizController::class, 'show'])->name('tes-online.detail');
     Route::post('/tes-online/{quiz}/mulai', [QuizController::class, 'start'])->name('tes-online.mulai');
@@ -60,5 +64,10 @@ Route::get('/kelola-rekrutmen/export-pelamar', function () {
     $filename = 'pelamar-' . \Illuminate\Support\Str::slug($opening->title) . $suffix . '-' . now()->format('Ymd') . '.xlsx';
     return Excel::download(new ApplicationsExport($id, $status), $filename);
 })->middleware('throttle:10,1')->name('admin.export.applications');
+
+Route::get('/kelola-rekrutmen/offering-letter/{application}/{type}', [OfferingLetterController::class, 'download'])
+    ->middleware(['auth'])
+    ->where('type', 'recruiter|signed')
+    ->name('admin.offering-letter.download');
 
 require __DIR__.'/auth.php';

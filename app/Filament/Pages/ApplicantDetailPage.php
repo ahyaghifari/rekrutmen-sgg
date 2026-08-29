@@ -24,7 +24,20 @@ class ApplicantDetailPage extends Page
         $id = request('application');
 
         $this->application = $id
-            ? JobApplication::with(['jobOpening.company.formSections.fields', 'answers'])->find($id)
+            ? JobApplication::with([
+                'jobOpening.company.formSections.fields',
+                'answers',
+                'candidate.familyMembers',
+                'candidate.educations',
+                'candidate.trainings',
+                'candidate.organizations',
+                'candidate.workExperiences',
+                'candidate.references',
+                'candidate.additionalInfo',
+                'candidate.selfAssessment',
+                'candidate.documents',
+                'candidate.agreements',
+            ])->find($id)
             : null;
 
         abort_if(! $this->application, 404);

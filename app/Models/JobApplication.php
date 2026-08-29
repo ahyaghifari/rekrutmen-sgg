@@ -29,11 +29,17 @@ class JobApplication extends Model
         'quiz_result',
         'psychotest_completed_at',
         'interview_result',
+        'offering_letter_path',
+        'offering_letter_uploaded_at',
+        'offering_letter_signed_path',
+        'offering_letter_signed_at',
     ];
 
     protected $casts = [
-        'quiz_sent_at'             => 'datetime',
-        'psychotest_completed_at'  => 'datetime',
+        'quiz_sent_at'                 => 'datetime',
+        'psychotest_completed_at'      => 'datetime',
+        'offering_letter_uploaded_at'  => 'datetime',
+        'offering_letter_signed_at'    => 'datetime',
     ];
 
     /**
@@ -43,6 +49,7 @@ class JobApplication extends Model
     public const STATUS_SCREENING    = 'screening';
     public const STATUS_SHORTLISTED  = 'shortlisted';
     public const STATUS_INTERVIEW    = 'interview';
+    public const STATUS_OFFERING     = 'offering';
     public const STATUS_MCU          = 'mcu';
     public const STATUS_ONBOARDING   = 'onboarding';
     public const STATUS_PASSED       = 'passed';
@@ -100,6 +107,16 @@ class JobApplication extends Model
         return $this->hasMany(JobApplicationStatusLog::class)->orderBy('changed_at');
     }
 
+    /**
+     * Catat keputusan/milestone yang TIDAK mengubah kolom `status` (mis. hasil tes lulus,
+     * yang statusnya tetap `shortlisted`) — supaya tetap muncul di Riwayat Status, bukan cuma
+     * perubahan status yang di-log otomatis lewat booted().
+     */
+    public function logMilestone(string $milestone): void
+    {
+        $this->logStatusChange($this->status, $milestone);
+    }
+
     public function answers(): HasMany
     {
         return $this->hasMany(JobApplicationAnswer::class);
@@ -129,6 +146,11 @@ class JobApplication extends Model
     public function offeringLetter(): HasOne
     {
         return $this->hasOne(OfferingLetter::class);
+    }
+
+    public function interviewInvitee(): HasOne
+    {
+        return $this->hasOne(InterviewInvitee::class);
     }
 
     public function quizAttempts(): HasMany

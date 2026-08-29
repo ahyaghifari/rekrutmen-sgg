@@ -7,6 +7,7 @@ $statusMap = [
     'screening'   => ['label' => 'Peninjauan Berkas',  'badge' => 'badge-screening', 'icon' => 'fa-magnifying-glass'],
     'shortlisted' => ['label' => 'Tes',         'badge' => 'badge-interview', 'icon' => 'fa-laptop'],
     'interview'   => ['label' => 'Wawancara',          'badge' => 'badge-interview', 'icon' => 'fa-comments'],
+    'offering'    => ['label' => 'Offering Letter',    'badge' => 'badge-interview', 'icon' => 'fa-file-signature'],
     'mcu'         => ['label' => 'Medical Check Up',   'badge' => 'badge-interview', 'icon' => 'fa-stethoscope'],
     'onboarding'  => ['label' => 'TTD & Onboarding',   'badge' => 'badge-passed',    'icon' => 'fa-signature'],
     'passed'      => ['label' => 'Diterima',           'badge' => 'badge-passed',    'icon' => 'fa-circle-check'],
@@ -20,6 +21,7 @@ $steps = [
     ['status' => 'screening',   'label' => 'Peninjauan Berkas', 'sub' => 'Tinjauan berkas awal', 'icon' => 'fa-magnifying-glass'],
     ['status' => 'shortlisted', 'label' => 'Tes',        'sub' => 'Kerjakan tes',         'icon' => 'fa-laptop'],
     ['status' => 'interview',   'label' => 'Wawancara',         'sub' => 'Jadwal dikirim',       'icon' => 'fa-comments'],
+    ['status' => 'offering',    'label' => 'Offering Letter',   'sub' => 'Surat penawaran',      'icon' => 'fa-file-signature'],
 ];
 if ($requiresMcu) {
     $steps[] = ['status' => 'mcu', 'label' => 'MCU', 'sub' => 'Medical check up', 'icon' => 'fa-stethoscope'];
@@ -117,6 +119,50 @@ $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#
     @endforeach
   </div>
 </div>
+
+@if($application->status === 'interview')
+@php $interviewSchedule = $application->interviewInvitee?->schedule; @endphp
+<div class="sg-card mt-3 rounded-[18px] px-6 py-5" style="border-left: 4px solid {{ $brand }};">
+  <div class="flex items-start gap-3">
+    <i class="fa-solid fa-calendar-days mt-[3px] text-sm" style="color:{{ $brand }};"></i>
+    <div class="text-[13.5px] text-slate-700">
+      @if($interviewSchedule)
+        <div class="font-extrabold text-slate-800 mb-1">Jadwal Wawancara</div>
+        <div>{{ $interviewSchedule->interview_date?->translatedFormat('l, j F Y') }}
+          @if($interviewSchedule->interview_time) &middot; {{ substr($interviewSchedule->interview_time, 0, 5) }} WIB @endif
+        </div>
+        @if($interviewSchedule->location)<div class="mt-1">Lokasi: {{ $interviewSchedule->location }}</div>@endif
+        @if($interviewSchedule->notes)<div class="mt-1 text-slate-500">Catatan: {{ $interviewSchedule->notes }}</div>@endif
+      @else
+        <div class="font-extrabold text-slate-800 mb-1">Jadwal Wawancara</div>
+        <div class="text-slate-500">Belum diinformasikan — tim rekrutmen akan menghubungimu untuk jadwal wawancara.</div>
+      @endif
+    </div>
+  </div>
+</div>
+@endif
+
+@if($application->status === 'mcu')
+@php $mcuSchedule = $application->mcuInvitee?->schedule; @endphp
+<div class="sg-card mt-3 rounded-[18px] px-6 py-5" style="border-left: 4px solid {{ $brand }};">
+  <div class="flex items-start gap-3">
+    <i class="fa-solid fa-calendar-days mt-[3px] text-sm" style="color:{{ $brand }};"></i>
+    <div class="text-[13.5px] text-slate-700">
+      @if($mcuSchedule)
+        <div class="font-extrabold text-slate-800 mb-1">Jadwal Medical Check Up</div>
+        <div>{{ $mcuSchedule->mcu_date?->translatedFormat('l, j F Y') }}
+          @if($mcuSchedule->mcu_time) &middot; {{ substr($mcuSchedule->mcu_time, 0, 5) }} WIB @endif
+        </div>
+        @if($mcuSchedule->location)<div class="mt-1">Lokasi: {{ $mcuSchedule->location }}</div>@endif
+        @if($mcuSchedule->notes)<div class="mt-1 text-slate-500">Catatan: {{ $mcuSchedule->notes }}</div>@endif
+      @else
+        <div class="font-extrabold text-slate-800 mb-1">Jadwal Medical Check Up</div>
+        <div class="text-slate-500">Belum diinformasikan — tim rekrutmen akan menghubungimu untuk jadwal MCU.</div>
+      @endif
+    </div>
+  </div>
+</div>
+@endif
 
 {{-- Answer sections — driven by company formSections --}}
 @if($co?->formSections->isNotEmpty())

@@ -129,22 +129,11 @@ class CompanyResource extends BaseResource
                 ->collapsible()
                 ->collapsed(),
 
-            Forms\Components\Section::make('Status & Mode Pengelolaan')->schema([
+            Forms\Components\Section::make('Status')->schema([
                 Forms\Components\Toggle::make('is_active')
                     ->label('Perusahaan Aktif')
                     ->helperText('Nonaktifkan untuk menyembunyikan lowongan dari halaman publik.')
                     ->default(true)
-                    ->disabled(fn () => !static::isSuperAdmin()),
-
-                Forms\Components\Radio::make('management_mode')
-                    ->label('Mode Pengelolaan Lowongan')
-                    ->options([
-                        'free' => 'Pengelolaan Bebas — lowongan dibuat & dikelola langsung di sistem ini',
-                        'hris' => 'Pengelolaan HRIS — lowongan dikirim otomatis dari sistem HRIS eksternal',
-                    ])
-                    ->default('free')
-                    ->required()
-                    ->columnSpanFull()
                     ->disabled(fn () => !static::isSuperAdmin()),
             ])->visible(fn () => static::isSuperAdmin()),
         ]);
@@ -179,12 +168,6 @@ class CompanyResource extends BaseResource
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Aktif')
                     ->boolean(),
-
-                Tables\Columns\TextColumn::make('management_mode')
-                    ->label('Mode')
-                    ->badge()
-                    ->color(fn (string $state): string => $state === 'hris' ? 'warning' : 'success')
-                    ->formatStateUsing(fn (string $state): string => $state === 'hris' ? 'HRIS' : 'Bebas'),
 
                 Tables\Columns\TextColumn::make('hris_code')
                     ->label('Kode HRIS')

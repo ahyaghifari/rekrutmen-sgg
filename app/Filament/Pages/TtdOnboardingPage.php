@@ -26,7 +26,7 @@ class TtdOnboardingPage extends Page implements HasTable, HasActions, HasForms
     protected static ?string $navigationLabel = 'TTD & Onboarding';
     protected static ?string $title           = 'TTD & Onboarding';
     protected static ?string $navigationGroup = 'Kandidat';
-    protected static ?int    $navigationSort  = 4;
+    protected static ?int    $navigationSort  = 6;
     protected static string  $view            = 'filament.pages.ttd-onboarding-page';
 
     public ?string $companyId    = null;

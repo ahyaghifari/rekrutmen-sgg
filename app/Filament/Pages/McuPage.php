@@ -40,7 +40,7 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
     protected static ?string $navigationLabel = 'MCU';
     protected static ?string $title           = 'Medical Check Up';
     protected static ?string $navigationGroup = 'Kandidat';
-    protected static ?int    $navigationSort  = 3;
+    protected static ?int    $navigationSort  = 4;
     protected static string  $view            = 'filament.pages.mcu-page';
 
     public ?string $companyId    = null;
@@ -399,6 +399,12 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
                     ->label('Lihat')
                     ->icon('heroicon-m-eye')
                     ->url(fn ($record) => route('filament.admin.pages.applicant-detail-page') . '?application=' . $record->id),
+                Tables\Actions\Action::make('lihatHasilMcu')
+                    ->label('Lihat Hasil MCU')
+                    ->icon('heroicon-m-clipboard-document-check')
+                    ->color('gray')
+                    ->visible(fn ($record) => $record->mcuInvitee?->hasAnyMcuResult())
+                    ->url(fn ($record) => route('filament.admin.pages.hasil-mcu-detail-page') . '?invitee=' . $record->mcuInvitee->id),
                 $this->putuskanHasilMcuAction()->visible(fn ($record) => $record->mcuInvitee
                     && $record->mcuInvitee->status_mcu === 'pending'
                     && $record->mcuInvitee->doctorExamDone()),

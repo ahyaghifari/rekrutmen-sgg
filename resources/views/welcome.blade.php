@@ -169,8 +169,7 @@
         <h2 id="alur-heading" class="mt-2.5 mb-2 text-[26px] font-extrabold text-slate-800 tracking-[-0.6px]" style="text-wrap: balance;">Enam tahap yang jelas dan terstruktur</h2>
         <p class="m-0 text-[14.5px] leading-[1.6] text-slate-500">Setiap perpindahan tahap dapat dipantau kapan saja dari dashboard kandidat.</p>
       </div>
-      @php $tlCols = 3; @endphp
-      <div class="sg-tl sg-tl-snake">
+      <div class="sg-tl">
         @foreach([
           ['icon' => 'fa-plus',         'bg' => 'bg-navy',      'border' => '',                    'color' => 'text-white', 'label' => 'Daftar &amp; Lamar',  'desc' => 'Buat akun dan isi formulir lamaran',     'last' => false],
           ['icon' => 'fa-circle-check', 'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'Seleksi Berkas',       'desc' => 'Tim HR meninjau kelengkapan dokumen',    'last' => false, 'regular' => true],
@@ -179,20 +178,9 @@
           ['icon' => 'fa-stethoscope',  'bg' => 'bg-white',     'border' => 'border-2 border-navy','color' => 'text-navy',  'label' => 'MCU',                  'desc' => 'Medical check up',                       'last' => false],
           ['icon' => 'fa-circle-check', 'bg' => 'bg-sgg-green', 'border' => '',                    'color' => 'text-white', 'label' => 'TTD &amp; Onboarding', 'desc' => 'Kontrak dan mulai berkarier',            'last' => true],
         ] as $i => $step)
-        @php
-          $row = intdiv($i, $tlCols);
-          $posInRow = $i % $tlCols;
-          $rowIsEven = $row % 2 === 0;
-          $col = $rowIsEven ? $posInRow + 1 : $tlCols - $posInRow;
-          $isLastInRow = $posInRow === $tlCols - 1;
-        @endphp
-        <div class="sg-fade relative text-center" style="transition-delay: {{ $i * 0.1 }}s; grid-column: {{ $col }}; grid-row: {{ $row + 1 }};">
-          @if(!$step['last'] && !$isLastInRow)
-          <div class="sg-tl-line absolute top-[33px] border-t-2 border-dashed border-slate-300"
-               style="{{ $rowIsEven ? 'left:calc(50% + 40px);right:calc(-50% + 40px);' : 'right:calc(50% + 40px);left:calc(-50% + 40px);' }}" aria-hidden="true"></div>
-          @endif
-          @if(!$step['last'] && $isLastInRow)
-          <div class="sg-tl-vline absolute border-l-2 border-dashed border-slate-300" style="left:50%; top:100%; margin-left:-1px;" aria-hidden="true"></div>
+        <div class="sg-fade relative text-center" style="transition-delay: {{ $i * 0.1 }}s;">
+          @if(!$step['last'])
+          <div class="sg-tl-line absolute top-[33px] border-t-2 border-dashed border-slate-300" style="left:calc(50% + 40px);right:calc(-50% + 40px);" aria-hidden="true"></div>
           @endif
           <div class="relative z-[1] w-[66px] h-[66px] mx-auto rounded-full grid place-items-center text-[19px] {{ $step['bg'] }} {{ $step['border'] }} {{ $step['color'] }}" aria-hidden="true">
             <i class="{{ isset($step['regular']) ? 'fa-regular' : 'fa-solid' }} {{ $step['icon'] }}"></i>

@@ -10,6 +10,8 @@ $statusMap   = [
     'screening'   => ['label' => 'Peninjauan Berkas',    'color' => 'info'],
     'shortlisted' => ['label' => 'Lolos Seleksi Berkas', 'color' => 'warning'],
     'interview'   => ['label' => 'Wawancara',            'color' => 'warning'],
+    'quiz_lulus'  => ['label' => 'Lulus Tes',            'color' => 'success'],
+    'offering'    => ['label' => 'Offering Letter',      'color' => 'warning'],
     'mcu'         => ['label' => 'Medical Check Up',     'color' => 'warning'],
     'onboarding'  => ['label' => 'TTD & Onboarding',     'color' => 'success'],
     'passed'      => ['label' => 'Diterima',             'color' => 'success'],
@@ -42,23 +44,6 @@ $s = $statusMap[$application->status] ?? ['label' => $application->status, 'colo
     </div>
 </div>
 
-{{-- Ubah Status --}}
-<x-filament::section heading="Status Lamaran" icon="heroicon-m-arrow-path" collapsible>
-    <div class="flex flex-wrap gap-2">
-        @foreach($statusMap as $key => $info)
-        @php $isActive = $application->status === $key; @endphp
-        <x-filament::button
-            wire:click="changeStatus('{{ $key }}')"
-            wire:loading.attr="disabled"
-            :color="$isActive ? $info['color'] : 'gray'"
-            :outlined="!$isActive"
-            size="sm">
-            {{ $info['label'] }}
-        </x-filament::button>
-        @endforeach
-    </div>
-</x-filament::section>
-
 {{-- Riwayat Status --}}
 <x-filament::section heading="Riwayat Status" icon="heroicon-m-clock" collapsible collapsed>
     @php $logs = $application->statusLogs; @endphp
@@ -86,10 +71,19 @@ $s = $statusMap[$application->status] ?? ['label' => $application->status, 'colo
     @endif
 </x-filament::section>
 
-{{-- Jawaban Form per Seksi --}}
+@php
+    $isFinalStage = in_array($application->status, ['onboarding', 'passed']);
+@endphp
+
+{{-- Data Diri Kandidat — ditonjolkan begitu masuk TTD & Onboarding / selesai --}}
+@if($isFinalStage && $application->candidate)
+    @include('filament.pages.partials.candidate-profile-view', ['candidate' => $application->candidate])
+@endif
+
+{{-- Jawaban Form per Seksi — collapse begitu masuk TTD & Onboarding / selesai, data diri kandidat jadi sorotan utama --}}
 @if($co?->formSections->isNotEmpty())
     @foreach($co->formSections as $section)
-    <x-filament::section :heading="$section->title" icon="heroicon-m-document-text">
+    <x-filament::section :heading="$section->title" icon="heroicon-m-document-text" :collapsible="$isFinalStage" :collapsed="$isFinalStage">
         <dl class="divide-y divide-gray-100 dark:divide-white/10">
             @foreach($section->fields as $field)
             @php
@@ -140,6 +134,23 @@ $s = $statusMap[$application->status] ?? ['label' => $application->status, 'colo
         </dl>
     </x-filament::section>
     @endforeach
+@endif
+
+{{-- Tidak Dilanjutkan --}}
+@if(! in_array($application->status, ['rejected', 'passed']))
+<x-filament::section heading="Tidak Dilanjutkan" icon="heroicon-m-x-circle" collapsible collapsed>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+        Tandai pelamar ini tidak dilanjutkan di luar alur normal — misalnya kandidat mengundurkan diri di tengah proses, bukan karena gagal di salah satu tahap.
+    </p>
+    <x-filament::button
+        wire:click="changeStatus('rejected')"
+        wire:confirm="Yakin ingin menandai pelamar ini tidak dilanjutkan?"
+        wire:loading.attr="disabled"
+        color="danger"
+        size="sm">
+        Tidak Dilanjutkan
+    </x-filament::button>
+</x-filament::section>
 @endif
 
 </x-filament-panels::page>

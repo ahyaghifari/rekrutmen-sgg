@@ -1,6 +1,18 @@
 <x-app-layout>
 <x-slot name="title">Data Diri Kandidat — Syifa Global Group</x-slot>
 
+@php
+// ponytail: @json() Blade directive does a naive explode(',', ...) on its argument,
+// so an inline array literal with 4+ items gets silently truncated. Precompute into
+// plain variables here so each @json() call below has zero top-level commas.
+$familyMembersData  = $candidate->familyMembers->map->only(['relation','gender','name','birth_date','education','job','phone']);
+$educationsData     = $candidate->educations->map->only(['level','school_name','major','gpa','start_year','end_year']);
+$trainingsData      = $candidate->trainings->map->only(['type','institution','material','duration','location']);
+$organizationsData  = $candidate->organizations->map->only(['organization_name','field','position','duration','location']);
+$workExperiencesData = $candidate->workExperiences->map->only(['company_name','business_type','company_address','position','start_date','end_date','salary','resign_reason','is_current']);
+$referencesData     = $candidate->references->map->only(['name','address','job','phone','relation']);
+@endphp
+
 <div>
 
   @if(session('success'))
@@ -17,14 +29,42 @@
   @endif
 
   <h1 class="m-0 mb-1 text-[22px] font-extrabold text-slate-800">Data Diri Kandidat</h1>
-  <p class="m-0 mb-5 text-[13.5px] text-slate-500">Lengkapi data ini untuk melanjutkan proses rekrutmen — identitas resmi, keluarga, pendidikan, dan dokumen pendukung.</p>
+  <p class="m-0 mb-5 text-[13.5px] text-slate-500">Lengkapi data ini untuk meneyelesaikan proses rekrutmen — identitas resmi, keluarga, pendidikan, dan dokumen pendukung.</p>
 
-  <form method="POST" action="{{ route('data-diri.update') }}" enctype="multipart/form-data" class="flex flex-col gap-4">
+  @php
+    $tabs = [
+      1 => 'Identitas', 2 => 'Alamat', 3 => 'BPJS & Rekening', 4 => 'Data Keluarga',
+      5 => 'Riwayat Pendidikan', 6 => 'Riwayat Pelatihan', 7 => 'Pengalaman Organisasi',
+      8 => 'Pengalaman Kerja', 9 => 'Referensi', 10 => 'Informasi Tambahan',
+      11 => 'Penilaian Diri', 12 => 'Dokumen', 13 => 'Persetujuan',
+    ];
+    // Warna tab disamakan dengan warna border-top kartu section masing-masing.
+    $tabColors = [
+      1 => '#042c6c', 2 => '#0284c7', 3 => '#b45309', 4 => '#047C54',
+      5 => '#B9308C', 6 => '#7c3aed', 7 => '#0f6e3d', 8 => '#042c6c',
+      9 => '#0284c7', 10 => '#b45309', 11 => '#047C54', 12 => '#7c3aed',
+      13 => '#042c6c',
+    ];
+  @endphp
+
+  <form method="POST" action="{{ route('data-diri.update') }}" enctype="multipart/form-data" class="flex flex-col gap-4" x-data="{ tab: 1 }">
     @csrf
     @method('PATCH')
 
+    {{-- Tab nav --}}
+    <div class="flex flex-wrap gap-2">
+      @foreach($tabs as $n => $label)
+      <button type="button" @click="tab = {{ $n }}"
+        class="px-4 py-2 rounded-[10px] text-[13px] font-bold whitespace-nowrap transition-colors duration-150 border"
+        :class="tab === {{ $n }} ? '' : 'border-slate-200 text-slate-500 bg-white'"
+        :style="tab === {{ $n }} ? 'background:{{ $tabColors[$n] }};border-color:{{ $tabColors[$n] }};color:#fff;' : ''">
+        {{ $n }}. {{ $label }}
+      </button>
+      @endforeach
+    </div>
+
     {{-- 1. Identitas --}}
-    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #042c6c;">
+    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #042c6c;" x-show="tab === 1" x-cloak>
       <div class="flex gap-3 items-center mb-5">
         <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#042c6c;background:#042c6c1a;">1</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Identitas</h2>
@@ -56,7 +96,7 @@
     </section>
 
     {{-- 2. Alamat --}}
-    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #0284c7;">
+    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #0284c7;" x-show="tab === 2" x-cloak>
       <div class="flex gap-3 items-center mb-5">
         <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#0284c7;background:#0284c71a;">2</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Alamat Sesuai KTP</h2>
@@ -78,7 +118,7 @@
     </section>
 
     {{-- 3. BPJS & Rekening --}}
-    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #b45309;">
+    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #b45309;" x-show="tab === 3" x-cloak>
       <div class="flex gap-3 items-center mb-5">
         <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#b45309;background:#b453091a;">3</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">BPJS &amp; Rekening</h2>
@@ -99,7 +139,7 @@
 
     {{-- 4. Keluarga --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #047C54;"
-      x-data="repeater(@json($candidate->familyMembers->map->only(['relation','gender','name','birth_date','education','job','phone'])))">
+      x-data="repeater(@json($familyMembersData))" x-show="tab === 4" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
           <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#047C54;background:#047C541a;">4</div>
@@ -131,7 +171,7 @@
 
     {{-- 5. Pendidikan --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #B9308C;"
-      x-data="repeater(@json($candidate->educations->map->only(['level','school_name','major','gpa','start_year','end_year'])))">
+      x-data="repeater(@json($educationsData))" x-show="tab === 5" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
           <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#B9308C;background:#B9308C1a;">5</div>
@@ -161,7 +201,7 @@
 
     {{-- 6. Pelatihan --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #7c3aed;"
-      x-data="repeater(@json($candidate->trainings->map->only(['type','institution','material','duration','location'])))">
+      x-data="repeater(@json($trainingsData))" x-show="tab === 6" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
           <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#7c3aed;background:#7c3aed1a;">6</div>
@@ -189,7 +229,7 @@
 
     {{-- 7. Organisasi --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #0f6e3d;"
-      x-data="repeater(@json($candidate->organizations->map->only(['organization_name','field','position','duration','location'])))">
+      x-data="repeater(@json($organizationsData))" x-show="tab === 7" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
           <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#0f6e3d;background:#0f6e3d1a;">7</div>
@@ -217,7 +257,7 @@
 
     {{-- 8. Pengalaman Kerja --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #042c6c;"
-      x-data="repeater(@json($candidate->workExperiences->map->only(['company_name','business_type','company_address','position','start_date','end_date','salary','resign_reason','is_current'])))">
+      x-data="repeater(@json($workExperiencesData))" x-show="tab === 8" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
           <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#042c6c;background:#042c6c1a;">8</div>
@@ -256,7 +296,7 @@
 
     {{-- 9. Referensi --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #0284c7;"
-      x-data="repeater(@json($candidate->references->map->only(['name','address','job','phone','relation'])))">
+      x-data="repeater(@json($referencesData))" x-show="tab === 9" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
           <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#0284c7;background:#0284c71a;">9</div>
@@ -284,20 +324,32 @@
 
     {{-- 10. Info Tambahan --}}
     @php $addInfo = $candidate->additionalInfo; @endphp
-    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #b45309;">
+    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #b45309;" x-show="tab === 10" x-cloak>
       <div class="flex gap-3 items-center mb-5">
         <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#b45309;background:#b453091a;">10</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Informasi Tambahan</h2>
       </div>
       <div class="sg-fields">
-        <div class="flex items-center gap-2">
-          <input type="checkbox" name="additional_info[allow_reference_check]" value="1" id="ainfo_ref" {{ old('additional_info.allow_reference_check', $addInfo?->allow_reference_check) ? 'checked' : '' }} />
-          <label for="ainfo_ref" class="text-[13px] text-slate-600">Bersedia referensi dihubungi</label>
-        </div>
-        <div class="flex items-center gap-2">
-          <input type="checkbox" name="additional_info[has_disease]" value="1" id="ainfo_disease" {{ old('additional_info.has_disease', $addInfo?->has_disease) ? 'checked' : '' }} />
-          <label for="ainfo_disease" class="text-[13px] text-slate-600">Memiliki riwayat penyakit</label>
-        </div>
+        <label for="ainfo_ref" class="flex items-center gap-[10px] cursor-pointer">
+          <div class="sg-chk relative w-[24px] h-[24px] shrink-0">
+            <input type="checkbox" name="additional_info[allow_reference_check]" value="1" id="ainfo_ref" {{ old('additional_info.allow_reference_check', $addInfo?->allow_reference_check) ? 'checked' : '' }}
+                   class="sg-chk-input absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0 p-0" />
+            <span class="sg-chk-face flex items-center justify-center w-full h-full rounded-[5px] border-2 border-slate-300 transition-colors duration-150">
+              <i class="fa-solid fa-check text-[12px] text-white opacity-0 transition-opacity duration-150 pointer-events-none"></i>
+            </span>
+          </div>
+          <span class="text-[13px] text-slate-600">Bersedia referensi dihubungi</span>
+        </label>
+        <label for="ainfo_disease" class="flex items-center gap-[10px] cursor-pointer">
+          <div class="sg-chk relative w-[24px] h-[24px] shrink-0">
+            <input type="checkbox" name="additional_info[has_disease]" value="1" id="ainfo_disease" {{ old('additional_info.has_disease', $addInfo?->has_disease) ? 'checked' : '' }}
+                   class="sg-chk-input absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0 p-0" />
+            <span class="sg-chk-face flex items-center justify-center w-full h-full rounded-[5px] border-2 border-slate-300 transition-colors duration-150">
+              <i class="fa-solid fa-check text-[12px] text-white opacity-0 transition-opacity duration-150 pointer-events-none"></i>
+            </span>
+          </div>
+          <span class="text-[13px] text-slate-600">Memiliki riwayat penyakit</span>
+        </label>
         <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Catatan Penyakit (jika ada)</label>
           <textarea name="additional_info[disease_notes]" rows="2" class="form-field resize-y">{{ old('additional_info.disease_notes', $addInfo?->disease_notes) }}</textarea></div>
         <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Hobi</label>
@@ -315,7 +367,7 @@
 
     {{-- 11. Penilaian Diri --}}
     @php $selfAssess = $candidate->selfAssessment; @endphp
-    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #047C54;">
+    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #047C54;" x-show="tab === 11" x-cloak>
       <div class="flex gap-3 items-center mb-5">
         <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#047C54;background:#047C541a;">11</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Penilaian Diri</h2>
@@ -339,7 +391,7 @@
     </section>
 
     {{-- 12. Dokumen --}}
-    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #7c3aed;">
+    <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #7c3aed;" x-show="tab === 12" x-cloak>
       <div class="flex gap-3 items-center mb-5">
         <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#7c3aed;background:#7c3aed1a;">12</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Dokumen</h2>
@@ -372,7 +424,7 @@
     </section>
 
     {{-- 13. Persetujuan --}}
-    <section class="sg-card rounded-[20px] py-[26px] px-7">
+    <section class="sg-card rounded-[20px] py-[26px] px-7" x-show="tab === 13" x-cloak>
       <div class="flex gap-3 items-center mb-5">
         <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#042c6c;background:#042c6c1a;">13</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Persetujuan</h2>
@@ -389,13 +441,29 @@
       @endphp
       @foreach($agreementTexts as $type => $ag)
       <label class="sg-agreement flex gap-[11px] items-start p-4 rounded-[14px] cursor-pointer mb-2">
-        <input type="checkbox" name="agreements[{{ $type }}]" value="1" {{ in_array($type, $existingAgreements) ? 'checked' : '' }} class="mt-[3px]" />
+        <div class="sg-chk relative w-[24px] h-[24px] shrink-0 mt-[2px]">
+          <input type="checkbox" name="agreements[{{ $type }}]" value="1" {{ in_array($type, $existingAgreements) ? 'checked' : '' }}
+                 class="sg-chk-input absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0 p-0" />
+          <span class="sg-chk-face flex items-center justify-center w-full h-full rounded-[5px] border-2 border-slate-300 transition-colors duration-150">
+            <i class="fa-solid fa-check text-[12px] text-white opacity-0 transition-opacity duration-150 pointer-events-none"></i>
+          </span>
+        </div>
         <span class="text-[13px] leading-[1.6] text-slate-600"><strong class="text-slate-800">{{ $ag['label'] }}</strong> — {{ $ag['text'] }}</span>
       </label>
       @endforeach
     </section>
 
-    <div class="flex justify-end">
+    <div class="flex justify-between items-center flex-wrap gap-3">
+      <div class="flex gap-2">
+        <button type="button" @click="tab = Math.max(tab - 1, 1)" :disabled="tab === 1"
+          class="px-4 py-[10px] rounded-xl border border-slate-200 text-slate-600 text-[13px] font-bold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer bg-white">
+          ← Sebelumnya
+        </button>
+        <button type="button" @click="tab = Math.min(tab + 1, {{ count($tabs) }})" :disabled="tab === {{ count($tabs) }}"
+          class="px-4 py-[10px] rounded-xl border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+          Selanjutnya →
+        </button>
+      </div>
       <button type="submit" class="px-[26px] py-3 rounded-xl border-0 bg-sgg-green hover:bg-sgg-green-hover text-white text-[13.5px] font-bold cursor-pointer">
         <i class="fa-solid fa-floppy-disk mr-2 text-xs"></i>Simpan Data Diri
       </button>

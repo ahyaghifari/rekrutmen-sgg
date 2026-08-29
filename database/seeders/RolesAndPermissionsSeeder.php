@@ -32,6 +32,10 @@ class RolesAndPermissionsSeeder extends Seeder
         $radiologi->givePermissionTo($fillRadiology);
         $dokter->givePermissionTo($fillDoctor);
 
+        // Super Admin selalu punya semua permission yang ada — termasuk yang baru dibuat Shield
+        // untuk resource/page baru, supaya nav/halaman baru tidak pernah kegate diam-diam.
+        $superAdmin->syncPermissions(Permission::all());
+
         $user = User::where('email', 'ahyaghifari288@gmail.com')->firstOrFail();
         $user->assignRole($superAdmin);
         $user->is_staff = true;

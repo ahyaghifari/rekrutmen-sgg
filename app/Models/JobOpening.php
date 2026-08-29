@@ -122,6 +122,10 @@ class JobOpening extends Model
             return ['label' => 'MCU', 'color' => 'warning'];
         }
 
+        if (($counts['offering'] ?? 0) > 0) {
+            return ['label' => 'Offering Letter', 'color' => 'warning'];
+        }
+
         if (($counts['interview'] ?? 0) > 0) {
             return ['label' => 'Wawancara', 'color' => 'warning'];
         }

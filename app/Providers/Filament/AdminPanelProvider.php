@@ -29,8 +29,9 @@ class AdminPanelProvider extends PanelProvider
             ->path('kelola-rekrutmen')
             ->login()
             ->profile()
+            ->topNavigation()
             ->colors([
-                // 'primary' => Color::,
+                'primary' => Color::hex('#c757b9'),
                 'gray'    => Color::Slate,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

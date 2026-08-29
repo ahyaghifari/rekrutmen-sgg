@@ -35,7 +35,7 @@ class McuStationPage extends Page implements HasTable, HasActions, HasForms
     protected static ?string $navigationLabel = 'Isi Pemeriksaan MCU';
     protected static ?string $title           = 'Isi Pemeriksaan MCU';
     protected static ?string $navigationGroup = 'Kandidat';
-    protected static ?int    $navigationSort  = 4;
+    protected static ?int    $navigationSort  = 5;
     protected static string  $view            = 'filament.pages.mcu-station-page';
 
     public ?string $companyId    = null;
@@ -275,10 +275,12 @@ class McuStationPage extends Page implements HasTable, HasActions, HasForms
                     ->boolean(),
             ])
             ->actions([
-                $this->isiPerawatAction(),
-                $this->isiLabAction(),
-                $this->isiRadiologiAction(),
-                $this->isiDokterAction(),
+                Tables\Actions\ActionGroup::make([
+                    $this->isiPerawatAction(),
+                    $this->isiLabAction(),
+                    $this->isiRadiologiAction(),
+                    $this->isiDokterAction(),
+                ])->label('Isi Pemeriksaan')->icon('heroicon-m-pencil-square'),
             ])
             ->bulkActions([])
             ->emptyStateHeading('Pilih perusahaan & lowongan')

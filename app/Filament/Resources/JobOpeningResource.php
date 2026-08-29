@@ -217,6 +217,7 @@ class JobOpeningResource extends BaseResource
                             'screening'   => 'Peninjauan Berkas',
                             'shortlisted' => 'Lolos Seleksi Berkas',
                             'interview'   => 'Wawancara',
+                            'offering'    => 'Offering Letter',
                             'mcu'         => 'MCU',
                             'onboarding'  => 'TTD & Onboarding',
                             'passed'      => 'Diterima',
@@ -272,11 +273,11 @@ class JobOpeningResource extends BaseResource
                     }),
 
                 Tables\Actions\EditAction::make()
-                    ->visible(fn ($record) => $record->company?->management_mode !== 'hris'),
+                    ->visible(fn ($record) => $record->hris_job_opening_id === null),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn ($record) => $record->company?->management_mode !== 'hris'),
+                    ->visible(fn ($record) => $record->hris_job_opening_id === null),
                 Tables\Actions\ViewAction::make()
-                    ->visible(fn ($record) => $record->company?->management_mode === 'hris'),
+                    ->visible(fn ($record) => $record->hris_job_opening_id !== null),
             ])
             ->bulkActions([]);
     }

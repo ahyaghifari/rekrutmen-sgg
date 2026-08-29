@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CandidateEducation extends Model
 {
+    // ponytail: "education" tidak dianggap kata jamak oleh Eloquent, jadi nama tabel harus eksplisit.
+    protected $table = 'candidate_educations';
+
     public $incrementing = false;
     protected $keyType = 'string';
 

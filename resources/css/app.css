@@ -38,6 +38,12 @@ input::placeholder, textarea::placeholder { color: #94a3b8; }
 .sg-tl-line { display: none; }
 .sg-fields { display: grid; grid-template-columns: 1fr; gap: 22px; }
 
+/* Widget timeline dashboard: ular (kanan-turun-kiri) di mobile, baris lurus di desktop */
+.sg-tl-widget-snake { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 0; row-gap: 28px; align-items: stretch; }
+.sg-tl-line-desktop { display: none; }
+.sg-tl-line-mobile, .sg-tl-vline-mobile { display: block; }
+.sg-tl-vline-mobile { height: calc(28px + 19px); }
+
 @media (min-width: 768px) {
   .sg-2col { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px; }
   .sg-login { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
@@ -52,10 +58,12 @@ input::placeholder, textarea::placeholder { color: #94a3b8; }
   .sg-stats { grid-template-columns: repeat(4, 1fr); }
   .sg-stats > div:nth-child(3), .sg-stats > div:nth-child(4) { border-top: 0; }
   .sg-stats > div:nth-child(3) { border-left: 1px solid #e2e8f0; }
-  .sg-tl-snake { grid-template-columns: repeat(3, 1fr); column-gap: 0; row-gap: 56px; align-items: stretch; }
-  .sg-tl-line, .sg-tl-vline { display: block; }
-  .sg-tl-vline { height: calc(56px + 33px); }
+  .sg-tl { grid-template-columns: repeat(6, 1fr); gap: 0; }
+  .sg-tl-line { display: block; }
   .sg-fields { grid-template-columns: 1fr 1fr; }
+  .sg-tl-widget-snake { display: flex; gap: 0; }
+  .sg-tl-line-desktop { display: block; }
+  .sg-tl-line-mobile, .sg-tl-vline-mobile { display: none; }
 }
 
 /* ── Form components (used by x-text-input, x-primary-button) ── */
