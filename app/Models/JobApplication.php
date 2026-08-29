@@ -88,7 +88,23 @@ class JobApplication extends Model
                     $candidate->update(['job_application_id' => $app->id]);
                 }
             }
+
+            if ($app->status === self::STATUS_PASSED) {
+                $app->closeJobOpeningIfQuotaFilled();
+            }
         });
+    }
+
+    /** Kuota terisi (jumlah kandidat `passed` >= quota) → nonaktifkan lowongan otomatis. */
+    private function closeJobOpeningIfQuotaFilled(): void
+    {
+        $opening = $this->jobOpening;
+        if (! $opening || ! $opening->is_active || $opening->quota <= 0) return;
+
+        $passedCount = self::where('job_opening_id', $opening->id)->where('status', self::STATUS_PASSED)->count();
+        if ($passedCount >= $opening->quota) {
+            $opening->update(['is_active' => false]);
+        }
     }
 
     private function logStatusChange(?string $from, string $to): void

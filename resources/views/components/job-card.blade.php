@@ -27,10 +27,6 @@
     </div>
   </div>
 
-  @if($opening->description)
-  <div class="mt-3 text-[13px] text-slate-500 leading-normal line-clamp-2">{{ $opening->description }}</div>
-  @endif
-
   <div class="sg-job-card-footer">
     <span class="text-[12.5px] text-slate-500">
       <i class="fa-solid fa-users text-slate-400 mr-[5px]" aria-hidden="true"></i>Kuota: {{ $opening->quota }} orang

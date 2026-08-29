@@ -25,6 +25,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmailContr
         return $this->hasAnyRole(['super_admin', 'Super Admin', 'Admin', 'Perawat', 'Staff Lab', 'Staff Radiologi', 'Dokter']);
     }
 
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
+
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new \App\Notifications\VerifyEmailNotification);
