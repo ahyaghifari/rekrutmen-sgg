@@ -19,7 +19,8 @@ class JobOpeningResource extends BaseResource
     protected static ?string $navigationLabel = 'Lowongan';
     protected static ?string $modelLabel = 'Lowongan';
     protected static ?string $pluralModelLabel = 'Lowongan';
-    protected static ?int $navigationSort = 2;
+    protected static ?string $navigationGroup = 'Lowongan';
+    protected static ?int $navigationSort = 1;
 
     public static function getEloquentQuery(): Builder
     {

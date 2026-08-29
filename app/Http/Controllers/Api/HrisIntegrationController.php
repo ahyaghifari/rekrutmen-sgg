@@ -10,6 +10,12 @@ use App\Models\InterviewSchedule;
 use App\Models\JobApplication;
 use App\Models\JobOpening;
 use App\Models\JobOpeningStageLog;
+use App\Models\McuDoctorExamination;
+use App\Models\McuInvitee;
+use App\Models\McuLabResult;
+use App\Models\McuNurseAssessment;
+use App\Models\McuRadiologyResult;
+use App\Models\McuSchedule;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -378,6 +384,242 @@ class HrisIntegrationController extends Controller
         JobOpeningStageLog::record($application->job_opening_id, 'offering', $next, 1);
 
         return response()->json(['message' => 'Advanced', 'status' => $next]);
+    }
+
+    /**
+     * Field per stasiun MCU — dipakai updateMcuStation() untuk validasi & mass-assign.
+     * Semua nullable kecuali 6 vital sign perawat.
+     */
+    private const MCU_FIELDS = [
+        'nurse' => [
+            'tinggi_badan', 'berat_badan', 'tekanan_darah', 'nadi', 'suhu', 'pernafasan',
+            'keluhan_kesehatan', 'rpk_hipertensi', 'rpk_stroke', 'rpk_jantung', 'rpk_diabetes',
+            'rpk_lainnya', 'riwayat_penyakit_dahulu', 'riwayat_operasi', 'alergi_makanan',
+            'alergi_obat', 'alergi_debu', 'alergi_lainnya', 'kebiasaan_olahraga', 'kebiasaan_merokok',
+            'kebiasaan_alkohol', 'kebiasaan_obat', 'kebiasaan_lainnya', 'hasil_ekg', 'keterangan_ekg', 'catatan',
+        ],
+        'lab' => [
+            'hemoglobin', 'leukosit', 'eritrosit', 'trombosit', 'hematokrit', 'basofil', 'eosinofil',
+            'stab', 'segmen', 'limfosit', 'monosit', 'mcv', 'mch', 'mchc', 'gds', 'gda',
+            'hbsag', 'hiv', 'kesimpulan',
+        ],
+        'radiology' => [
+            'jenis_pemeriksaan', 'foto_thorax', 'jantung', 'paru_kanan', 'paru_kiri', 'diafragma',
+            'tulang', 'kesimpulan',
+        ],
+        'doctor' => [
+            'kulit', 'rambut', 'visus_mata', 'buta_warna', 'lapang_pandang', 'hidung', 'telinga',
+            'tonsil', 'faring', 'gigi', 'kelenjar_gondok', 'suara_pernafasan', 'ronchi', 'wheezing',
+            'lainnya_paru', 'jantung', 'hati', 'limpa', 'epigastrium', 'ginjal', 'lainnya_abdomen',
+            'ekstremitas', 'neurologi', 'diagnosa', 'rekomendasi', 'catatan',
+        ],
+    ];
+
+    private const MCU_STATION_MAP = [
+        'nurse'     => [McuNurseAssessment::class, 'nurseAssessment', 'file_ekg'],
+        'lab'       => [McuLabResult::class, 'labResult', 'file_path'],
+        'radiology' => [McuRadiologyResult::class, 'radiologyResult', 'file_path'],
+        'doctor'    => [McuDoctorExamination::class, 'doctorExamination', null],
+    ];
+
+    /** Antrian MCU — semua lamaran status `mcu` lintas lowongan (buat staff klinis HRIS). */
+    public function mcuQueue(): JsonResponse
+    {
+        $apps = JobApplication::where('status', 'mcu')
+            ->with(['user:id,name,email', 'jobOpening:id,hris_job_opening_id,title', 'mcuInvitee'])
+            ->latest('updated_at')
+            ->get();
+
+        return response()->json([
+            'data' => $apps->map(fn (JobApplication $a) => [
+                'job_application_id' => $a->id,
+                'applicant_name'     => $a->user?->name,
+                'job_opening_title'  => $a->jobOpening?->title,
+                'hris_job_opening_id' => $a->jobOpening?->hris_job_opening_id,
+                'stations_filled'    => $this->mcuStationsFilled($a->mcuInvitee),
+                'status_mcu'         => $a->mcuInvitee?->status_mcu ?? 'pending',
+                'updated_at'         => $a->updated_at?->toIso8601String(),
+            ])->values(),
+        ]);
+    }
+
+    /** State MCU 1 lamaran: status + isi tiap stasiun (null kalau belum diisi). */
+    public function showMcu(string $jobApplicationId): JsonResponse
+    {
+        $application = JobApplication::with([
+            'mcuInvitee.nurseAssessment', 'mcuInvitee.labResult',
+            'mcuInvitee.radiologyResult', 'mcuInvitee.doctorExamination',
+        ])->find($jobApplicationId);
+
+        if (! $application) {
+            return response()->json(['message' => 'Job application not found: ' . $jobApplicationId], 404);
+        }
+
+        $inv = $application->mcuInvitee;
+
+        return response()->json([
+            'status'      => $application->status,
+            'status_mcu'  => $inv?->status_mcu ?? 'pending',
+            'catatan_mcu' => $inv?->catatan_mcu,
+            'nurse'       => $inv?->nurseAssessment,
+            'lab'         => $inv?->labResult,
+            'radiology'   => $inv?->radiologyResult,
+            'doctor'      => $inv?->doctorExamination,
+        ]);
+    }
+
+    /**
+     * Simpan 1 stasiun MCU (nurse|lab|radiology|doctor). Body = field-field stasiun itu
+     * (lihat MCU_FIELDS) + opsional `file` multipart. McuInvitee (+ McuSchedule dummy)
+     * dibuat otomatis kalau belum ada. Status wajib `mcu`.
+     */
+    public function updateMcuStation(Request $request, string $jobApplicationId, string $station): JsonResponse
+    {
+        if (! isset(self::MCU_STATION_MAP[$station])) {
+            return response()->json(['message' => "Stasiun tidak dikenal: {$station}."], 404);
+        }
+
+        $application = JobApplication::find($jobApplicationId);
+
+        if (! $application) {
+            return response()->json(['message' => 'Job application not found: ' . $jobApplicationId], 404);
+        }
+
+        if ($application->status !== 'mcu') {
+            return response()->json(['message' => "MCU cuma bisa diisi saat status 'mcu' (sekarang '{$application->status}')."], 422);
+        }
+
+        $rules = [];
+        foreach (self::MCU_FIELDS[$station] as $f) {
+            $rules[$f] = 'nullable';
+        }
+        if ($station === 'nurse') {
+            foreach (['tinggi_badan', 'berat_badan', 'suhu'] as $f) {
+                $rules[$f] = 'required|numeric';
+            }
+            foreach (['nadi', 'pernafasan'] as $f) {
+                $rules[$f] = 'required|integer';
+            }
+            $rules['tekanan_darah'] = 'required|string';
+        }
+        $rules['file'] = 'nullable|file|max:5120';
+        $data = $request->validate($rules);
+
+        $invitee = $this->resolveMcuInvitee($application);
+
+        $payload = collect($data)->only(self::MCU_FIELDS[$station])->all();
+
+        [$modelClass, , $fileColumn] = self::MCU_STATION_MAP[$station];
+
+        if ($fileColumn && $request->hasFile('file')) {
+            $payload[$fileColumn] = $request->file('file')->store("mcu/{$station}/{$invitee->id}", 'local');
+        }
+
+        $modelClass::updateOrCreate(['mcu_invitee_id' => $invitee->id], $payload);
+
+        return response()->json(['message' => 'Saved', 'station' => $station]);
+    }
+
+    /**
+     * Keputusan fit/unfit MCU (HRD). Guard: pemeriksaan dokter sudah ada. fit → `onboarding`,
+     * unfit → `rejected` + notif draft.
+     */
+    public function decideMcu(Request $request, string $jobApplicationId): JsonResponse
+    {
+        $data = $request->validate([
+            'result'  => 'required|in:fit,unfit',
+            'catatan' => 'nullable|string',
+        ]);
+
+        $application = JobApplication::with('mcuInvitee.doctorExamination')->find($jobApplicationId);
+
+        if (! $application) {
+            return response()->json(['message' => 'Job application not found: ' . $jobApplicationId], 404);
+        }
+
+        if ($application->status !== 'mcu') {
+            return response()->json(['message' => "Status sekarang '{$application->status}', bukan 'mcu'."], 422);
+        }
+
+        $invitee = $application->mcuInvitee;
+
+        if (! $invitee || ! $invitee->doctorExamDone()) {
+            return response()->json(['message' => 'Pemeriksaan dokter belum diisi.'], 422);
+        }
+
+        $invitee->update(['status_mcu' => $data['result'], 'catatan_mcu' => $data['catatan'] ?? null]);
+
+        if ($data['result'] === 'fit') {
+            $application->update(['status' => 'onboarding']);
+            JobOpeningStageLog::record($application->job_opening_id, 'mcu', 'onboarding', 1);
+        } else {
+            $application->update(['status' => 'rejected']);
+            JobOpeningStageLog::record($application->job_opening_id, 'mcu', 'rejected', 1);
+            ApplicationNotification::createDraftFor($application, CompanyMessageTemplate::EVENT_MCU_REJECTED);
+        }
+
+        return response()->json(['message' => 'Decided', 'status' => $application->status, 'status_mcu' => $data['result']]);
+    }
+
+    /** @return list<string> stasiun yang sudah diisi */
+    private function mcuStationsFilled(?McuInvitee $invitee): array
+    {
+        if (! $invitee) {
+            return [];
+        }
+
+        return collect(self::MCU_STATION_MAP)
+            ->filter(fn ($cfg, $station) => $invitee->{$cfg[1]}()->exists())
+            ->keys()
+            ->all();
+    }
+
+    private function resolveMcuInvitee(JobApplication $application): McuInvitee
+    {
+        if ($application->mcuInvitee) {
+            return $application->mcuInvitee;
+        }
+
+        $schedule = McuSchedule::create([
+            'job_opening_id' => $application->job_opening_id,
+            'mcu_date'       => now()->toDateString(),
+            'status'         => 'published',
+        ]);
+
+        return McuInvitee::create([
+            'mcu_schedule_id'    => $schedule->id,
+            'job_application_id' => $application->id,
+            'status_mcu'         => 'pending',
+        ]);
+    }
+
+    /**
+     * Tandai onboarding selesai (rewrite TtdOnboardingPage): candidate.is_onboarded = true,
+     * status → `passed`, kirim OnboardingInviteNotification. Guard status `onboarding`.
+     */
+    public function completeOnboarding(string $jobApplicationId): JsonResponse
+    {
+        $application = JobApplication::with(['candidate', 'user'])->find($jobApplicationId);
+
+        if (! $application) {
+            return response()->json(['message' => 'Job application not found: ' . $jobApplicationId], 404);
+        }
+
+        if ($application->status !== 'onboarding') {
+            return response()->json(['message' => "Status sekarang '{$application->status}', bukan 'onboarding'."], 422);
+        }
+
+        $application->candidate?->update(['is_onboarded' => true]);
+        $application->update(['status' => 'passed']);
+        JobOpeningStageLog::record($application->job_opening_id, 'onboarding', 'passed', 1);
+
+        try {
+            $application->user?->notify(new \App\Notifications\OnboardingInviteNotification($application));
+        } catch (\Throwable $e) {
+            // email gagal tidak boleh menggagalkan transisi status
+        }
+
+        return response()->json(['message' => 'Completed', 'status' => 'passed']);
     }
 
     /**

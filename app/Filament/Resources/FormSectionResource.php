@@ -19,7 +19,7 @@ class FormSectionResource extends BaseResource
     protected static ?string $navigationLabel = 'Form Lamaran';
     protected static ?string $modelLabel = 'Bagian Form';
     protected static ?string $pluralModelLabel = 'Form Lamaran';
-    protected static ?string $navigationGroup = 'Perusahaan & Lowongan';
+    protected static ?string $navigationGroup = 'Master';
     protected static ?int $navigationSort = 2;
 
     public static function getEloquentQuery(): Builder

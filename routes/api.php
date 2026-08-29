@@ -24,4 +24,10 @@ Route::middleware(HrisApiAuth::class)->group(function () {
     Route::post('/integrations/hris/applications/{jobApplicationId}/offering-letter', [HrisIntegrationController::class, 'uploadOfferingLetter']);
     Route::post('/integrations/hris/applications/{jobApplicationId}/offering-letter/advance', [HrisIntegrationController::class, 'advanceFromOffering']);
     Route::get('/integrations/hris/applications/{jobApplicationId}/offering-letter/{type}', [HrisIntegrationController::class, 'downloadOfferingLetter'])->where('type', 'recruiter|signed');
+
+    Route::get('/integrations/hris/mcu-queue', [HrisIntegrationController::class, 'mcuQueue']);
+    Route::get('/integrations/hris/applications/{jobApplicationId}/mcu', [HrisIntegrationController::class, 'showMcu']);
+    Route::post('/integrations/hris/applications/{jobApplicationId}/mcu/decision', [HrisIntegrationController::class, 'decideMcu']);
+    Route::post('/integrations/hris/applications/{jobApplicationId}/mcu/{station}', [HrisIntegrationController::class, 'updateMcuStation'])->where('station', 'nurse|lab|radiology|doctor');
+    Route::post('/integrations/hris/applications/{jobApplicationId}/onboarding/complete', [HrisIntegrationController::class, 'completeOnboarding']);
 });

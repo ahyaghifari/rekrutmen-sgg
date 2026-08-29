@@ -24,7 +24,7 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
     protected static ?string $navigationIcon  = 'heroicon-o-question-mark-circle';
     protected static ?string $navigationLabel = 'Soal Kuis';
     protected static ?string $title           = 'Soal Kuis';
-    protected static ?string $navigationGroup = 'Perusahaan & Lowongan';
+    protected static ?string $navigationGroup = 'Master';
     protected static ?int    $navigationSort  = 5;
     protected static string  $view            = 'filament.pages.quiz-questions-page';
 

@@ -33,7 +33,8 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
     protected static ?string $navigationLabel = 'Daftar Pelamar';
     protected static ?string $title           = 'Daftar Pelamar';
     protected static string  $view            = 'filament.pages.applicants-page';
-    protected static ?int    $navigationSort  = 4;
+    protected static ?string $navigationGroup = 'Lowongan';
+    protected static ?int    $navigationSort  = 2;
 
     public ?string $companyId    = null;
     public ?string $jobOpeningId = null;

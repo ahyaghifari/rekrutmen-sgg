@@ -17,7 +17,7 @@ class QuizResource extends Resource
     protected static ?string $navigationLabel = 'Kuis';
     protected static ?string $modelLabel = 'Kuis';
     protected static ?string $pluralModelLabel = 'Kuis';
-    protected static ?string $navigationGroup = 'Perusahaan & Lowongan';
+    protected static ?string $navigationGroup = 'Master';
     protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form

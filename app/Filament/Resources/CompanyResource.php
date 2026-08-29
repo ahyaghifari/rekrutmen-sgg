@@ -20,7 +20,7 @@ class CompanyResource extends BaseResource
     protected static ?string $navigationLabel = 'Perusahaan';
     protected static ?string $modelLabel = 'Perusahaan';
     protected static ?string $pluralModelLabel = 'Perusahaan';
-    protected static ?string $navigationGroup = 'Perusahaan & Lowongan';
+    protected static ?string $navigationGroup = 'Master';
     protected static ?int $navigationSort = 1;
 
     public static function getEloquentQuery(): Builder
