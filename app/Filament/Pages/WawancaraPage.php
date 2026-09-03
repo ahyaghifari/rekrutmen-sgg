@@ -294,13 +294,13 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
             : 0;
 
         return Action::make('kirimNotifPenolakanWawancara')
-            ->label("Kirim Notif Penolakan ({$pendingCount})")
+            ->label("Kirim Notif Tidak Dilanjutkan ({$pendingCount})")
             ->icon('heroicon-m-envelope')
             ->color('danger')
             ->visible(fn () => $pendingCount > 0)
             ->requiresConfirmation()
             ->modalHeading('Kirim Pemberitahuan Tidak Lolos Wawancara?')
-            ->modalDescription("Email penolakan akan dikirim ke {$pendingCount} kandidat yang tidak lolos wawancara. Tindakan ini tidak bisa dibatalkan.")
+            ->modalDescription("Email tidak dilanjutkan akan dikirim ke {$pendingCount} kandidat yang tidak lolos wawancara. Tindakan ini tidak bisa dibatalkan.")
             ->modalSubmitActionLabel('Ya, Kirim Sekarang')
             ->action(function (): void {
                 if (! $this->jobOpeningId) return;
@@ -320,7 +320,7 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
                 }
 
                 \Filament\Notifications\Notification::make()
-                    ->title("Email penolakan wawancara terkirim ke {$count} kandidat.")
+                    ->title("Email tidak dilanjutkan terkirim ke {$count} kandidat.")
                     ->success()->send();
             });
     }

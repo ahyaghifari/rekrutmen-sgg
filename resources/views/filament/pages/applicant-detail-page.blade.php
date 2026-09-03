@@ -139,6 +139,28 @@ $s = $statusMap[$application->status] ?? ['label' => $application->status, 'colo
     @endforeach
 @endif
 
+{{-- Banner: draft notif tidak dilanjutkan (manual) belum dikirim --}}
+@php $pendingManualRejection = $application->status === 'rejected'
+    ? \App\Models\ApplicationNotification::where('job_application_id', $application->id)
+        ->where('status', 'draft')
+        ->where('event', \App\Models\CompanyMessageTemplate::EVENT_MANUAL_REJECTED)
+        ->exists()
+    : false; @endphp
+@if($pendingManualRejection)
+<div class="fi-section rounded-xl bg-red-50 dark:bg-red-950/30 ring-1 ring-red-200 dark:ring-red-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center shrink-0">
+            <x-heroicon-m-envelope class="w-4 h-4 text-red-700 dark:text-red-400" />
+        </div>
+        <div>
+            <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Tidak Dilanjutkan Ditahan</div>
+            <div class="text-xs text-red-700 dark:text-red-400 mt-0.5">Pelamar ini belum menerima pemberitahuan tidak dilanjutkan.</div>
+        </div>
+    </div>
+    {{ ($this->kirimNotifTidakDilanjutkanAction) }}
+</div>
+@endif
+
 {{-- Tidak Dilanjutkan --}}
 @if(! in_array($application->status, ['rejected', 'passed']))
 <x-filament::section heading="Tidak Dilanjutkan" icon="heroicon-m-x-circle" collapsible collapsed>

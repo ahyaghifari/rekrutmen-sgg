@@ -31,12 +31,27 @@
       </div>
 
       {{-- Password --}}
-      <div>
+      <div x-data="{ pw: '' }">
         <label for="password" class="block mb-[7px] text-[13px] font-bold text-slate-700">Kata Sandi <span class="text-red-700">*</span></label>
-        <input id="password" type="password" name="password" required autocomplete="new-password"
-          placeholder="Min. 8 karakter"
+        <input id="password" type="password" name="password" required autocomplete="new-password" x-model="pw"
+          placeholder="Buat kata sandi"
           class="sg-input w-full box-border border {{ $errors->has('password') ? 'border-red-600' : 'border-slate-200' }} rounded-xl py-3 px-3.5 text-sm text-slate-800 outline-none bg-white focus:border-navy transition-colors duration-150" />
         @error('password')<p class="mt-1.5 text-[12.5px] text-red-600">{{ $message }}</p>@enderror
+
+        <ul class="mt-2.5 flex flex-col gap-1.5">
+          @foreach ([
+            'Minimal 8 karakter'   => 'pw.length >= 8',
+            'Mengandung huruf'     => '/\p{L}/u.test(pw)',
+            'Mengandung angka'     => '/[0-9]/.test(pw)',
+            'Mengandung simbol'    => '/[\p{P}\p{S}]/u.test(pw)',
+          ] as $label => $check)
+          <li class="flex items-center gap-2 text-[12.5px] transition-colors duration-150"
+              :class="{{ $check }} ? 'text-sgg-green font-semibold' : 'text-slate-400'">
+            <i class="fa-solid text-[11px]" :class="{{ $check }} ? 'fa-circle-check' : 'fa-circle'"></i>
+            {{ $label }}
+          </li>
+          @endforeach
+        </ul>
       </div>
 
       {{-- Password confirmation --}}

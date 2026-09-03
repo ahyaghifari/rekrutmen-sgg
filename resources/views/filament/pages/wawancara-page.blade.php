@@ -99,7 +99,7 @@
                 <x-heroicon-m-envelope class="w-4 h-4 text-red-700 dark:text-red-400" />
             </div>
             <div>
-                <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Penolakan Wawancara Ditahan</div>
+                <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Tidak Dilanjutkan Wawancara Ditahan</div>
                 <div class="text-xs text-red-700 dark:text-red-400 mt-0.5">
                     <strong>{{ $pendingWawancaraRejection }}</strong> kandidat belum menerima pemberitahuan tidak lolos wawancara. Kirim kapan saja kamu siap.
                 </div>

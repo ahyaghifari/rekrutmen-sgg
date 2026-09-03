@@ -103,7 +103,7 @@
                 <x-heroicon-m-envelope class="w-4 h-4 text-red-700 dark:text-red-400" />
             </div>
             <div>
-                <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Penolakan Tes Ditahan</div>
+                <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Tidak Dilanjutkan Tes Ditahan</div>
                 <div class="text-xs text-red-700 dark:text-red-400 mt-0.5">
                     <strong>{{ $pendingTesDraft }}</strong> kandidat belum menerima pemberitahuan tidak lolos tes. Kirim kapan saja.
                 </div>

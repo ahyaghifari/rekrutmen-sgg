@@ -150,7 +150,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
             ->form([
                 CheckboxList::make('passed_ids')
                     ->label('Centang pelamar yang LOLOS seleksi berkas')
-                    ->helperText('Yang tidak dicentang = tetap di Peninjauan Berkas. Notif penolakan dibuat sebagai draft — bisa dikirim manual kapan saja. Status berubah hanya setelah kamu terapkan.')
+                    ->helperText('Yang tidak dicentang = tetap di Peninjauan Berkas. Notif tidak dilanjutkan dibuat sebagai draft — bisa dikirim manual kapan saja. Status berubah hanya setelah kamu terapkan.')
                     ->options($options)
                     ->searchable()
                     ->bulkToggleable()
@@ -223,7 +223,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                     ->label("Tidak Lolos — {$rejectedCount} orang")
                     ->content(new HtmlString(
                         '<p style="font-size:13px;color:#d97706;">'
-                        . "{$rejectedCount} pelamar tetap di status Peninjauan Berkas. Draft email penolakan dibuat — kirim manual kapan saja."
+                        . "{$rejectedCount} pelamar tetap di status Peninjauan Berkas. Draft email tidak dilanjutkan dibuat — kirim manual kapan saja."
                         . '</p>'
                     )),
             ])
@@ -245,7 +245,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                         $this->resetTable();
 
                         \Filament\Notifications\Notification::make()
-                            ->title("{$passedCount} lolos (email terkirim). {$rejectedCount} tetap di Peninjauan Berkas — draft notif penolakan siap dikirim manual.")
+                            ->title("{$passedCount} lolos (email terkirim). {$rejectedCount} tetap di Peninjauan Berkas — draft notif tidak dilanjutkan siap dikirim manual.")
                             ->success()
                             ->send();
                     }),
@@ -258,7 +258,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                 $this->resetTable();
 
                 \Filament\Notifications\Notification::make()
-                    ->title("{$passedCount} lolos. {$rejectedCount} tetap di Peninjauan Berkas — draft notif penolakan siap dikirim manual.")
+                    ->title("{$passedCount} lolos. {$rejectedCount} tetap di Peninjauan Berkas — draft notif tidak dilanjutkan siap dikirim manual.")
                     ->success()
                     ->send();
             });
@@ -279,6 +279,35 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
         }
     }
 
+    public function kirimNotifLolosBerkasAction(): Action
+    {
+        $pendingCount = $this->jobOpeningId
+            ? ApplicationNotification::whereHas('jobApplication', fn ($q) => $q->where('job_opening_id', $this->jobOpeningId))
+                ->where('status', 'draft')
+                ->where('event', \App\Models\CompanyMessageTemplate::EVENT_SCREENING_PASSED)
+                ->count()
+            : 0;
+
+        return Action::make('kirimNotifLolosBerkas')
+            ->label("Kirim Notif Lolos ({$pendingCount})")
+            ->icon('heroicon-m-envelope')
+            ->color('success')
+            ->visible(fn () => $pendingCount > 0)
+            ->requiresConfirmation()
+            ->modalHeading('Kirim Pemberitahuan Lolos Seleksi Berkas?')
+            ->modalDescription("Email lolos seleksi berkas akan dikirim ke {$pendingCount} pelamar. Tindakan ini tidak bisa dibatalkan.")
+            ->modalSubmitActionLabel('Ya, Kirim Sekarang')
+            ->action(function (): void {
+                if (! $this->jobOpeningId) return;
+
+                $this->sendPassedNotificationsForOpening($this->jobOpeningId);
+
+                \Filament\Notifications\Notification::make()
+                    ->title('Email lolos seleksi berkas terkirim.')
+                    ->success()->send();
+            });
+    }
+
     public function kirimNotifPenolakanBerkasAction(): Action
     {
         $pendingCount = $this->jobOpeningId
@@ -289,13 +318,13 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
             : 0;
 
         return Action::make('kirimNotifPenolakanBerkas')
-            ->label("Kirim Notif Penolakan ({$pendingCount})")
+            ->label("Kirim Notif Tidak Dilanjutkan ({$pendingCount})")
             ->icon('heroicon-m-envelope')
             ->color('danger')
             ->visible(fn () => $pendingCount > 0)
             ->requiresConfirmation()
-            ->modalHeading('Kirim Pemberitahuan Penolakan Seleksi Berkas?')
-            ->modalDescription("Email penolakan akan dikirim ke {$pendingCount} pelamar yang tidak lolos seleksi berkas. Tindakan ini tidak bisa dibatalkan.")
+            ->modalHeading('Kirim Pemberitahuan Tidak Dilanjutkan Seleksi Berkas?')
+            ->modalDescription("Email tidak dilanjutkan akan dikirim ke {$pendingCount} pelamar yang tidak lolos seleksi berkas. Tindakan ini tidak bisa dibatalkan.")
             ->modalSubmitActionLabel('Ya, Kirim Sekarang')
             ->action(function (): void {
                 if (! $this->jobOpeningId) return;
@@ -315,7 +344,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                 }
 
                 \Filament\Notifications\Notification::make()
-                    ->title("Email penolakan terkirim ke {$count} pelamar.")
+                    ->title("Email tidak dilanjutkan terkirim ke {$count} pelamar.")
                     ->success()->send();
             });
     }

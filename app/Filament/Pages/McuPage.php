@@ -281,7 +281,7 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
             : 0;
 
         return Action::make('kirimNotifPenolakanMcu')
-            ->label("Kirim Notif Penolakan MCU ({$pendingCount})")
+            ->label("Kirim Notif Tidak Dilanjutkan MCU ({$pendingCount})")
             ->icon('heroicon-m-envelope')
             ->color('danger')
             ->visible(fn () => $pendingCount > 0)

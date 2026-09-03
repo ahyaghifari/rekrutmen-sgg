@@ -267,7 +267,7 @@ class TesOnlinePage extends Page implements HasTable, HasActions, HasForms
             : 0;
 
         return Action::make('kirimNotifPenolakanTes')
-            ->label("Kirim Notif Penolakan ({$pendingCount})")
+            ->label("Kirim Notif Tidak Dilanjutkan ({$pendingCount})")
             ->icon('heroicon-m-envelope')
             ->color('danger')
             ->visible(fn () => $pendingCount > 0)

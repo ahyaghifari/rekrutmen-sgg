@@ -24,6 +24,7 @@ class CompanyMessageTemplate extends Model
     public const EVENT_MCU_REJECTED        = 'mcu_rejected';
     public const EVENT_ONBOARDING_INVITE   = 'onboarding_invite';
     public const EVENT_OFFERING_LETTER_READY = 'offering_letter_ready';
+    public const EVENT_MANUAL_REJECTED     = 'manual_rejected';
 
     public static function forCompanyEvent(int $companyId, string $event): ?self
     {

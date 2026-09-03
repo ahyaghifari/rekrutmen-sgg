@@ -53,6 +53,23 @@ class OfferingLetterController extends Controller
         return back()->with('success', 'Surat penawaran bertanda tangan berhasil diupload.');
     }
 
+    /** Kandidat: ajukan negosiasi sebelum menandatangani. */
+    public function negotiate(Request $request): RedirectResponse
+    {
+        $application = $this->currentOfferingApplication();
+
+        $data = $request->validate([
+            'message' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $application->offeringNegotiations()->create([
+            'sender'  => 'applicant',
+            'message' => $data['message'],
+        ]);
+
+        return back()->with('success', 'Pengajuan negosiasi terkirim. Tim rekrutmen akan meninjau.');
+    }
+
     private function currentOfferingApplication(): JobApplication
     {
         $application = Auth::user()->jobApplications()

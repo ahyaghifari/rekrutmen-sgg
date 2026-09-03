@@ -28,13 +28,16 @@ class EditCompany extends EditRecord
     {
         $companyId = $this->record->id;
 
-        $rejected = CompanyMessageTemplate::forCompanyEvent($companyId, CompanyMessageTemplate::EVENT_SCREENING_REJECTED);
-        $passed   = CompanyMessageTemplate::forCompanyEvent($companyId, CompanyMessageTemplate::EVENT_SCREENING_PASSED);
+        $rejected       = CompanyMessageTemplate::forCompanyEvent($companyId, CompanyMessageTemplate::EVENT_SCREENING_REJECTED);
+        $passed         = CompanyMessageTemplate::forCompanyEvent($companyId, CompanyMessageTemplate::EVENT_SCREENING_PASSED);
+        $manualRejected = CompanyMessageTemplate::forCompanyEvent($companyId, CompanyMessageTemplate::EVENT_MANUAL_REJECTED);
 
         $data['template_rejected_subject'] = $rejected?->subject ?? '';
         $data['template_rejected_body']    = $rejected?->body ?? '';
         $data['template_passed_subject']   = $passed?->subject ?? '';
         $data['template_passed_body']      = $passed?->body ?? '';
+        $data['template_manual_rejected_subject'] = $manualRejected?->subject ?? '';
+        $data['template_manual_rejected_body']    = $manualRejected?->body ?? '';
 
         return $data;
     }
@@ -51,6 +54,10 @@ class EditCompany extends EditRecord
         $this->upsertTemplate($companyId, CompanyMessageTemplate::EVENT_SCREENING_PASSED,
             $state['template_passed_subject'] ?? '',
             $state['template_passed_body'] ?? '');
+
+        $this->upsertTemplate($companyId, CompanyMessageTemplate::EVENT_MANUAL_REJECTED,
+            $state['template_manual_rejected_subject'] ?? '',
+            $state['template_manual_rejected_body'] ?? '');
     }
 
     private function upsertTemplate(int $companyId, string $event, string $subject, string $body): void

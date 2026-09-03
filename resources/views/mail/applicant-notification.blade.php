@@ -18,6 +18,11 @@
   </div>
   <div class="body">
     {!! nl2br(e($notification->body)) !!}
+    @if ($cta = $notification->cta())
+      <p style="margin:28px 0 4px;">
+        <a href="{{ $cta['url'] }}" style="display:inline-block;background:#042c6c;color:#fff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:bold;font-size:14px;">{{ $cta['label'] }}</a>
+      </p>
+    @endif
   </div>
   <div class="footer">
     Email ini dikirim otomatis oleh sistem rekrutmen SGG. Mohon jangan membalas email ini.

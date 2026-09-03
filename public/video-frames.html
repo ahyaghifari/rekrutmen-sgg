@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Frame Video Tutorial — Portal Rekrutmen SGG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#042c6c; --navy-dark:#032356; --navy-light:#0b47a1;
+    --green:#047C54; --magenta:#B9308C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#1e293b;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+
+  /* satu frame = 1 frame video 1920x1080 */
+  .frame{
+    position:relative;width:1920px;height:1080px;overflow:hidden;
+    color:#fff;display:flex;flex-direction:column;justify-content:center;
+    padding:0 200px;margin:0 auto 48px;
+  }
+  .frame.alt{--g1:var(--navy);--g2:var(--navy-light)}
+  .frame.accent{--g1:var(--navy);--g2:var(--magenta)}
+  .frame{background:linear-gradient(135deg,var(--g1,var(--navy)) 0%,var(--g2,var(--navy-light)) 100%)}
+
+  /* bentuk dekoratif — meniru hero welcome.blade.php */
+  .shape{position:absolute;pointer-events:none;background:rgba(255,255,255,.05)}
+  .s1{width:520px;height:520px;border-radius:96px;transform:rotate(24deg);left:-180px;bottom:-180px;background:rgba(255,255,255,.06)}
+  .s2{width:340px;height:340px;border-radius:50%;right:-90px;top:-110px;background:rgba(255,255,255,.05)}
+  .s3{width:170px;height:170px;border-radius:44px;transform:rotate(12deg);right:16%;bottom:14%;background:rgba(255,255,255,.04)}
+  .s4{width:220px;height:220px;border-radius:50%;left:28%;top:9%;background:rgba(255,255,255,.03)}
+
+  .inner{position:relative;z-index:2;max-width:1300px}
+
+  .brand{display:flex;align-items:center;gap:16px;margin-bottom:44px}
+  .brand img{height:64px;width:auto}
+  .brand .kicker{font-size:20px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.72)}
+
+  .pill{display:inline-flex;align-items:center;gap:12px;padding:14px 28px;border-radius:999px;
+    font-size:22px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.14);margin-bottom:36px}
+
+  .step-num{font-size:34px;font-weight:800;color:rgba(255,255,255,.55);margin-bottom:12px}
+  h1{font-size:104px;font-weight:800;line-height:1.05;letter-spacing:-2px}
+  h1.big{font-size:128px}
+  p.sub{margin-top:34px;font-size:34px;font-weight:500;line-height:1.5;color:rgba(255,255,255,.82);max-width:1100px}
+
+  .foot{position:absolute;left:200px;bottom:72px;z-index:2;font-size:24px;font-weight:600;color:rgba(255,255,255,.6)}
+  .contact{margin-top:40px;display:flex;gap:40px;font-size:28px;font-weight:600}
+  .contact span{display:flex;align-items:center;gap:12px}
+
+  .topbar{position:absolute;top:0;left:0;right:0;height:8px;z-index:3;
+    background:linear-gradient(90deg,#042c6c 0%,#0b47a1 55%,#B9308C 100%)}
+
+  /* label kecil di layar (tidak ikut ter-screenshot kalau crop pas ke .frame) */
+  .tag{max-width:1920px;margin:0 auto;color:#94a3b8;font:600 14px/1 'Plus Jakarta Sans',sans-serif;padding:8px 4px}
+
+  @media print{body{background:#fff}.tag{display:none}.frame{margin:0;page-break-after:always}}
+</style>
+</head>
+<body>
+
+<!-- ============ INTRO ============ -->
+<div class="tag">01-intro.jpg</div>
+<section class="frame">
+  <div class="topbar"></div>
+  <div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div><div class="shape s4"></div>
+  <div class="inner">
+    <div class="brand"><img src="/logo-sgg.png" alt=""><span class="kicker">Karir &amp; Rekrutmen</span></div>
+    <div class="pill">Panduan Video</div>
+    <h1 class="big">Portal Rekrutmen<br>Syifa Global Group</h1>
+    <p class="sub">Cara melamar kerja online — dari daftar akun sampai diterima, semua dalam satu portal.</p>
+  </div>
+  <div class="foot">syifaglobalgroup.com &middot; Tim Rekrutmen</div>
+</section>
+
+<!-- ============ SECTION DIVIDERS ============ -->
+<div class="tag">02-daftar-akun.jpg</div>
+<section class="frame alt">
+  <div class="topbar"></div>
+  <div class="shape s1"></div><div class="shape s2"></div><div class="shape s4"></div>
+  <div class="inner">
+    <div class="step-num">Langkah 01</div>
+    <h1>Daftar Akun</h1>
+    <p class="sub">Buat akun dengan email aktif, lalu verifikasi lewat tautan yang dikirim ke email kamu.</p>
+  </div>
+  <div class="foot">Portal Rekrutmen SGG</div>
+</section>
+
+<div class="tag">03-cari-lowongan.jpg</div>
+<section class="frame alt">
+  <div class="topbar"></div>
+  <div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div>
+  <div class="inner">
+    <div class="step-num">Langkah 02</div>
+    <h1>Cari &amp; Lihat<br>Lowongan</h1>
+    <p class="sub">Telusuri lowongan yang terbuka, baca deskripsi dan persyaratan tiap posisi.</p>
+  </div>
+  <div class="foot">Portal Rekrutmen SGG</div>
+</section>
+
+<div class="tag">04-isi-form-lamaran.jpg</div>
+<section class="frame alt">
+  <div class="topbar"></div>
+  <div class="shape s1"></div><div class="shape s2"></div><div class="shape s4"></div>
+  <div class="inner">
+    <div class="step-num">Langkah 03</div>
+    <h1>Isi Form Lamaran</h1>
+    <p class="sub">Lengkapi data diri, unggah CV dan sertifikat. Satu lamaran aktif dalam satu waktu.</p>
+  </div>
+  <div class="foot">Portal Rekrutmen SGG</div>
+</section>
+
+<div class="tag">05-pantau-status.jpg</div>
+<section class="frame alt">
+  <div class="topbar"></div>
+  <div class="shape s1"></div><div class="shape s3"></div><div class="shape s4"></div>
+  <div class="inner">
+    <div class="step-num">Langkah 04</div>
+    <h1>Pantau Status<br>Lamaran</h1>
+    <p class="sub">Cek progres lamaran di dashboard — seleksi berkas, tes, wawancara, sampai keputusan akhir.</p>
+  </div>
+  <div class="foot">Portal Rekrutmen SGG</div>
+</section>
+
+<div class="tag">06-tes-online.jpg</div>
+<section class="frame alt">
+  <div class="topbar"></div>
+  <div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div>
+  <div class="inner">
+    <div class="step-num">Langkah 05</div>
+    <h1>Kerjakan Tes Online</h1>
+    <p class="sub">Tes bisa dikerjakan kapan saja. Begitu ditekan "Mulai", ada batas waktu — pastikan waktumu cukup.</p>
+  </div>
+  <div class="foot">Portal Rekrutmen SGG</div>
+</section>
+
+<div class="tag">07-wawancara.jpg</div>
+<section class="frame alt">
+  <div class="topbar"></div>
+  <div class="shape s2"></div><div class="shape s3"></div><div class="shape s4"></div>
+  <div class="inner">
+    <div class="step-num">Langkah 06</div>
+    <h1>Jadwal Wawancara</h1>
+    <p class="sub">Tanggal, jam, dan lokasi/link wawancara muncul di dashboard dan dikirim lewat email.</p>
+  </div>
+  <div class="foot">Portal Rekrutmen SGG</div>
+</section>
+
+<div class="tag">08-offering-letter.jpg</div>
+<section class="frame alt">
+  <div class="topbar"></div>
+  <div class="shape s1"></div><div class="shape s2"></div><div class="shape s4"></div>
+  <div class="inner">
+    <div class="step-num">Langkah 07</div>
+    <h1>Offering Letter<br>&amp; Negosiasi</h1>
+    <p class="sub">Unduh surat penawaran, ajukan negosiasi bila perlu, lalu unggah kembali surat yang sudah ditandatangani.</p>
+  </div>
+  <div class="foot">Portal Rekrutmen SGG</div>
+</section>
+
+<div class="tag">09-mcu.jpg</div>
+<section class="frame alt">
+  <div class="topbar"></div>
+  <div class="shape s1"></div><div class="shape s3"></div>
+  <div class="inner">
+    <div class="step-num">Langkah 08</div>
+    <h1>Medical Check Up</h1>
+    <p class="sub">Untuk posisi tertentu, ikuti MCU sesuai jadwal sebelum masuk tahap onboarding.</p>
+  </div>
+  <div class="foot">Portal Rekrutmen SGG</div>
+</section>
+
+<!-- ============ OUTRO ============ -->
+<div class="tag">10-outro.jpg</div>
+<section class="frame accent">
+  <div class="topbar"></div>
+  <div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div><div class="shape s4"></div>
+  <div class="inner">
+    <div class="brand"><img src="/logo-sgg.png" alt=""><span class="kicker">Karir &amp; Rekrutmen</span></div>
+    <h1 class="big">Selamat Melamar!</h1>
+    <p class="sub">Butuh bantuan? Hubungi tim rekrutmen pada hari kerja, 08.00–16.00 WIB.</p>
+    <div class="contact">
+      <span>&#9993;&nbsp; recruiter@syifaglobalgroup.com</span>
+      <span>&#128241;&nbsp; 0822-5356-8275</span>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

@@ -125,6 +125,19 @@ class CompanyResource extends BaseResource
                             ->placeholder("Halo {nama},\n\nKami dengan senang hati menginformasikan...")
                             ->columnSpanFull(),
                     ])->columns(1),
+
+                    Forms\Components\Fieldset::make('Tidak Dilanjutkan (manual, di luar alur normal)')->schema([
+                        Forms\Components\TextInput::make('template_manual_rejected_subject')
+                            ->label('Subjek Email')
+                            ->placeholder('Update Lamaran Kamu – {posisi}')
+                            ->columnSpanFull(),
+                        Forms\Components\Textarea::make('template_manual_rejected_body')
+                            ->label('Isi Pesan')
+                            ->rows(5)
+                            ->placeholder("Halo {nama},\n\nTerima kasih atas partisipasimu...")
+                            ->helperText('Dipakai saat admin menandai "Tidak Dilanjutkan" di luar alur normal (mis. kandidat mengundurkan diri), di tahap manapun.')
+                            ->columnSpanFull(),
+                    ])->columns(1),
                 ])
                 ->collapsible()
                 ->collapsed(),

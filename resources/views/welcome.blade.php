@@ -216,9 +216,13 @@
             </a>
           @endif
         @empty
-          <a href="mailto:rekrutmen@syifaglobal.co.id" class="flex items-center gap-3 px-5 py-[14px] rounded-[14px] no-underline text-white bg-white/[0.14] hover:bg-white/[0.22] transition-colors duration-150" style="touch-action:manipulation;">
+          <a href="mailto:recruiter@syifaglobalgroup.com" class="flex items-center gap-3 px-5 py-[14px] rounded-[14px] no-underline text-white bg-white/[0.14] hover:bg-white/[0.22] transition-colors duration-150" style="touch-action:manipulation;">
             <div class="w-9 h-9 shrink-0 rounded-[10px] grid place-items-center text-sm bg-white/[0.18]" aria-hidden="true"><i class="fa-regular fa-envelope"></i></div>
-            <span class="text-sm font-bold">rekrutmen@syifaglobal.co.id</span>
+            <span class="text-sm font-bold">recruiter@syifaglobalgroup.com</span>
+          </a>
+          <a href="https://wa.me/6282253568275" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 px-5 py-[14px] rounded-[14px] no-underline text-white bg-white/[0.14] hover:bg-white/[0.22] transition-colors duration-150" style="touch-action:manipulation;">
+            <div class="w-9 h-9 shrink-0 rounded-[10px] grid place-items-center text-sm bg-white/[0.18]" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></div>
+            <span class="text-sm font-bold">WhatsApp &middot; 0822-5356-8275</span>
           </a>
         @endforelse
       </div>

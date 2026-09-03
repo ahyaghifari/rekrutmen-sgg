@@ -24,6 +24,22 @@ class ApplicationNotification extends Model
         return $this->status === 'draft';
     }
 
+    /** Tombol CTA di email untuk event yang butuh aksi pelamar. Null = tidak ada tombol. */
+    public function cta(): ?array
+    {
+        return match ($this->event) {
+            CompanyMessageTemplate::EVENT_QUIZ_SENT =>
+                ['url' => route('tes-online.show'), 'label' => 'Kerjakan Tes'],
+            CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY =>
+                ['url' => route('dashboard'), 'label' => 'Unggah Surat Penawaran'],
+            CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED =>
+                ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal Wawancara'],
+            CompanyMessageTemplate::EVENT_MCU_SCHEDULED =>
+                ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal MCU'],
+            default => null,
+        };
+    }
+
     /** Bikin draft lalu langsung kirim — buat event "positif" (lulus/undangan) yang tidak perlu ditahan admin. */
     public static function createAndSend(JobApplication $app, string $event, array $extra = []): void
     {
@@ -95,6 +111,7 @@ class ApplicationNotification extends Model
             CompanyMessageTemplate::EVENT_MCU_REJECTED        => "Update Lamaran Kamu – {$jobTitle}",
             CompanyMessageTemplate::EVENT_ONBOARDING_INVITE   => "Selamat Bergabung! Undangan TTD & Onboarding – {$jobTitle}",
             CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY => "Surat Penawaran Kerja Sudah Bisa Diunduh – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_MANUAL_REJECTED     => "Update Lamaran Kamu – {$jobTitle}",
             default                                           => "Update Lamaran Kamu – {$jobTitle}",
         };
     }
@@ -143,6 +160,11 @@ class ApplicationNotification extends Model
 
         if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED) {
             return "Halo {$name},\n\nTerima kasih telah meluangkan waktu untuk mengikuti proses wawancara posisi {$jobTitle}.\n\nSetelah melalui pertimbangan, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nKami sangat menghargai antusiasme dan usahamu. Jangan menyerah — terus tingkatkan diri dan kami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
+        }
+
+        if ($event === CompanyMessageTemplate::EVENT_MANUAL_REJECTED) {
+            $notes = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
+            return "Halo {$name},\n\nTerima kasih atas partisipasimu dalam proses seleksi untuk posisi {$jobTitle}.\n\nKami informasikan bahwa proses lamaranmu kami hentikan pada tahap ini.{$notes}\n\nKami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_MCU_REJECTED) {

@@ -273,11 +273,41 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
           <i class="fa-solid fa-download text-xs"></i>Unduh Surat Penawaran
         </a>
 
+        @php($negos = $activeApp->offeringNegotiations)
+        @if($negos->isNotEmpty())
+        <div class="mt-4 space-y-2">
+          <div class="text-[12.5px] font-bold text-slate-700">Riwayat Negosiasi</div>
+          @foreach($negos as $n)
+          <div class="rounded-xl px-3 py-2 text-[12.5px] {{ $n->sender === 'applicant' ? 'bg-slate-100 text-slate-700' : 'bg-navy/5 text-navy' }}">
+            <div class="font-semibold">{{ $n->sender === 'applicant' ? 'Kamu' : 'Tim Rekrutmen' }} &middot; <span class="font-normal text-slate-400">{{ $n->created_at->translatedFormat('j M Y, H:i') }}</span></div>
+            <div class="mt-0.5 whitespace-pre-line">{{ $n->message }}</div>
+          </div>
+          @endforeach
+        </div>
+        @endif
+
         @if($activeApp->offering_letter_signed_path)
         <div class="mt-3 flex items-center gap-2 text-[13px] text-sgg-green font-semibold">
           <i class="fa-solid fa-circle-check"></i>Surat bertanda tangan sudah diunggah {{ $activeApp->offering_letter_signed_at->translatedFormat('j F Y, H:i') }}.
         </div>
         @else
+        <details class="mt-3 group">
+          <summary class="cursor-pointer text-[13px] font-semibold text-navy hover:underline list-none">
+            <i class="fa-solid fa-comments text-xs"></i> Ada yang ingin dinegosiasikan dulu?
+          </summary>
+          <form method="POST" action="{{ route('offering-letter.negosiasi') }}" class="mt-2" x-data="{ sending: false }" @submit="sending = true">
+            @csrf
+            <textarea name="message" rows="3" required maxlength="2000"
+                      placeholder="Tuliskan poin yang ingin dinegosiasikan (mis. gaji, tanggal mulai, tunjangan)..."
+                      class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none"></textarea>
+            <button type="submit" :disabled="sending"
+                    class="mt-2 px-4 py-[9px] rounded-[10px] border-0 bg-slate-700 hover:bg-slate-800 text-white text-[13px] font-bold cursor-pointer disabled:opacity-50">
+              <span x-show="!sending">Kirim Pengajuan Negosiasi</span>
+              <span x-show="sending">Mengirim...</span>
+            </button>
+          </form>
+        </details>
+
         <form method="POST" action="{{ route('offering-letter.upload-signed') }}" enctype="multipart/form-data" class="mt-3"
               x-data="{ fileName: null, dragging: false, submitting: false }"
               @submit="submitting = true">

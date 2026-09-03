@@ -72,15 +72,17 @@ class ApplicantDetailPage extends Page implements HasActions
             $this->application->statusLogs()->latest('changed_at')->first()?->update(['notes' => trim($reason)]);
         }
 
-        // Create draft notification when moving to shortlisted or rejected (from screening)
+        // Create draft notification when moving to shortlisted or rejected.
         $notifEvent = match (true) {
             $status === 'shortlisted'                                   => CompanyMessageTemplate::EVENT_SCREENING_PASSED,
             $status === 'rejected' && $prevStatus === 'screening'       => CompanyMessageTemplate::EVENT_SCREENING_REJECTED,
+            // "Tidak Dilanjutkan" manual di tahap lain (tes/wawancara/mcu/onboarding) — belum ada event khusus per tahap di sini.
+            $status === 'rejected'                                      => CompanyMessageTemplate::EVENT_MANUAL_REJECTED,
             default                                                     => null,
         };
 
         if ($notifEvent) {
-            ApplicationNotification::createDraftFor($this->application, $notifEvent);
+            ApplicationNotification::createDraftFor($this->application, $notifEvent, ['notes' => $reason]);
         }
 
         Notification::make()
@@ -111,6 +113,32 @@ class ApplicantDetailPage extends Page implements HasActions
             ])
             ->action(function (array $data): void {
                 $this->changeStatus('rejected', $data['reason']);
+            });
+    }
+
+    public function kirimNotifTidakDilanjutkanAction(): Action
+    {
+        return Action::make('kirimNotifTidakDilanjutkan')
+            ->label('Kirim Notif Tidak Dilanjutkan')
+            ->icon('heroicon-m-envelope')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('Kirim Pemberitahuan Tidak Dilanjutkan?')
+            ->modalDescription('Email tidak dilanjutkan akan dikirim ke pelamar ini. Tindakan ini tidak bisa dibatalkan.')
+            ->modalSubmitActionLabel('Ya, Kirim Sekarang')
+            ->action(function (): void {
+                $notif = ApplicationNotification::where('job_application_id', $this->application->id)
+                    ->where('status', 'draft')
+                    ->where('event', CompanyMessageTemplate::EVENT_MANUAL_REJECTED)
+                    ->first();
+
+                if ($notif) {
+                    \Illuminate\Support\Facades\Mail::to($this->application->user->email)
+                        ->send(new \App\Mail\ApplicantNotificationMail($notif));
+                    $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                }
+
+                Notification::make()->title('Email tidak dilanjutkan terkirim.')->success()->send();
             });
     }
 }

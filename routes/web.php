@@ -39,6 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/offering-letter/unduh', [OfferingLetterController::class, 'downloadForCandidate'])->name('offering-letter.unduh');
     Route::post('/offering-letter/upload-signed', [OfferingLetterController::class, 'uploadSigned'])->middleware('throttle:10,1')->name('offering-letter.upload-signed');
+    Route::post('/offering-letter/negosiasi', [OfferingLetterController::class, 'negotiate'])->middleware('throttle:10,1')->name('offering-letter.negosiasi');
 
     Route::get('/tes-online', [QuizController::class, 'index'])->name('tes-online.show');
     Route::get('/tes-online/{quiz}', [QuizController::class, 'show'])->name('tes-online.detail');

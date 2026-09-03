@@ -10,6 +10,9 @@ use App\Models\JobApplication;
 use App\Models\JobOpening;
 use App\Models\JobOpeningStageLog;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Textarea;
+use Illuminate\Support\HtmlString;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Tables;
@@ -127,6 +130,37 @@ class OfferingLetterPage extends Page implements HasTable
             ->openUrlInNewTab();
     }
 
+    /** Lihat riwayat negosiasi kandidat & balas. Balasan sekadar teks — surat revisi tetap lewat "Ganti Surat". */
+    public function negosiasiAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('negosiasi')
+            ->label(fn ($record) => 'Negosiasi (' . $record->offeringNegotiations->count() . ')')
+            ->icon('heroicon-m-chat-bubble-left-right')
+            ->color(fn ($record) => $record->offeringNegotiations->where('sender', 'applicant')->isNotEmpty() ? 'warning' : 'gray')
+            ->visible(fn ($record) => $record->offeringNegotiations->isNotEmpty())
+            ->modalHeading('Negosiasi Offering Letter')
+            ->modalSubmitActionLabel('Kirim Balasan')
+            ->form(fn ($record) => [
+                Placeholder::make('riwayat')
+                    ->label('Riwayat')
+                    ->content(new HtmlString(collect($record->offeringNegotiations)->map(fn ($n) =>
+                        '<div style="margin-bottom:8px;padding:8px 10px;border-radius:8px;background:' .
+                        ($n->sender === 'applicant' ? '#f1f5f9' : '#eef2ff') . '">' .
+                        '<strong>' . ($n->sender === 'applicant' ? 'Kandidat' : 'Rekruter') . '</strong> ' .
+                        '<span style="color:#94a3b8">· ' . $n->created_at->format('d M Y, H:i') . '</span><br>' .
+                        nl2br(e($n->message)) . '</div>'
+                    )->implode(''))),
+                Textarea::make('message')->label('Balasan')->rows(3)->required()->maxLength(2000),
+            ])
+            ->action(function (array $data, $record): void {
+                $record->offeringNegotiations()->create([
+                    'sender'  => 'recruiter',
+                    'message' => $data['message'],
+                ]);
+                Notification::make()->title('Balasan negosiasi terkirim')->success()->send();
+            });
+    }
+
     public function lanjutkanAction(): Tables\Actions\Action
     {
         return Tables\Actions\Action::make('lanjutkanSetelahOffering')
@@ -150,7 +184,7 @@ class OfferingLetterPage extends Page implements HasTable
         return $table
             ->query(
                 JobApplication::query()
-                    ->with(['answers' => fn ($q) => $q->where('field_key', 'full_name')])
+                    ->with(['answers' => fn ($q) => $q->where('field_key', 'full_name'), 'offeringNegotiations'])
                     ->when(
                         $this->jobOpeningId && $this->isJobOpeningAllowed($this->jobOpeningId),
                         fn (Builder $q) => $q->where('job_opening_id', $this->jobOpeningId)->where('status', 'offering'),
@@ -181,6 +215,7 @@ class OfferingLetterPage extends Page implements HasTable
             ->actions([
                 $this->uploadSuratAction(),
                 $this->unduhSuratMasukAction(),
+                $this->negosiasiAction(),
                 $this->unduhSuratSignedAction(),
                 $this->lanjutkanAction(),
             ])
