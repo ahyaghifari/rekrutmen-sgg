@@ -78,12 +78,35 @@ class TtdOnboardingPage extends Page implements HasTable, HasActions, HasForms
         return JobOpening::where('company_id', $this->companyId)->orderBy('created_at', 'desc')->get(['id', 'title']);
     }
 
+    /** [disetujui, total] persetujuan efektif (perusahaan + khusus jabatan) untuk kandidat ini. */
+    private function agreementProgress($record): array
+    {
+        $total = $record->jobOpening?->effectiveAgreements()->count() ?? 0;
+        $approved = $record->candidate
+            ? $record->candidate->agreements
+                ->filter(fn ($a) => $a->company_agreement_id || $a->job_opening_agreement_id)
+                ->count()
+            : 0;
+
+        return [$approved, $total];
+    }
+
     public function tandaiOnboardingSelesaiAction(): Tables\Actions\Action
     {
         return Tables\Actions\Action::make('tandaiOnboardingSelesai')
             ->label('Tandai Selesai')
             ->icon('heroicon-m-check-badge')
             ->color('success')
+            ->disabled(function ($record): bool {
+                [$approved, $total] = $this->agreementProgress($record);
+                return $approved < $total;
+            })
+            ->tooltip(function ($record): ?string {
+                [$approved, $total] = $this->agreementProgress($record);
+                return $approved < $total
+                    ? "Kandidat belum menyetujui semua persetujuan perusahaan ({$approved}/{$total})."
+                    : null;
+            })
             ->requiresConfirmation()
             ->modalDescription('Kandidat akan ditandai resmi menjadi karyawan dan menerima email undangan TTD & onboarding.')
             ->action(function ($record): void {
@@ -104,7 +127,7 @@ class TtdOnboardingPage extends Page implements HasTable, HasActions, HasForms
         return $table
             ->query(
                 JobApplication::query()
-                    ->with(['answers' => fn ($q) => $q->where('field_key', 'full_name'), 'candidate'])
+                    ->with(['answers' => fn ($q) => $q->where('field_key', 'full_name'), 'candidate.agreements', 'jobOpening.company.agreements', 'jobOpening.agreements'])
                     ->when(
                         $this->jobOpeningId && $this->isJobOpeningAllowed($this->jobOpeningId),
                         fn (Builder $q) => $q->where('job_opening_id', $this->jobOpeningId)->where('status', 'onboarding'),
@@ -121,6 +144,15 @@ class TtdOnboardingPage extends Page implements HasTable, HasActions, HasForms
                     ->label('Data Diri Kandidat')
                     ->boolean()
                     ->getStateUsing(fn ($record) => filled($record->candidate?->nik)),
+
+                Tables\Columns\TextColumn::make('persetujuan')
+                    ->label('Persetujuan')
+                    ->badge()
+                    ->color(fn ($record) => $this->agreementProgress($record)[0] >= $this->agreementProgress($record)[1] ? 'success' : 'warning')
+                    ->getStateUsing(function ($record) {
+                        [$approved, $total] = $this->agreementProgress($record);
+                        return "{$approved}/{$total}";
+                    }),
 
                 Tables\Columns\TextColumn::make('created_at')->label('Tanggal')->dateTime('d M Y, H:i')->sortable(),
             ])

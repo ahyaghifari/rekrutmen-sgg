@@ -34,7 +34,7 @@ class McuStationPage extends Page implements HasTable, HasActions, HasForms
     protected static ?string $navigationIcon  = 'heroicon-o-clipboard-document-check';
     protected static ?string $navigationLabel = 'Isi Pemeriksaan MCU';
     protected static ?string $title           = 'Isi Pemeriksaan MCU';
-    protected static ?string $navigationGroup = 'Kandidat';
+    protected static ?string $navigationGroup = null;
     protected static ?int    $navigationSort  = 5;
     protected static string  $view            = 'filament.pages.mcu-station-page';
 

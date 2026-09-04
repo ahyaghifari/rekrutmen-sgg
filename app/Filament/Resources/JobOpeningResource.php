@@ -19,7 +19,7 @@ class JobOpeningResource extends BaseResource
     protected static ?string $navigationLabel = 'Lowongan';
     protected static ?string $modelLabel = 'Lowongan';
     protected static ?string $pluralModelLabel = 'Lowongan';
-    protected static ?string $navigationGroup = 'Lowongan';
+    protected static ?string $navigationGroup = null;
     protected static ?int $navigationSort = 1;
 
     public static function getEloquentQuery(): Builder
@@ -122,6 +122,32 @@ class JobOpeningResource extends BaseResource
                     ->nullable()
                     ->columnSpanFull(),
             ]),
+
+            Forms\Components\Section::make('Persetujuan Khusus Jabatan')
+                ->description('Persetujuan yang khusus untuk jabatan ini (mis. jadwal absensi). Kalau judulnya SAMA PERSIS dengan salah satu persetujuan perusahaan, versi jabatan ini yang dipakai (menimpa). Judul baru = persetujuan tambahan.')
+                ->schema([
+                    Forms\Components\Repeater::make('agreements')
+                        ->relationship()
+                        ->label('')
+                        ->schema([
+                            Forms\Components\TextInput::make('title')
+                                ->label('Judul')
+                                ->required()
+                                ->maxLength(255),
+                            Forms\Components\RichEditor::make('content')
+                                ->label('Naskah')
+                                ->required()
+                                ->columnSpanFull(),
+                        ])
+                        ->orderColumn('sort_order')
+                        ->reorderable()
+                        ->collapsible()
+                        ->itemLabel(fn (array $state): ?string => $state['title'] ?? 'Persetujuan baru')
+                        ->addActionLabel('Tambah persetujuan')
+                        ->defaultItems(0),
+                ])
+                ->collapsible()
+                ->collapsed(),
         ]);
     }
 

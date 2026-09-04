@@ -26,9 +26,12 @@ class CandidateProfileController extends Controller
             'familyMembers', 'educations', 'trainings', 'organizations',
             'workExperiences', 'references', 'additionalInfo', 'selfAssessment',
             'documents', 'agreements',
+            'jobApplication.jobOpening.company.agreements', 'jobApplication.jobOpening.agreements',
         ]);
 
-        return view('candidate-profile.edit', compact('candidate'));
+        $effectiveAgreements = $candidate->jobApplication?->jobOpening?->effectiveAgreements() ?? collect();
+
+        return view('candidate-profile.edit', compact('candidate', 'effectiveAgreements'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -180,12 +183,19 @@ class CandidateProfileController extends Controller
                 ]);
             }
 
-            foreach (['kontrak', 'peraturan', 'tata_tertib'] as $type) {
-                if ($request->boolean("agreements.{$type}")) {
+            $effective = $candidate->jobApplication?->jobOpening?->effectiveAgreements() ?? collect();
+            foreach ($effective as $item) {
+                $col = $item['company_agreement_id'] ? 'company_agreement_id' : 'job_opening_agreement_id';
+                $id  = $item['company_agreement_id'] ?: $item['job_opening_agreement_id'];
+                $key = ($col === 'company_agreement_id' ? 'c:' : 'j:') . $id;
+
+                if ($request->boolean("agreements.{$key}")) {
                     $candidate->agreements()->updateOrCreate(
-                        ['agreement_type' => $type],
+                        [$col => $id],
                         ['agreed_at' => now(), 'ip_address' => $request->ip(), 'user_agent' => $request->userAgent()]
                     );
+                } else {
+                    $candidate->agreements()->where($col, $id)->delete();
                 }
             }
         });

@@ -430,27 +430,33 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Persetujuan</h2>
       </div>
 
-      {{-- ponytail: teks legal placeholder — ganti dengan naskah kontrak/peraturan/tata tertib resmi dari HR --}}
       @php
-        $agreementTexts = [
-          'kontrak'     => ['label' => 'Kontrak Kerja', 'text' => 'Saya telah membaca dan memahami isi kontrak kerja yang berlaku, termasuk hak dan kewajiban sebagai karyawan.'],
-          'peraturan'   => ['label' => 'Peraturan Perusahaan', 'text' => 'Saya bersedia mematuhi seluruh peraturan perusahaan yang berlaku selama masa kerja.'],
-          'tata_tertib' => ['label' => 'Tata Tertib Kerja', 'text' => 'Saya memahami dan bersedia mengikuti tata tertib kerja yang ditetapkan perusahaan.'],
-        ];
-        $existingAgreements = $candidate->agreements->pluck('agreement_type')->all();
+        $approvedKeys = $candidate->agreements->map(fn ($a) =>
+          $a->company_agreement_id ? 'c:' . $a->company_agreement_id
+          : ($a->job_opening_agreement_id ? 'j:' . $a->job_opening_agreement_id : null)
+        )->filter()->all();
       @endphp
-      @foreach($agreementTexts as $type => $ag)
-      <label class="sg-agreement flex gap-[11px] items-start p-4 rounded-[14px] cursor-pointer mb-2">
-        <div class="sg-chk relative w-[24px] h-[24px] shrink-0 mt-[2px]">
-          <input type="checkbox" name="agreements[{{ $type }}]" value="1" {{ in_array($type, $existingAgreements) ? 'checked' : '' }}
-                 class="sg-chk-input absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0 p-0" />
-          <span class="sg-chk-face flex items-center justify-center w-full h-full rounded-[5px] border-2 border-slate-300 transition-colors duration-150">
-            <i class="fa-solid fa-check text-[12px] text-white opacity-0 transition-opacity duration-150 pointer-events-none"></i>
-          </span>
+      @forelse($effectiveAgreements as $agreement)
+      @php($key = $agreement['company_agreement_id'] ? 'c:' . $agreement['company_agreement_id'] : 'j:' . $agreement['job_opening_agreement_id'])
+      <div class="mb-3 rounded-[14px] border border-slate-200 overflow-hidden">
+        <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 text-[13px] font-bold text-slate-800">{{ $agreement['title'] }}</div>
+        <div class="sg-agreement-body px-4 py-3 text-[13px] leading-[1.7] text-slate-600 max-h-[240px] overflow-y-auto [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2 [&_strong]:text-slate-800">
+          {!! $agreement['content'] !!}
         </div>
-        <span class="text-[13px] leading-[1.6] text-slate-600"><strong class="text-slate-800">{{ $ag['label'] }}</strong> — {{ $ag['text'] }}</span>
-      </label>
-      @endforeach
+        <label class="sg-agreement flex gap-[11px] items-start p-4 cursor-pointer border-t border-slate-200 bg-white">
+          <div class="sg-chk relative w-[24px] h-[24px] shrink-0 mt-[2px]">
+            <input type="checkbox" name="agreements[{{ $key }}]" value="1" {{ in_array($key, $approvedKeys) ? 'checked' : '' }}
+                   class="sg-chk-input absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0 p-0" />
+            <span class="sg-chk-face flex items-center justify-center w-full h-full rounded-[5px] border-2 border-slate-300 transition-colors duration-150">
+              <i class="fa-solid fa-check text-[12px] text-white opacity-0 transition-opacity duration-150 pointer-events-none"></i>
+            </span>
+          </div>
+          <span class="text-[13px] leading-[1.6] text-slate-600">Saya telah membaca, memahami, dan menyetujui <strong class="text-slate-800">{{ $agreement['title'] }}</strong>.</span>
+        </label>
+      </div>
+      @empty
+      <p class="text-[13px] text-slate-500">Belum ada persetujuan yang perlu disetujui. Bagian ini bisa dilewati.</p>
+      @endforelse
     </section>
 
     <div class="flex justify-between items-center flex-wrap gap-3">

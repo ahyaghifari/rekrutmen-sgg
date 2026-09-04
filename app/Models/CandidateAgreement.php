@@ -11,7 +11,8 @@ class CandidateAgreement extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'candidate_id', 'agreement_type', 'agreed_at', 'ip_address', 'user_agent',
+        'candidate_id', 'agreement_type', 'company_agreement_id', 'job_opening_agreement_id',
+        'agreed_at', 'ip_address', 'user_agent',
     ];
 
     protected $casts = [
@@ -21,5 +22,15 @@ class CandidateAgreement extends Model
     public function candidate(): BelongsTo
     {
         return $this->belongsTo(Candidate::class);
+    }
+
+    public function companyAgreement(): BelongsTo
+    {
+        return $this->belongsTo(CompanyAgreement::class);
+    }
+
+    public function jobOpeningAgreement(): BelongsTo
+    {
+        return $this->belongsTo(JobOpeningAgreement::class);
     }
 }
