@@ -50,6 +50,42 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
     @csrf
     @method('PATCH')
 
+    {{-- Indikator kelengkapan data untuk HRIS --}}
+    @php
+      $hrisChecklist = $candidate->hrisChecklist();
+      $hrisFilled = collect($hrisChecklist)->where('filled', true)->count();
+      $hrisTotal = count($hrisChecklist);
+      $hrisDone = $hrisFilled === $hrisTotal;
+      $hrisPct = $hrisTotal ? round($hrisFilled / $hrisTotal * 100) : 0;
+    @endphp
+    <div class="sg-card rounded-[16px] px-5 py-4" style="border-top:3px solid {{ $hrisDone ? '#047C54' : '#b45309' }};">
+      <div class="flex items-center justify-between gap-3 mb-2">
+        <span class="text-[13.5px] font-extrabold text-slate-800">
+          <i class="fa-solid {{ $hrisDone ? 'fa-circle-check text-emerald-600' : 'fa-clipboard-list text-amber-600' }} mr-1.5"></i>
+          Kelengkapan data untuk HRIS
+        </span>
+        <span class="text-[12px] font-bold tabular-nums {{ $hrisDone ? 'text-emerald-600' : 'text-amber-600' }}">{{ $hrisFilled }} / {{ $hrisTotal }}</span>
+      </div>
+      <div class="h-1.5 rounded-full overflow-hidden mb-3" style="background:#e8edf5;">
+        <div class="h-full rounded-full transition-all duration-300" style="width:{{ $hrisPct }}%;background:{{ $hrisDone ? '#047C54' : '#b45309' }};"></div>
+      </div>
+      @if($hrisDone)
+        <p class="m-0 text-[12px] text-emerald-700">Semua data wajib sudah terisi. Data ini otomatis dipakai saat kamu diangkat jadi karyawan di HRIS.</p>
+      @else
+        <p class="m-0 mb-2 text-[12px] text-slate-500">Wajib diisi agar bisa diproses jadi karyawan di HRIS — klik untuk langsung ke bagiannya:</p>
+        <div class="flex flex-wrap gap-1.5">
+          @foreach($hrisChecklist as $item)
+            @unless($item['filled'])
+            <button type="button" @click="tab = {{ $item['tab'] }}"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">
+              <i class="fa-solid fa-circle-exclamation text-[10px]"></i> {{ $item['label'] }}
+            </button>
+            @endunless
+          @endforeach
+        </div>
+      @endif
+    </div>
+
     {{-- Tab nav --}}
     <div class="flex flex-wrap gap-2">
       @foreach($tabs as $n => $label)

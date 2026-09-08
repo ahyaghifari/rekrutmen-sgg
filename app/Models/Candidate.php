@@ -109,6 +109,44 @@ class Candidate extends Model
         return $this->hasMany(CandidateAgreement::class);
     }
 
+    /**
+     * Data diri yang WAJIB terisi supaya kandidat bisa diangkat jadi karyawan di HRIS
+     * (dipetakan ke user_profiles oleh CandidateOnboardingService di HRIS).
+     *
+     * @return array<string, array{label:string, filled:bool, tab:int}>
+     */
+    public function hrisChecklist(): array
+    {
+        $has = fn ($v) => filled(is_string($v) ? trim($v) : $v);
+
+        return [
+            'name'            => ['label' => 'Nama sesuai KTP',            'filled' => $has($this->name),            'tab' => 1],
+            'nik'             => ['label' => 'NIK',                        'filled' => $has($this->nik),             'tab' => 1],
+            'no_kk'           => ['label' => 'No. Kartu Keluarga',        'filled' => $has($this->no_kk),           'tab' => 1],
+            'status_marital'  => ['label' => 'Status pernikahan',         'filled' => $has($this->status_marital),  'tab' => 1],
+            'ktp_address'     => ['label' => 'Alamat KTP',                'filled' => $has($this->ktp_address),     'tab' => 2],
+            'village'         => ['label' => 'Kelurahan/Desa',            'filled' => $has($this->village),         'tab' => 2],
+            'district'        => ['label' => 'Kecamatan',                 'filled' => $has($this->district),        'tab' => 2],
+            'city'            => ['label' => 'Kota/Kabupaten',            'filled' => $has($this->city),            'tab' => 2],
+            'province'        => ['label' => 'Provinsi',                  'filled' => $has($this->province),        'tab' => 2],
+            'no_bpjskes'      => ['label' => 'No. BPJS Kesehatan',        'filled' => $has($this->no_bpjskes),      'tab' => 3],
+            'no_bpjstk'       => ['label' => 'No. BPJS Ketenagakerjaan',  'filled' => $has($this->no_bpjstk),       'tab' => 3],
+            'bsi_bank_number' => ['label' => 'No. Rekening (BSI)',        'filled' => $has($this->bsi_bank_number), 'tab' => 3],
+        ];
+    }
+
+    /** Semua data wajib HRIS sudah terisi. */
+    public function hrisChecklistDone(): bool
+    {
+        foreach ($this->hrisChecklist() as $item) {
+            if (! $item['filled']) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /** Masih ada persetujuan efektif yang belum disetujui kandidat ini. */
     public function agreementsPending(): bool
     {
