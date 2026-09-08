@@ -110,33 +110,41 @@ class Candidate extends Model
     }
 
     /**
-     * Data diri yang WAJIB terisi supaya kandidat bisa diangkat jadi karyawan di HRIS
-     * (dipetakan ke user_profiles oleh CandidateOnboardingService di HRIS).
+     * Data diri yang WAJIB dilengkapi kandidat sebelum onboarding.
      *
      * @return array<string, array{label:string, filled:bool, tab:int}>
      */
-    public function hrisChecklist(): array
+    public function requiredDataChecklist(): array
     {
+        $this->loadMissing(['familyMembers', 'educations', 'documents']);
+
         $has = fn ($v) => filled(is_string($v) ? trim($v) : $v);
+        $docTypeHas = fn (string $needle) => $this->documents
+            ->contains(fn ($d) => str_contains(mb_strtolower((string) $d->doc_type), $needle));
 
         return [
-            'name'            => ['label' => 'Nama sesuai KTP',            'filled' => $has($this->name),            'tab' => 1],
-            'nik'             => ['label' => 'NIK',                        'filled' => $has($this->nik),             'tab' => 1],
-            'no_kk'           => ['label' => 'No. Kartu Keluarga',        'filled' => $has($this->no_kk),           'tab' => 1],
-            'status_marital'  => ['label' => 'Status pernikahan',         'filled' => $has($this->status_marital),  'tab' => 1],
-            'ktp_address'     => ['label' => 'Alamat KTP',                'filled' => $has($this->ktp_address),     'tab' => 2],
-            'village'         => ['label' => 'Kelurahan/Desa',            'filled' => $has($this->village),         'tab' => 2],
-            'district'        => ['label' => 'Kecamatan',                 'filled' => $has($this->district),        'tab' => 2],
-            'city'            => ['label' => 'Kota/Kabupaten',            'filled' => $has($this->city),            'tab' => 2],
-            'province'        => ['label' => 'Provinsi',                  'filled' => $has($this->province),        'tab' => 2],
-            'bsi_bank_number' => ['label' => 'No. Rekening (BSI)',        'filled' => $has($this->bsi_bank_number), 'tab' => 3],
+            'name'           => ['label' => 'Nama sesuai KTP',           'filled' => $has($this->name),           'tab' => 1],
+            'nik'            => ['label' => 'NIK',                       'filled' => $has($this->nik),            'tab' => 1],
+            'no_kk'          => ['label' => 'No. Kartu Keluarga',       'filled' => $has($this->no_kk),          'tab' => 1],
+            'mother_name'    => ['label' => 'Nama ibu kandung',         'filled' => $has($this->mother_name),    'tab' => 1],
+            'status_marital' => ['label' => 'Status pernikahan',        'filled' => $has($this->status_marital), 'tab' => 1],
+            'ktp_address'    => ['label' => 'Alamat KTP',               'filled' => $has($this->ktp_address),    'tab' => 2],
+            'village'        => ['label' => 'Kelurahan/Desa',           'filled' => $has($this->village),        'tab' => 2],
+            'district'       => ['label' => 'Kecamatan',                'filled' => $has($this->district),       'tab' => 2],
+            'city'           => ['label' => 'Kota/Kabupaten',           'filled' => $has($this->city),           'tab' => 2],
+            'province'       => ['label' => 'Provinsi',                 'filled' => $has($this->province),       'tab' => 2],
+            'bank_number'    => ['label' => 'No. Rekening (BSI)',       'filled' => $has($this->bsi_bank_number), 'tab' => 3],
+            'family'         => ['label' => 'Data keluarga (min. 1)',   'filled' => $this->familyMembers->isNotEmpty(), 'tab' => 4],
+            'education'      => ['label' => 'Riwayat pendidikan (min. 1)', 'filled' => $this->educations->isNotEmpty(), 'tab' => 5],
+            'doc_ktp'        => ['label' => 'Dokumen KTP',              'filled' => $docTypeHas('ktp'),          'tab' => 12],
+            'doc_kk'         => ['label' => 'Dokumen Kartu Keluarga',   'filled' => $docTypeHas('kk') || $docTypeHas('kartu keluarga'), 'tab' => 12],
         ];
     }
 
-    /** Semua data wajib HRIS sudah terisi. */
-    public function hrisChecklistDone(): bool
+    /** Semua data wajib sudah dilengkapi. */
+    public function requiredDataComplete(): bool
     {
-        foreach ($this->hrisChecklist() as $item) {
+        foreach ($this->requiredDataChecklist() as $item) {
             if (! $item['filled']) {
                 return false;
             }
