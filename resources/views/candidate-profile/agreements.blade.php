@@ -65,8 +65,8 @@
     @csrf
     @method('PATCH')
 
-    {{-- inline @php: JANGAN campur dengan blok @php...@endphp di file yang sama —
-         @endphp blok akan "menutup" @php(...) inline pertama & merusak kompilasi Blade. --}}
+    {{-- Semua PHP inline pakai bentuk @php(...) — jangan pakai bentuk blok di file ini
+         (penutup bloknya bakal menutup @php(...) inline pertama & merusak kompilasi Blade). --}}
     @php($agreed = $candidate->agreements->keyBy(fn ($a) => $a->company_agreement_id ? 'c:' . $a->company_agreement_id : ($a->job_opening_agreement_id ? 'j:' . $a->job_opening_agreement_id : 'x')))
 
     @forelse($effectiveAgreements as $i => $agreement)
