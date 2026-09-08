@@ -28,6 +28,11 @@ class JobOpening extends Model
         'description',
         'requirements',
         'requires_psychotest',
+        'published_at',
+        'closed_at',
+        'created_by_name',
+        'published_by',
+        'closed_by',
     ];
 
     protected $casts = [
@@ -36,6 +41,8 @@ class JobOpening extends Model
         'max_applicants'        => 'integer',
         'applications_deadline' => 'date',
         'requires_psychotest'   => 'boolean',
+        'published_at'          => 'datetime',
+        'closed_at'             => 'datetime',
     ];
 
     /**
