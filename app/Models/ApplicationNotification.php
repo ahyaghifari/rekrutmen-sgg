@@ -36,26 +36,28 @@ class ApplicationNotification extends Model
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal Wawancara'],
             CompanyMessageTemplate::EVENT_MCU_SCHEDULED =>
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal MCU'],
+            'interview_rescheduled' =>
+                ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal Wawancara'],
+            'mcu_rescheduled' =>
+                ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal MCU'],
+            'offering_negotiation_replied' =>
+                ['url' => route('dashboard'), 'label' => 'Lihat Balasan Negosiasi'],
             default => null,
         };
     }
 
-    /** Bikin draft lalu langsung kirim — buat event "positif" (lulus/undangan) yang tidak perlu ditahan admin. */
+    /**
+     * Bikin draft lalu langsung antrekan — buat event "positif" (lulus/undangan) yang tidak
+     * perlu ditahan admin. Email dikirim oleh command notifications:dispatch, bukan di sini.
+     */
     public static function createAndSend(JobApplication $app, string $event, array $extra = []): void
     {
         static::createDraftFor($app, $event, $extra);
 
-        $notif = static::where('job_application_id', $app->id)
+        static::where('job_application_id', $app->id)
             ->where('event', $event)
             ->where('status', 'draft')
-            ->latest()->first();
-
-        $app->loadMissing('user');
-
-        if ($notif && $app->user) {
-            \Illuminate\Support\Facades\Mail::to($app->user->email)->send(new \App\Mail\ApplicantNotificationMail($notif));
-            $notif->update(['status' => 'sent', 'sent_at' => now()]);
-        }
+            ->update(['status' => 'queued']);
     }
 
     public static function createDraftFor(JobApplication $app, string $event, array $extra = []): static|null
