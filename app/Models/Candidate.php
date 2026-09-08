@@ -129,8 +129,6 @@ class Candidate extends Model
             'district'        => ['label' => 'Kecamatan',                 'filled' => $has($this->district),        'tab' => 2],
             'city'            => ['label' => 'Kota/Kabupaten',            'filled' => $has($this->city),            'tab' => 2],
             'province'        => ['label' => 'Provinsi',                  'filled' => $has($this->province),        'tab' => 2],
-            'no_bpjskes'      => ['label' => 'No. BPJS Kesehatan',        'filled' => $has($this->no_bpjskes),      'tab' => 3],
-            'no_bpjstk'       => ['label' => 'No. BPJS Ketenagakerjaan',  'filled' => $has($this->no_bpjstk),       'tab' => 3],
             'bsi_bank_number' => ['label' => 'No. Rekening (BSI)',        'filled' => $has($this->bsi_bank_number), 'tab' => 3],
         ];
     }
