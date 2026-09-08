@@ -10,7 +10,9 @@ class CompanyAgreement extends Model
 {
     use HasUlids;
 
-    protected $fillable = ['company_id', 'title', 'content', 'sort_order'];
+    protected $fillable = ['company_id', 'title', 'content', 'per_position', 'sort_order'];
+
+    protected $casts = ['per_position' => 'boolean'];
 
     public function company(): BelongsTo
     {
