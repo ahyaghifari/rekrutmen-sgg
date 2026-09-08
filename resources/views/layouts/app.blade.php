@@ -43,14 +43,21 @@
            class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('lamaran.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
           <i class="fa-solid fa-file-lines w-4 text-center text-xs"></i>Lamaran Saya
         </a>
-        @if(auth()->user()->candidate)
-        <a href="{{ route('data-diri.edit') }}" @click="sidebarOpen = false"
-           class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('data-diri.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
-          <i class="fa-solid fa-id-card w-4 text-center text-xs"></i>Data Diri Kandidat
-        </a>
+        @php($navApp = auth()->user()->latestApplication)
+        @if($navApp?->status === 'shortlisted' && $navApp?->quiz_sent_at)
         <a href="{{ route('tes-online.show') }}" @click="sidebarOpen = false"
            class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('tes-online.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
           <i class="fa-solid fa-computer w-4 text-center text-xs"></i>Tes
+        </a>
+        @endif
+        @if(auth()->user()->candidate)
+        <a href="{{ route('persetujuan.edit') }}" @click="sidebarOpen = false"
+           class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('persetujuan.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
+          <i class="fa-solid fa-file-signature w-4 text-center text-xs"></i>Persetujuan
+        </a>
+        <a href="{{ route('data-diri.edit') }}" @click="sidebarOpen = false"
+           class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('data-diri.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
+          <i class="fa-solid fa-id-card w-4 text-center text-xs"></i>Data Diri Kandidat
         </a>
         @endif
       </nav>
@@ -89,14 +96,21 @@
            class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('lamaran.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
           <i class="fa-solid fa-file-lines mr-1.5 text-xs"></i>Lamaran Saya
         </a>
-        @if(auth()->user()->candidate)
-        <a href="{{ route('data-diri.edit') }}"
-           class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('data-diri.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
-          <i class="fa-solid fa-id-card mr-1.5 text-xs"></i>Data Diri Kandidat
-        </a>
+        @php($navApp = auth()->user()->latestApplication)
+        @if($navApp?->status === 'shortlisted' && $navApp?->quiz_sent_at)
         <a href="{{ route('tes-online.show') }}"
            class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('tes-online.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
           <i class="fa-solid fa-computer mr-1.5 text-xs"></i>Tes
+        </a>
+        @endif
+        @if(auth()->user()->candidate)
+        <a href="{{ route('persetujuan.edit') }}"
+           class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('persetujuan.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
+          <i class="fa-solid fa-file-signature mr-1.5 text-xs"></i>Persetujuan
+        </a>
+        <a href="{{ route('data-diri.edit') }}"
+           class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('data-diri.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
+          <i class="fa-solid fa-id-card mr-1.5 text-xs"></i>Data Diri Kandidat
         </a>
         @endif
       </nav>

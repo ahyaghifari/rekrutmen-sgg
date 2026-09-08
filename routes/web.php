@@ -37,6 +37,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/data-diri-kandidat', [CandidateProfileController::class, 'update'])->name('data-diri.update');
     Route::get('/data-diri-kandidat/dokumen/{document}', [CandidateProfileController::class, 'downloadDocument'])->name('data-diri.dokumen');
 
+    Route::get('/persetujuan', [CandidateProfileController::class, 'agreements'])->name('persetujuan.edit');
+    Route::patch('/persetujuan', [CandidateProfileController::class, 'updateAgreements'])->name('persetujuan.update');
+
     Route::get('/offering-letter/unduh', [OfferingLetterController::class, 'downloadForCandidate'])->name('offering-letter.unduh');
     Route::post('/offering-letter/upload-signed', [OfferingLetterController::class, 'uploadSigned'])->middleware('throttle:10,1')->name('offering-letter.upload-signed');
     Route::post('/offering-letter/negosiasi', [OfferingLetterController::class, 'negotiate'])->middleware('throttle:10,1')->name('offering-letter.negosiasi');

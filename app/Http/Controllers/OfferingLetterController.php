@@ -62,6 +62,11 @@ class OfferingLetterController extends Controller
             'message' => ['required', 'string', 'max:2000'],
         ]);
 
+        // Tidak boleh kirim lagi selama pengajuan terakhir belum dibalas tim rekrutmen.
+        if ($application->offeringNegotiations()->latest('created_at')->first()?->sender === 'applicant') {
+            return back()->with('warning', 'Pengajuan negosiasi kamu masih menunggu balasan tim rekrutmen.');
+        }
+
         $application->offeringNegotiations()->create([
             'sender'  => 'applicant',
             'message' => $data['message'],

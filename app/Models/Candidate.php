@@ -108,4 +108,20 @@ class Candidate extends Model
     {
         return $this->hasMany(CandidateAgreement::class);
     }
+
+    /** Masih ada persetujuan efektif yang belum disetujui kandidat ini. */
+    public function agreementsPending(): bool
+    {
+        $this->loadMissing([
+            'agreements',
+            'jobApplication.jobOpening.company.agreements', 'jobApplication.jobOpening.agreements',
+        ]);
+
+        $effective = $this->jobApplication?->jobOpening?->effectiveAgreements() ?? collect();
+        $approved = $this->agreements
+            ->filter(fn ($a) => $a->company_agreement_id || $a->job_opening_agreement_id)
+            ->count();
+
+        return $approved < $effective->count();
+    }
 }

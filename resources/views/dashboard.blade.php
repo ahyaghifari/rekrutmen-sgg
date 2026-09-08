@@ -265,49 +265,56 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
     @if($activeApp->status === 'offering')
     <div class="mt-4 pt-4 sg-dd-border border-t">
       @if(! $activeApp->offering_letter_path)
-      <div class="text-[13px] text-slate-500">Surat penawaran sedang disiapkan tim rekrutmen. Cek lagi nanti ya.</div>
+      <div class="text-[13px] text-slate-500">Surat penawaran sedang disiapkan tim rekrutmen. Sambil menunggu, kamu tetap bisa mengajukan negosiasi di bawah.</div>
       @else
         <a href="{{ route('offering-letter.unduh') }}" target="_blank"
-           class="flex items-center justify-center gap-2 w-full py-[12px] rounded-[12px] text-white text-[13.5px] font-bold no-underline transition-opacity duration-150 hover:opacity-90"
-           style="background:{{ $tlBrand }};">
+           class="flex items-center justify-center gap-2 w-full py-[12px] rounded-[12px] bg-slate-500 hover:bg-slate-600 text-white text-[13.5px] font-bold no-underline transition-colors duration-150">
           <i class="fa-solid fa-download text-xs"></i>Unduh Surat Penawaran
         </a>
+      @endif
 
-        @php($negos = $activeApp->offeringNegotiations)
-        @if($negos->isNotEmpty())
-        <div class="mt-4 space-y-2">
-          <div class="text-[12.5px] font-bold text-slate-700">Riwayat Negosiasi</div>
-          @foreach($negos as $n)
-          <div class="rounded-xl px-3 py-2 text-[12.5px] {{ $n->sender === 'applicant' ? 'bg-slate-100 text-slate-700' : 'bg-navy/5 text-navy' }}">
-            <div class="font-semibold">{{ $n->sender === 'applicant' ? 'Kamu' : 'Tim Rekrutmen' }} &middot; <span class="font-normal text-slate-400">{{ $n->created_at->translatedFormat('j M Y, H:i') }}</span></div>
-            <div class="mt-0.5 whitespace-pre-line">{{ $n->message }}</div>
+      {{-- Negosiasi: selalu tersedia selama status offering & belum tanda tangan, tidak menunggu surat --}}
+      @php($negos = $activeApp->offeringNegotiations)
+      @if($negos->isNotEmpty())
+      <div class="mt-4 space-y-2">
+        <div class="text-[12.5px] font-bold text-slate-700">Riwayat Negosiasi</div>
+        @foreach($negos as $n)
+        <div class="rounded-xl px-3 py-2 text-[12.5px] {{ $n->sender === 'applicant' ? 'bg-slate-100 text-slate-700' : 'bg-navy/5 text-navy' }}">
+          <div class="font-semibold">{{ $n->sender === 'applicant' ? 'Kamu' : 'Tim Rekrutmen' }} &middot; <span class="font-normal text-slate-400">{{ $n->created_at->translatedFormat('j M Y, H:i') }}</span></div>
+          <div class="mt-0.5 whitespace-pre-line">{{ $n->message }}</div>
+        </div>
+        @endforeach
+      </div>
+      @endif
+
+      @if($activeApp->offering_letter_signed_path)
+      <div class="mt-3 flex items-center gap-2 text-[13px] text-sgg-green font-semibold">
+        <i class="fa-solid fa-circle-check"></i>Surat bertanda tangan sudah diunggah {{ $activeApp->offering_letter_signed_at->translatedFormat('j F Y, H:i') }}.
+      </div>
+      @else
+        <div class="mt-4">
+          @if($negos->last()?->sender === 'applicant')
+          <div class="rounded-[10px] px-3 py-2.5 text-[12.5px] bg-amber-50 text-amber-700 border border-amber-200">
+            <i class="fa-solid fa-clock text-xs mr-1"></i>Pengajuan negosiasi kamu sedang ditinjau tim rekrutmen. Kamu bisa mengirim lagi setelah ada balasan.
           </div>
-          @endforeach
-        </div>
-        @endif
-
-        @if($activeApp->offering_letter_signed_path)
-        <div class="mt-3 flex items-center gap-2 text-[13px] text-sgg-green font-semibold">
-          <i class="fa-solid fa-circle-check"></i>Surat bertanda tangan sudah diunggah {{ $activeApp->offering_letter_signed_at->translatedFormat('j F Y, H:i') }}.
-        </div>
-        @else
-        <details class="mt-3 group">
-          <summary class="cursor-pointer text-[13px] font-semibold text-navy hover:underline list-none">
-            <i class="fa-solid fa-comments text-xs"></i> Ada yang ingin dinegosiasikan dulu?
-          </summary>
-          <form method="POST" action="{{ route('offering-letter.negosiasi') }}" class="mt-2" x-data="{ sending: false }" @submit="sending = true">
+          @else
+          <div class="text-[12.5px] font-bold text-slate-700 mb-1.5">
+            <i class="fa-solid fa-comments text-xs mr-1"></i>Ada yang ingin dinegosiasikan dulu?
+          </div>
+          <form method="POST" action="{{ route('offering-letter.negosiasi') }}" x-data="{ sending: false }" @submit="sending = true">
             @csrf
             <textarea name="message" rows="3" required maxlength="2000"
                       placeholder="Tuliskan poin yang ingin dinegosiasikan (mis. gaji, tanggal mulai, tunjangan)..."
                       class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none"></textarea>
-            <button type="submit" :disabled="sending"
-                    class="mt-2 px-4 py-[9px] rounded-[10px] border-0 bg-slate-700 hover:bg-slate-800 text-white text-[13px] font-bold cursor-pointer disabled:opacity-50">
-              <span x-show="!sending">Kirim Pengajuan Negosiasi</span>
-              <span x-show="sending">Mengirim...</span>
+            <button type="submit" x-bind:disabled="sending"
+                    class="mt-2 w-full py-[11px] rounded-[10px] border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+              <span x-text="sending ? 'Mengirim...' : 'Kirim Pengajuan Negosiasi'">Kirim Pengajuan Negosiasi</span>
             </button>
           </form>
-        </details>
+          @endif
+        </div>
 
+        @if($activeApp->offering_letter_path)
         <form method="POST" action="{{ route('offering-letter.upload-signed') }}" enctype="multipart/form-data" class="mt-3"
               x-data="{ fileName: null, dragging: false, submitting: false }"
               @submit="submitting = true">
@@ -325,7 +332,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
                    @change="fileName = $event.target.files[0]?.name" />
           </label>
           <button type="submit" :disabled="submitting"
-                  class="mt-3 w-full px-4 py-[10px] rounded-[10px] border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                  class="mt-3 w-full px-4 py-[10px] rounded-[10px] border-0 bg-sgg-green hover:bg-sgg-green-hover text-white text-[13px] font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
             <span x-show="! submitting">Unggah</span>
             <span x-show="submitting">Mengunggah...</span>
           </button>

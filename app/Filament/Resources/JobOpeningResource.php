@@ -24,7 +24,7 @@ class JobOpeningResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with('company');
 
         if (static::isSuperAdmin()) {
             return $query;
@@ -33,15 +33,29 @@ class JobOpeningResource extends BaseResource
         return $query->where('company_id', static::companyId());
     }
 
+    public static function canCreate(): bool
+    {
+        // Perusahaan mode 'hris' hanya bisa ditambah lowongannya dari HRIS.
+        if (! static::isSuperAdmin()) {
+            $co = Company::find(static::companyId());
+
+            return $co && $co->management_mode === 'free';
+        }
+
+        return Company::where('management_mode', 'free')->exists();
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
             Forms\Components\Section::make('Informasi Lowongan')->schema([
                 Forms\Components\Select::make('company_id')
                     ->label('Perusahaan')
-                    ->options(fn () => static::isSuperAdmin()
-                        ? Company::query()->pluck('name', 'id')
-                        : Company::query()->where('id', static::companyId())->pluck('name', 'id'))
+                    // Hanya perusahaan mode 'free' — yang mode 'hris' dikelola di HRIS.
+                    ->options(fn () => Company::query()
+                        ->where('management_mode', 'free')
+                        ->when(! static::isSuperAdmin(), fn ($q) => $q->where('id', static::companyId()))
+                        ->pluck('name', 'id'))
                     ->searchable()
                     ->nullable()
                     ->live()
@@ -300,11 +314,11 @@ class JobOpeningResource extends BaseResource
                     }),
 
                 Tables\Actions\EditAction::make()
-                    ->visible(fn ($record) => $record->hris_job_opening_id === null),
+                    ->visible(fn ($record) => $record->hris_job_opening_id === null && $record->company?->management_mode !== 'hris'),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn ($record) => $record->hris_job_opening_id === null),
+                    ->visible(fn ($record) => $record->hris_job_opening_id === null && $record->company?->management_mode !== 'hris'),
                 Tables\Actions\ViewAction::make()
-                    ->visible(fn ($record) => $record->hris_job_opening_id !== null),
+                    ->visible(fn ($record) => $record->hris_job_opening_id !== null || $record->company?->management_mode === 'hris'),
             ])
             ->bulkActions([]);
     }

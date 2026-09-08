@@ -94,6 +94,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmailContr
         return $this->hasMany(JobApplication::class);
     }
 
+    public function latestApplication(): HasOne
+    {
+        return $this->hasOne(JobApplication::class)->latestOfMany();
+    }
+
     public function candidate(): HasOne
     {
         return $this->hasOne(Candidate::class);

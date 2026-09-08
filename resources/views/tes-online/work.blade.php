@@ -13,8 +13,10 @@ $applicantName = $application->answersMap()['full_name'] ?? $application->user->
         current: 0,
         total: {{ $questions->count() }},
         answers: {},
+        confirmOpen: false,
         storageKey: 'quiz-draft-{{ $attempt->id }}',
-        tick() { this.remaining = Math.max(0, Math.floor((this.deadline - Date.now()) / 1000)); if (this.remaining <= 0) { document.getElementById('quiz-form').submit(); } },
+        submitQuiz() { localStorage.removeItem(this.storageKey); document.getElementById('quiz-form').submit(); },
+        tick() { this.remaining = Math.max(0, Math.floor((this.deadline - Date.now()) / 1000)); if (this.remaining <= 0) { this.submitQuiz(); } },
         save() { localStorage.setItem(this.storageKey, JSON.stringify({ answers: this.answers, current: this.current })); },
         init() {
             this.tick(); setInterval(() => this.tick(), 1000);
@@ -103,12 +105,34 @@ $applicantName = $application->answersMap()['full_name'] ?? $application->user->
         <div class="text-[12px] text-slate-500" x-text="Object.keys(answers).length + ' / ' + total + ' terjawab'"></div>
       </div>
 
-      <button type="submit" :disabled="Object.keys(answers).length < total"
+      <button type="button" @click="confirmOpen = true" :disabled="Object.keys(answers).length < total"
         class="w-full py-[13px] rounded-xl border-0 bg-navy hover:bg-navy-dark text-white text-[14.5px] font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
         Kumpulkan Jawaban
       </button>
     </div>
   </form>
+
+  {{-- Modal konfirmasi kumpulkan jawaban --}}
+  <div x-show="confirmOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       x-transition.opacity>
+    <div class="absolute inset-0 bg-slate-900/50" @click="confirmOpen = false"></div>
+    <div class="relative sg-card rounded-[18px] p-6 w-full max-w-[400px]" @keydown.escape.window="confirmOpen = false">
+      <div class="text-[16px] font-extrabold text-slate-800 mb-1">Kumpulkan jawaban?</div>
+      <p class="text-[13px] leading-[1.6] text-slate-500 m-0 mb-5">
+        Setelah dikumpulkan, jawaban tidak bisa diubah lagi. Pastikan semua soal sudah kamu jawab dengan yakin.
+      </p>
+      <div class="flex justify-end gap-2">
+        <button type="button" @click="confirmOpen = false"
+          class="px-4 py-[10px] rounded-xl border border-slate-200 text-slate-600 text-[13px] font-bold cursor-pointer bg-white">
+          Batal
+        </button>
+        <button type="button" @click="submitQuiz()"
+          class="px-5 py-[10px] rounded-xl border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold cursor-pointer">
+          Ya, Kumpulkan
+        </button>
+      </div>
+    </div>
+  </div>
 
 </div>
 </x-app-layout>

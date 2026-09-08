@@ -20,23 +20,92 @@ class CandidateProfileController extends Controller
         return $candidate;
     }
 
-    public function edit(): View
+    public function edit(): RedirectResponse|View
     {
-        $candidate = $this->currentCandidate()->load([
+        $candidate = $this->currentCandidate();
+
+        if ($candidate->agreementsPending()) {
+            return redirect()->route('persetujuan.edit')
+                ->with('warning', 'Setujui semua persetujuan dulu sebelum mengisi data diri.');
+        }
+
+        $candidate->load([
             'familyMembers', 'educations', 'trainings', 'organizations',
             'workExperiences', 'references', 'additionalInfo', 'selfAssessment',
-            'documents', 'agreements',
+            'documents',
+        ]);
+
+        return view('candidate-profile.edit', compact('candidate'));
+    }
+
+    public function agreements(): View
+    {
+        $candidate = $this->currentCandidate()->load([
+            'agreements',
             'jobApplication.jobOpening.company.agreements', 'jobApplication.jobOpening.agreements',
         ]);
 
         $effectiveAgreements = $candidate->jobApplication?->jobOpening?->effectiveAgreements() ?? collect();
 
-        return view('candidate-profile.edit', compact('candidate', 'effectiveAgreements'));
+        // Sudah lengkap -> halaman jadi read-only (kandidat masih bisa baca naskahnya).
+        $locked = ! $candidate->agreementsPending();
+
+        return view('candidate-profile.agreements', compact('candidate', 'effectiveAgreements', 'locked'));
+    }
+
+    public function updateAgreements(Request $request): RedirectResponse
+    {
+        $candidate = $this->currentCandidate();
+
+        // Sudah lengkap -> read-only, tidak menerima perubahan lagi.
+        if (! $candidate->agreementsPending()) {
+            return redirect()->route('persetujuan.edit');
+        }
+
+        $request->validate(['agreements' => ['array']]);
+
+        $effective = $candidate->jobApplication?->jobOpening?->effectiveAgreements() ?? collect();
+
+        // Semua persetujuan wajib dicentang — tidak ada simpan sebagian.
+        $allChecked = $effective->every(function ($item) use ($request) {
+            $key = $item['company_agreement_id'] ? 'c:' . $item['company_agreement_id'] : 'j:' . $item['job_opening_agreement_id'];
+
+            return $request->boolean("agreements.{$key}");
+        });
+
+        if (! $allChecked) {
+            return redirect()->route('persetujuan.edit')
+                ->with('warning', 'Centang semua persetujuan dulu sebelum menyimpan.');
+        }
+
+        DB::transaction(function () use ($candidate, $request, $effective) {
+            foreach ($effective as $item) {
+                $col = $item['company_agreement_id'] ? 'company_agreement_id' : 'job_opening_agreement_id';
+                $id  = $item['company_agreement_id'] ?: $item['job_opening_agreement_id'];
+
+                // Snapshot judul + naskah master saat disetujui — lepas dari master.
+                $candidate->agreements()->updateOrCreate(
+                    [$col => $id],
+                    [
+                        'title' => $item['title'], 'content' => $item['content'],
+                        'agreed_at' => now(), 'ip_address' => $request->ip(), 'user_agent' => $request->userAgent(),
+                    ]
+                );
+            }
+        });
+
+        return redirect()->route('data-diri.edit')
+            ->with('success', 'Persetujuan tersimpan. Lanjut lengkapi data diri kandidat.');
     }
 
     public function update(Request $request): RedirectResponse
     {
         $candidate = $this->currentCandidate();
+
+        if ($candidate->agreementsPending()) {
+            return redirect()->route('persetujuan.edit')
+                ->with('warning', 'Setujui semua persetujuan dulu sebelum mengisi data diri.');
+        }
 
         $data = $request->validate([
             'name'                  => ['required', 'string', 'max:255'],
@@ -131,8 +200,6 @@ class CandidateProfileController extends Controller
             'documents.*.doc_type'   => ['required_with:documents', 'string', 'max:100'],
             'documents.*.label'      => ['nullable', 'string', 'max:255'],
             'documents.*.file'       => ['nullable', 'file', 'max:5120'],
-
-            'agreements' => ['array'],
         ]);
 
         DB::transaction(function () use ($candidate, $data, $request) {
@@ -183,21 +250,6 @@ class CandidateProfileController extends Controller
                 ]);
             }
 
-            $effective = $candidate->jobApplication?->jobOpening?->effectiveAgreements() ?? collect();
-            foreach ($effective as $item) {
-                $col = $item['company_agreement_id'] ? 'company_agreement_id' : 'job_opening_agreement_id';
-                $id  = $item['company_agreement_id'] ?: $item['job_opening_agreement_id'];
-                $key = ($col === 'company_agreement_id' ? 'c:' : 'j:') . $id;
-
-                if ($request->boolean("agreements.{$key}")) {
-                    $candidate->agreements()->updateOrCreate(
-                        [$col => $id],
-                        ['agreed_at' => now(), 'ip_address' => $request->ip(), 'user_agent' => $request->userAgent()]
-                    );
-                } else {
-                    $candidate->agreements()->where($col, $id)->delete();
-                }
-            }
         });
 
         return redirect()->route('data-diri.edit')->with('success', 'Data diri berhasil disimpan.');

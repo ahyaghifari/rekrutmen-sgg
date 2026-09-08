@@ -36,14 +36,13 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
       1 => 'Identitas', 2 => 'Alamat', 3 => 'BPJS & Rekening', 4 => 'Data Keluarga',
       5 => 'Riwayat Pendidikan', 6 => 'Riwayat Pelatihan', 7 => 'Pengalaman Organisasi',
       8 => 'Pengalaman Kerja', 9 => 'Referensi', 10 => 'Informasi Tambahan',
-      11 => 'Penilaian Diri', 12 => 'Dokumen', 13 => 'Persetujuan',
+      11 => 'Penilaian Diri', 12 => 'Dokumen',
     ];
     // Warna tab disamakan dengan warna border-top kartu section masing-masing.
     $tabColors = [
       1 => '#042c6c', 2 => '#0284c7', 3 => '#b45309', 4 => '#047C54',
       5 => '#B9308C', 6 => '#7c3aed', 7 => '#0f6e3d', 8 => '#042c6c',
       9 => '#0284c7', 10 => '#b45309', 11 => '#047C54', 12 => '#7c3aed',
-      13 => '#042c6c',
     ];
   @endphp
 
@@ -421,42 +420,6 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
           </div>
         </template>
       </div>
-    </section>
-
-    {{-- 13. Persetujuan --}}
-    <section class="sg-card rounded-[20px] py-[26px] px-7" x-show="tab === 13" x-cloak>
-      <div class="flex gap-3 items-center mb-5">
-        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#042c6c;background:#042c6c1a;">13</div>
-        <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Persetujuan</h2>
-      </div>
-
-      @php
-        $approvedKeys = $candidate->agreements->map(fn ($a) =>
-          $a->company_agreement_id ? 'c:' . $a->company_agreement_id
-          : ($a->job_opening_agreement_id ? 'j:' . $a->job_opening_agreement_id : null)
-        )->filter()->all();
-      @endphp
-      @forelse($effectiveAgreements as $agreement)
-      @php($key = $agreement['company_agreement_id'] ? 'c:' . $agreement['company_agreement_id'] : 'j:' . $agreement['job_opening_agreement_id'])
-      <div class="mb-3 rounded-[14px] border border-slate-200 overflow-hidden">
-        <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 text-[13px] font-bold text-slate-800">{{ $agreement['title'] }}</div>
-        <div class="sg-agreement-body px-4 py-3 text-[13px] leading-[1.7] text-slate-600 max-h-[240px] overflow-y-auto [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2 [&_strong]:text-slate-800">
-          {!! $agreement['content'] !!}
-        </div>
-        <label class="sg-agreement flex gap-[11px] items-start p-4 cursor-pointer border-t border-slate-200 bg-white">
-          <div class="sg-chk relative w-[24px] h-[24px] shrink-0 mt-[2px]">
-            <input type="checkbox" name="agreements[{{ $key }}]" value="1" {{ in_array($key, $approvedKeys) ? 'checked' : '' }}
-                   class="sg-chk-input absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0 p-0" />
-            <span class="sg-chk-face flex items-center justify-center w-full h-full rounded-[5px] border-2 border-slate-300 transition-colors duration-150">
-              <i class="fa-solid fa-check text-[12px] text-white opacity-0 transition-opacity duration-150 pointer-events-none"></i>
-            </span>
-          </div>
-          <span class="text-[13px] leading-[1.6] text-slate-600">Saya telah membaca, memahami, dan menyetujui <strong class="text-slate-800">{{ $agreement['title'] }}</strong>.</span>
-        </label>
-      </div>
-      @empty
-      <p class="text-[13px] text-slate-500">Belum ada persetujuan yang perlu disetujui. Bagian ini bisa dilewati.</p>
-      @endforelse
     </section>
 
     <div class="flex justify-between items-center flex-wrap gap-3">
