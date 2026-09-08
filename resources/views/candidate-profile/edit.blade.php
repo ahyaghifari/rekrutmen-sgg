@@ -122,7 +122,11 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
         <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Kewarganegaraan</label>
           <input type="text" name="nationality" value="{{ old('nationality', $candidate->nationality ?? 'Indonesia') }}" class="form-field" /></div>
         <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Status Pernikahan</label>
-          <input type="text" name="status_marital" value="{{ old('status_marital', $candidate->status_marital) }}" class="form-field" /></div>
+          <select name="status_marital" class="form-field">
+            <option value="">Pilih...</option>
+            <option value="Belum Menikah" @selected(old('status_marital', $candidate->status_marital) === 'Belum Menikah')>Belum Menikah</option>
+            <option value="Sudah Menikah" @selected(old('status_marital', $candidate->status_marital) === 'Sudah Menikah')>Sudah Menikah</option>
+          </select></div>
         <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Tanggal Menikah</label>
           <input type="date" name="marriage_date" value="{{ old('marriage_date', $candidate->marriage_date?->format('Y-m-d')) }}" class="form-field" /></div>
         <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Nama Ibu Kandung</label>

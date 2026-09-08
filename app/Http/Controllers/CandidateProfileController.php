@@ -116,7 +116,7 @@ class CandidateProfileController extends Controller
             'body_height_weight'    => ['nullable', 'string', 'max:100'],
             'religion'              => ['nullable', 'string', 'max:100'],
             'nationality'           => ['nullable', 'string', 'max:100'],
-            'status_marital'        => ['nullable', 'string', 'max:50'],
+            'status_marital'        => ['nullable', 'in:Belum Menikah,Sudah Menikah'],
             'marriage_date'         => ['nullable', 'date'],
             'mother_name'           => ['nullable', 'string', 'max:255'],
             'ktp_address'           => ['nullable', 'string'],
