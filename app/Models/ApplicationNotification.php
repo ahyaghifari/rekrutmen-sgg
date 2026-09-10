@@ -47,17 +47,25 @@ class ApplicationNotification extends Model
     }
 
     /**
-     * Bikin draft lalu langsung antrekan — buat event "positif" (lulus/undangan) yang tidak
-     * perlu ditahan admin. Email dikirim oleh command notifications:dispatch, bukan di sini.
+     * Bikin baris lalu kirim emailnya lewat queue (ApplicantNotificationMail ShouldQueue ->
+     * queue:work). Untuk event "positif" yang tidak perlu ditahan admin.
      */
     public static function createAndSend(JobApplication $app, string $event, array $extra = []): void
     {
-        static::createDraftFor($app, $event, $extra);
+        $notif = static::where('job_application_id', $app->id)->where('event', $event)->first()
+            ?? static::createDraftFor($app, $event, $extra);
 
-        static::where('job_application_id', $app->id)
-            ->where('event', $event)
-            ->where('status', 'draft')
-            ->update(['status' => 'queued']);
+        if (! $notif || $notif->status === 'sent') {
+            return;
+        }
+
+        $app->loadMissing('user');
+
+        if ($app->user?->email) {
+            \Illuminate\Support\Facades\Mail::to($app->user->email)
+                ->send(new \App\Mail\ApplicantNotificationMail($notif));
+            $notif->update(['status' => 'sent', 'sent_at' => now()]);
+        }
     }
 
     public static function createDraftFor(JobApplication $app, string $event, array $extra = []): static|null

@@ -2,11 +2,10 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Kirim email pemberitahuan pelamar yang diantrekan (status 'queued') oleh HRIS / admin.
-Schedule::command('notifications:dispatch')->everyMinute()->withoutOverlapping();
+// Email pemberitahuan pelamar: HRIS memanggil POST /api/integrations/hris/notifications;
+// email dikirim lewat Mail ShouldQueue -> queue:work. Tak ada scheduled task.

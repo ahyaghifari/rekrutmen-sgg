@@ -9,6 +9,9 @@ Route::middleware(HrisApiAuth::class)->group(function () {
 
     Route::post('/integrations/hris/companies', [HrisIntegrationController::class, 'upsertCompany']);
 
+    Route::post('/integrations/hris/notifications', [HrisIntegrationController::class, 'sendNotification']);
+    Route::post('/integrations/hris/notifications/flush', [HrisIntegrationController::class, 'flushNotifications']);
+
     Route::post('/integrations/hris/job-openings/applicant-counts', [HrisIntegrationController::class, 'applicantCounts']);
     Route::get('/integrations/hris/job-openings/unlinked', [HrisIntegrationController::class, 'unlinkedJobOpenings']);
     Route::get('/integrations/hris/job-openings/{hrisJobOpeningId}/applications', [HrisIntegrationController::class, 'jobOpeningApplications']);
