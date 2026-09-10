@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="color-scheme" content="light dark" />
 <meta name="supported-color-schemes" content="light dark" />
-<title>[Syifa Global Group] Verifikasi Email</title>
+<title>[Karir Syifa Global Group] Verifikasi Email</title>
 <!--[if mso]><style>body,table,td,a{font-family:Arial,Helvetica,sans-serif !important;}</style><![endif]-->
 <style>
   @media only screen and (max-width:620px){
@@ -24,7 +24,7 @@
         <tr>
           <td align="center" bgcolor="#042c6c" style="background-color:#042c6c;background-image:linear-gradient(120deg,#042c6c 0%,#1247a8 60%,#1d5bd6 100%);padding:34px 24px;font-family:Arial,Helvetica,sans-serif;">
             <div style="font-size:13px;font-weight:bold;letter-spacing:2px;color:#c5d6f2;text-transform:uppercase;mso-line-height-rule:exactly;line-height:18px;">Syifa Global Group</div>
-            <div style="font-size:24px;font-weight:bold;color:#ffffff;padding-top:10px;mso-line-height-rule:exactly;line-height:30px;">Portal Rekrutmen</div>
+            <div style="font-size:24px;font-weight:bold;color:#ffffff;padding-top:10px;mso-line-height-rule:exactly;line-height:30px;">Karir</div>
             <div style="font-size:14px;color:#c5d6f2;padding-top:8px;mso-line-height-rule:exactly;line-height:20px;">Verifikasi Alamat Email</div>
           </td>
         </tr>
@@ -36,7 +36,7 @@
               </tr>
             </table>
             <h1 class="sg-h1" style="margin:0 0 18px 0;font-family:Arial,Helvetica,sans-serif;font-size:21px;font-weight:bold;color:#042c6c;mso-line-height-rule:exactly;line-height:28px;">Halo, {{ $name }}</h1>
-            <p style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#374151;mso-line-height-rule:exactly;line-height:24px;">Terima kasih telah mendaftar di Portal Rekrutmen <strong style="color:#1e293b;">Syifa Global Group</strong>. Untuk mengaktifkan akun dan mulai melamar posisi yang tersedia, mohon verifikasi alamat email Anda dengan mengklik tombol di bawah ini.</p>
+            <p style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#374151;mso-line-height-rule:exactly;line-height:24px;">Terima kasih telah mendaftar di portal Karir <strong style="color:#1e293b;">Syifa Global Group</strong>. Untuk mengaktifkan akun dan mulai melamar posisi yang tersedia, mohon verifikasi alamat email Anda dengan mengklik tombol di bawah ini.</p>
             <p style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#374151;mso-line-height-rule:exactly;line-height:24px;">Tautan ini dapat dibuka dari perangkat mana pun, dan berlaku selama <strong style="color:#b45309;">60 menit</strong> sejak email ini dikirim.</p>
           </td>
         </tr>
@@ -62,7 +62,7 @@
         </tr>
         <tr>
           <td class="sg-pad" style="padding:18px 32px 34px 32px;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;color:#64748b;mso-line-height-rule:exactly;line-height:21px;">
-            Tidak merasa mendaftar di Portal Rekrutmen Syifa Global Group? Abaikan saja email ini, tidak ada tindakan lebih lanjut yang diperlukan.
+            Tidak merasa mendaftar di portal Karir Syifa Global Group? Abaikan saja email ini, tidak ada tindakan lebih lanjut yang diperlukan.
           </td>
         </tr>
         <tr>

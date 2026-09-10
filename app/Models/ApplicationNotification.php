@@ -129,7 +129,7 @@ class ApplicationNotification extends Model
     private static function defaultBody(string $event, string $name, string $jobTitle, array $extra = []): string
     {
         if ($event === CompanyMessageTemplate::EVENT_SCREENING_PASSED) {
-            return "Halo {$name},\n\nKami dengan senang hati menginformasikan bahwa berkas lamaran kamu untuk posisi {$jobTitle} telah berhasil lolos tahap seleksi berkas.\n\nTim kami akan segera menghubungi kamu untuk informasi lebih lanjut terkait jadwal wawancara.\n\nTetap semangat dan terima kasih atas ketertarikanmu bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nKami dengan senang hati menginformasikan bahwa berkas lamaran kamu untuk posisi {$jobTitle} telah berhasil lolos tahap seleksi berkas.\n\nTahap selanjutnya adalah tes online. Tim kami akan segera memberi tahu kamu begitu tesnya sudah bisa dikerjakan lewat dashboard akunmu.\n\nTetap semangat dan terima kasih atas ketertarikanmu bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED) {

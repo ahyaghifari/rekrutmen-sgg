@@ -14,7 +14,7 @@ class VerifyEmailNotification extends VerifyEmail implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Verifikasi Email Anda — Syifa Global Group')
+            ->subject('Verifikasi Email — Karir Syifa Global Group')
             ->view('emails.verify-email', [
                 'name' => $notifiable->name,
                 'url' => $this->verificationUrl($notifiable),
