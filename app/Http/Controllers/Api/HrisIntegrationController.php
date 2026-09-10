@@ -8,6 +8,7 @@ use App\Models\ApplicationNotification;
 use App\Models\JobApplication;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
@@ -50,15 +51,27 @@ class HrisIntegrationController extends Controller
             'hold'              => ['sometimes', 'boolean'],
         ]);
 
+        $log = Log::channel('hris');
+        $log->info('sendNotification masuk.', [
+            'job_application_id' => $data['job_application_id'],
+            'event' => $data['event'],
+            'hold' => $data['hold'] ?? false,
+            'verbatim' => isset($data['subject'], $data['body']),
+        ]);
+
         $app = JobApplication::with(['user', 'jobOpening'])->find($data['job_application_id']);
 
         if (! $app) {
+            $log->warning('Lamaran tidak ditemukan.', ['job_application_id' => $data['job_application_id']]);
+
             return response()->json(['message' => 'Lamaran tidak ditemukan.'], 404);
         }
 
         $email = $app->user?->email;
 
         if (! $email) {
+            $log->warning('Email pelamar tidak tersedia.', ['job_application_id' => $app->id]);
+
             return response()->json(['message' => 'Email pelamar tidak tersedia.'], 422);
         }
 
@@ -67,6 +80,8 @@ class HrisIntegrationController extends Controller
             : ApplicationNotification::where('job_application_id', $app->id)->where('event', $data['event'])->first();
 
         if ($notif && $notif->status === 'sent') {
+            $log->info('already_sent - notif event ini sudah pernah terkirim, tidak dikirim ulang.', ['id' => $notif->id, 'event' => $data['event']]);
+
             return response()->json(['status' => 'already_sent', 'id' => $notif->id]);
         }
 
@@ -83,15 +98,24 @@ class HrisIntegrationController extends Controller
         }
 
         if (! $notif) {
+            $log->error('Gagal menyusun notifikasi (createDraftFor mengembalikan null).', ['event' => $data['event']]);
+
             return response()->json(['message' => 'Gagal menyusun notifikasi.'], 500);
         }
 
         if ($data['hold'] ?? false) {
+            $log->info('held - draft disimpan, TIDAK dikirim (nunggu flush).', ['id' => $notif->id, 'event' => $data['event']]);
+
             return response()->json(['status' => 'held', 'id' => $notif->id]);
         }
 
         Mail::to($email)->send(new ApplicantNotificationMail($notif)); // ShouldQueue -> masuk queue:work
         $notif->update(['status' => 'sent', 'sent_at' => now()]);
+
+        $log->info('queued - email masuk antrean (queue:work harus jalan untuk mengirim).', [
+            'id' => $notif->id, 'event' => $data['event'], 'email' => $email,
+            'queue_connection' => config('queue.default'), 'mailer' => config('mail.default'),
+        ]);
 
         return response()->json(['status' => 'queued', 'id' => $notif->id]);
     }
@@ -114,12 +138,20 @@ class HrisIntegrationController extends Controller
             ->when($data['event'] ?? null, fn ($q, $e) => $q->where('event', $e))
             ->get();
 
+        $log = Log::channel('hris');
+        $log->info('flushNotifications masuk.', [
+            'jumlah_id' => count($data['job_application_ids']),
+            'event' => $data['event'] ?? null,
+            'draft_ketemu' => $drafts->count(),
+        ]);
+
         $queued = 0;
 
         foreach ($drafts as $notif) {
             $email = $notif->jobApplication?->user?->email;
 
             if (! $email) {
+                $log->warning('flush: draft dilewati - email pelamar kosong.', ['id' => $notif->id]);
                 continue;
             }
 
@@ -127,6 +159,8 @@ class HrisIntegrationController extends Controller
             $notif->update(['status' => 'sent', 'sent_at' => now()]);
             $queued++;
         }
+
+        $log->info('flushNotifications selesai.', ['queued' => $queued, 'queue_connection' => config('queue.default'), 'mailer' => config('mail.default')]);
 
         return response()->json(['queued' => $queued]);
     }

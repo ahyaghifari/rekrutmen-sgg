@@ -71,6 +71,15 @@ return [
             'level' => 'debug',
         ],
 
+        // Jejak permintaan email pelamar dari HRIS (POST /api/integrations/hris/notifications).
+        'hris' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/hris.log'),
+            'level' => 'debug',
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
