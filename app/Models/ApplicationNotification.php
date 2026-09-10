@@ -32,6 +32,8 @@ class ApplicationNotification extends Model
                 ['url' => route('tes-online.show'), 'label' => 'Kerjakan Tes'],
             CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY =>
                 ['url' => route('dashboard'), 'label' => 'Unggah Surat Penawaran'],
+            CompanyMessageTemplate::EVENT_MCU_PASSED =>
+                ['url' => route('data-diri.edit'), 'label' => 'Setujui & Lengkapi Data Diri'],
             CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED =>
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal Wawancara'],
             CompanyMessageTemplate::EVENT_MCU_SCHEDULED =>
@@ -158,7 +160,7 @@ class ApplicationNotification extends Model
         }
 
         if ($event === CompanyMessageTemplate::EVENT_MCU_PASSED) {
-            return "Halo {$name},\n\nSelamat! Kamu dinyatakan fit/lulus Medical Check Up untuk posisi {$jobTitle}.\n\nTim rekrutmen kami akan segera menghubungimu untuk tahap TTD & Onboarding.\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSelamat! Kamu dinyatakan fit/lulus Medical Check Up untuk posisi {$jobTitle}.\n\nSebelum lanjut ke tahap TTD & Onboarding, mohon lengkapi data diri kandidat lewat dashboard akunmu. Kamu perlu menyetujui semua persetujuan yang ditampilkan dulu sebelum bisa mengisi data diri.\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_MCU_SCHEDULED) {
@@ -166,7 +168,7 @@ class ApplicationNotification extends Model
             $time     = $extra['interview_time'] ? " pukul {$extra['interview_time']}" : '';
             $location = $extra['location'] ? "\nLokasi: {$extra['location']}" : '';
             $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
-            return "Halo {$name},\n\nSelamat! Kamu lolos tahap wawancara untuk posisi {$jobTitle} dan diminta melakukan Medical Check Up (MCU).\n\nMCU dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSurat penawaran kerja (offering letter) kamu untuk posisi {$jobTitle} sudah kami terima. Proses dilanjutkan ke tahap Medical Check Up (MCU).\n\nMCU dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_QUIZ_REJECTED) {

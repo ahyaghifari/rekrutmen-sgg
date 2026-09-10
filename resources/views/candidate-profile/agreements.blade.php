@@ -39,6 +39,17 @@
     @endif
   </p>
 
+  @unless($locked)
+  <div class="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5 flex items-start gap-2.5">
+    <i class="fa-solid fa-circle-exclamation text-red-600 text-[14px] mt-[2px] shrink-0"></i>
+    <div class="text-[12px] leading-[1.6] text-red-700">
+      <span class="font-extrabold">Penting.</span>
+      Dengan menyetujui seluruh persetujuan di bawah ini, kamu dinyatakan <strong>siap untuk memulai onboarding dan mulai bekerja</strong>.
+      Pastikan kamu sudah membaca dan memahami setiap naskah sebelum menandainya.
+    </div>
+  </div>
+  @endunless
+
   @if($locked)
   @php($agreedAt = $candidate->agreements->max('agreed_at'))
   <div class="mt-4 rounded-2xl px-4 py-3 bg-emerald-50 text-[12px] font-semibold text-emerald-700 flex flex-wrap items-center gap-x-2 gap-y-1">
