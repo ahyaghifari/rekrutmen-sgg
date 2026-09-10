@@ -115,6 +115,7 @@ class ApplicationNotification extends Model
             CompanyMessageTemplate::EVENT_QUIZ_PASSED         => "Selamat! Kamu Lulus Tes – {$jobTitle}",
             CompanyMessageTemplate::EVENT_QUIZ_REJECTED       => "Update Lamaran Kamu – {$jobTitle}",
             CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED => "Undangan Wawancara – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_INTERVIEW_PASSED    => "Selamat! Kamu Lolos Wawancara – {$jobTitle}",
             CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED  => "Update Lamaran Kamu – {$jobTitle}",
             CompanyMessageTemplate::EVENT_MCU_SCHEDULED       => "Jadwal Medical Check Up – {$jobTitle}",
             CompanyMessageTemplate::EVENT_MCU_PASSED          => "Selamat! Kamu Lulus MCU – {$jobTitle}",
@@ -146,6 +147,10 @@ class ApplicationNotification extends Model
 
         if ($event === CompanyMessageTemplate::EVENT_QUIZ_PASSED) {
             return "Halo {$name},\n\nSelamat! Kamu dinyatakan lulus tes untuk posisi {$jobTitle}.\n\nTim rekrutmen kami akan segera menghubungimu untuk tahap wawancara.\n\nSalam,\nTim Rekrutmen";
+        }
+
+        if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_PASSED) {
+            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lolos tahap wawancara untuk posisi {$jobTitle}.\n\nTahap selanjutnya adalah penawaran kerja (offering letter). Mohon menunggu — tim rekrutmen kami akan memberi tahu kamu begitu surat penawaran sudah bisa diunduh lewat dashboard akunmu.\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY) {

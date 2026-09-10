@@ -343,6 +343,10 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
                     // sebelum lanjut MCU/onboarding — lihat OfferingLetterPage.
                     $record->update(['interview_result' => 'lulus', 'status' => 'offering']);
                     \App\Models\JobOpeningStageLog::record($record->job_opening_id, 'interview', 'offering', 1);
+                    \App\Models\ApplicationNotification::createAndSend(
+                        $record,
+                        \App\Models\CompanyMessageTemplate::EVENT_INTERVIEW_PASSED
+                    );
                 } else {
                     $record->update(['interview_result' => 'tidak_lulus', 'status' => 'rejected']);
                     \App\Models\JobOpeningStageLog::record($record->job_opening_id, 'interview', 'rejected', 1);
