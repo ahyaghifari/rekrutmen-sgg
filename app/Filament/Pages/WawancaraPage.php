@@ -268,8 +268,7 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
                     $app->update(['interview_result' => 'tidak_lulus', 'status' => 'rejected']);
                     $notif = ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED);
                     if ($notif && $app->user) {
-                        Mail::to($app->user->email)->send(new ApplicantNotificationMail($notif));
-                        $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                        $notif->update(['status' => 'queued']);
                     }
                     $count++;
                 }
@@ -314,8 +313,7 @@ class WawancaraPage extends Page implements HasTable, HasActions, HasForms
                 $count = 0;
                 foreach ($drafts as $notif) {
                     $email = $notif->jobApplication->user->email;
-                    \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\ApplicantNotificationMail($notif));
-                    $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    $notif->update(['status' => 'queued']);
                     $count++;
                 }
 

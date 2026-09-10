@@ -133,9 +133,7 @@ class ApplicantDetailPage extends Page implements HasActions
                     ->first();
 
                 if ($notif) {
-                    \Illuminate\Support\Facades\Mail::to($this->application->user->email)
-                        ->send(new \App\Mail\ApplicantNotificationMail($notif));
-                    $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    $notif->update(['status' => 'queued']);
                 }
 
                 Notification::make()->title('Email tidak dilanjutkan terkirim.')->success()->send();

@@ -258,8 +258,7 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
                     $app->update(['status' => 'rejected']);
                     $notif = ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_MCU_REJECTED);
                     if ($notif && $app->user) {
-                        Mail::to($app->user->email)->send(new ApplicantNotificationMail($notif));
-                        $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                        $notif->update(['status' => 'queued']);
                     }
                     $count++;
                 }
@@ -297,8 +296,7 @@ class McuPage extends Page implements HasTable, HasActions, HasForms
 
                 $count = 0;
                 foreach ($drafts as $notif) {
-                    Mail::to($notif->jobApplication->user->email)->send(new ApplicantNotificationMail($notif));
-                    $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    $notif->update(['status' => 'queued']);
                     $count++;
                 }
                 \Filament\Notifications\Notification::make()->title("Email terkirim ke {$count} kandidat.")->success()->send();

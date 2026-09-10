@@ -274,8 +274,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
 
         foreach ($drafts as $notif) {
             $email = $notif->jobApplication->user->email;
-            \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\ApplicantNotificationMail($notif));
-            $notif->update(['status' => 'sent', 'sent_at' => now()]);
+            $notif->update(['status' => 'queued']);
         }
     }
 
@@ -338,8 +337,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                 $count = 0;
                 foreach ($drafts as $notif) {
                     $email = $notif->jobApplication->user->email;
-                    \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\ApplicantNotificationMail($notif));
-                    $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                    $notif->update(['status' => 'queued']);
                     $count++;
                 }
 
@@ -406,9 +404,7 @@ class ApplicantsPage extends Page implements HasTable, HasActions, HasForms
                         ?? ApplicationNotification::createDraftFor($app, CompanyMessageTemplate::EVENT_SCREENING_REJECTED);
 
                     if ($notif) {
-                        \Illuminate\Support\Facades\Mail::to($app->user->email)
-                            ->send(new \App\Mail\ApplicantNotificationMail($notif));
-                        $notif->update(['status' => 'sent', 'sent_at' => now()]);
+                        $notif->update(['status' => 'queued']);
                     }
 
                     $count++;
