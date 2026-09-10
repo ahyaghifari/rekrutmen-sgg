@@ -36,6 +36,8 @@ class ApplicationNotification extends Model
                 ['url' => route('dashboard'), 'label' => 'Unggah Ulang Surat Penawaran'],
             CompanyMessageTemplate::EVENT_MCU_PASSED =>
                 ['url' => route('data-diri.edit'), 'label' => 'Setujui & Lengkapi Data Diri'],
+            CompanyMessageTemplate::EVENT_ONBOARDING_INVITE =>
+                ['url' => route('data-diri.edit'), 'label' => 'Lengkapi Data Diri Kandidat'],
             CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED =>
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal Wawancara'],
             CompanyMessageTemplate::EVENT_MCU_SCHEDULED =>
@@ -82,6 +84,12 @@ class ApplicationNotification extends Model
         $template      = CompanyMessageTemplate::forCompanyEvent($companyId, $event);
         $applicantName = $app->answersMap()['full_name'] ?? 'Pelamar';
         $jobTitle      = $app->jobOpening->title ?? '';
+
+        // Undangan onboarding: ingatkan kalau data diri kandidat belum lengkap.
+        if ($event === CompanyMessageTemplate::EVENT_ONBOARDING_INVITE) {
+            $app->loadMissing('candidate');
+            $extra['data_diri_belum_lengkap'] = ! ($app->candidate?->requiredDataComplete() ?? false);
+        }
 
         $placeholders = ['{nama}', '{posisi}', '{tanggal}', '{waktu}', '{lokasi}', '{catatan}'];
         $values       = [
@@ -200,7 +208,11 @@ class ApplicationNotification extends Model
                 ? "\n\nJadwal onboarding kamu: {$extra['onboarding_date']}. Mohon hadir tepat waktu; detail lokasi dan agenda menyusul dari tim rekrutmen."
                 : "\n\nTim rekrutmen kami akan segera menghubungimu untuk jadwal dan detail lebih lanjut.";
 
-            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lolos seluruh tahap seleksi untuk posisi {$jobTitle} di Syifa Global Group.\n\nLangkah terakhir: penandatanganan kontrak dan onboarding.{$jadwal}\n\nSelamat bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
+            $dataDiri = ! empty($extra['data_diri_belum_lengkap'])
+                ? "\n\nCatatan: data diri kandidat kamu belum lengkap. Mohon lengkapi lewat dashboard akunmu sebelum hari onboarding supaya proses administrasi karyawan berjalan lancar."
+                : '';
+
+            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lolos seluruh tahap seleksi untuk posisi {$jobTitle} di Syifa Global Group.\n\nLangkah terakhir: penandatanganan kontrak dan onboarding.{$jadwal}{$dataDiri}\n\nSelamat bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
         }
 
         return "Halo {$name},\n\nTerima kasih telah melamar untuk posisi {$jobTitle}.\n\nSetelah melalui proses seleksi berkas, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nJangan menyerah ya! Terus tingkatkan diri dan semoga kesuksesan selalu menyertaimu.\n\nSalam hangat,\nTim Rekrutmen";
