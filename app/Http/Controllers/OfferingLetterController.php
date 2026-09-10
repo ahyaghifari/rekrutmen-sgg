@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApplicationNotification;
+use App\Models\CompanyMessageTemplate;
 use App\Models\JobApplication;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,10 +36,17 @@ class OfferingLetterController extends Controller
         return Storage::disk('local')->response($application->offering_letter_path);
     }
 
-    /** Kandidat: upload surat yang sudah ditandatangani. */
+    /**
+     * Kandidat: upload surat yang sudah ditandatangani. Boleh sekali; unggah lagi hanya
+     * kalau tim rekrutmen minta kirim ulang (offering_signed_revision_reason terisi).
+     */
     public function uploadSigned(Request $request): RedirectResponse
     {
         $application = $this->currentOfferingApplication();
+
+        if ($application->offering_letter_signed_path && $application->offering_signed_revision_reason === null) {
+            return back()->with('warning', 'Surat sudah diunggah dan sedang dikonfirmasi tim rekrutmen. Kamu bisa mengunggah ulang hanya jika diminta.');
+        }
 
         $request->validate([
             'file' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
@@ -46,11 +55,23 @@ class OfferingLetterController extends Controller
         $path = $request->file('file')->store("offering-letters/{$application->id}/signed", 'local');
 
         $application->update([
-            'offering_letter_signed_path' => $path,
-            'offering_letter_signed_at'   => now(),
+            'offering_letter_signed_path'     => $path,
+            'offering_letter_signed_at'       => now(),
+            'offering_signed_revision_reason' => null,
+            'offering_signed_reviewed_at'     => null,
         ]);
 
-        return back()->with('success', 'Surat penawaran bertanda tangan berhasil diupload.');
+        // Purge supaya email konfirmasi bisa dikirim ulang di siklus review berikutnya
+        // (createDraftFor mengembalikan null bila row event sudah ada).
+        ApplicationNotification::where('job_application_id', $application->id)
+            ->whereIn('event', [
+                CompanyMessageTemplate::EVENT_OFFERING_SIGNED_RECEIVED,
+                CompanyMessageTemplate::EVENT_OFFERING_SIGNED_ACCEPTED,
+            ])
+            ->delete();
+        ApplicationNotification::createAndSend($application, CompanyMessageTemplate::EVENT_OFFERING_SIGNED_RECEIVED);
+
+        return back()->with('success', 'Surat penawaran bertanda tangan berhasil diupload. Tim rekrutmen akan mengonfirmasi pada jam kerja.');
     }
 
     /** Kandidat: ajukan negosiasi sebelum menandatangani. */

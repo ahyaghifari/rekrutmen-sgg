@@ -288,10 +288,24 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
       @endif
 
       @if($activeApp->offering_letter_signed_path)
-      <div class="mt-3 flex items-center gap-2 text-[13px] text-sgg-green font-semibold">
-        <i class="fa-solid fa-circle-check"></i>Surat bertanda tangan sudah diunggah {{ $activeApp->offering_letter_signed_at->translatedFormat('j F Y, H:i') }}.
-      </div>
+        @if($activeApp->offering_signed_reviewed_at)
+        <div class="mt-3 rounded-[10px] px-3 py-2.5 text-[12.5px] bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-start gap-2">
+          <i class="fa-solid fa-circle-check text-xs mt-[3px]"></i>
+          <span>Surat bertanda tangan sudah diterima tim rekrutmen pada {{ $activeApp->offering_signed_reviewed_at->translatedFormat('j F Y, H:i') }}. Proses lamaranmu berlanjut ke tahap berikutnya.</span>
+        </div>
+        @else
+        <div class="mt-3 rounded-[10px] px-3 py-2.5 text-[12.5px] bg-slate-50 text-slate-600 border border-slate-200 flex items-start gap-2">
+          <i class="fa-solid fa-clock text-xs mt-[3px]"></i>
+          <span>Surat bertanda tangan sudah diunggah {{ $activeApp->offering_letter_signed_at->translatedFormat('j F Y, H:i') }}. Sedang dikonfirmasi tim rekrutmen pada jam kerja — kamu akan dikabari lewat email begitu ada hasilnya.</span>
+        </div>
+        @endif
       @else
+        @if($activeApp->offering_signed_revision_reason)
+        <div class="mt-3 rounded-[10px] px-3 py-2.5 text-[12.5px] bg-amber-50 text-amber-700 border border-amber-200 flex items-start gap-2">
+          <i class="fa-solid fa-triangle-exclamation text-xs mt-[3px]"></i>
+          <span>Tim rekrutmen meminta kamu mengunggah <strong>ulang</strong> surat penawaran bertanda tangan.<br>Alasan: <span class="whitespace-pre-line">{{ $activeApp->offering_signed_revision_reason }}</span></span>
+        </div>
+        @endif
         <div class="mt-4">
           @if($negos->last()?->sender === 'applicant')
           <div class="rounded-[10px] px-3 py-2.5 text-[12.5px] bg-amber-50 text-amber-700 border border-amber-200">

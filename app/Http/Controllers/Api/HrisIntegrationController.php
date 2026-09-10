@@ -22,13 +22,21 @@ class HrisIntegrationController extends Controller
     /** Event pemberitahuan yang boleh diminta HRIS. */
     private const NOTIFICATION_EVENTS = [
         'screening_rejected', 'screening_passed', 'quiz_sent', 'quiz_passed', 'quiz_rejected',
-        'interview_scheduled', 'interview_rejected', 'mcu_scheduled', 'mcu_passed', 'mcu_rejected',
+        'interview_scheduled', 'interview_passed', 'interview_rejected',
+        'mcu_scheduled', 'mcu_passed', 'mcu_rejected',
         'onboarding_invite', 'offering_letter_ready', 'manual_rejected',
         'interview_rescheduled', 'mcu_rescheduled', 'offering_negotiation_replied',
+        'offering_signed_received', 'offering_signed_accepted', 'offering_revision_requested',
     ];
 
-    /** Event yang boleh dikirim berulang (tidak dedup by job_application_id+event). */
-    private const REPEATABLE_EVENTS = ['interview_rescheduled', 'mcu_rescheduled', 'offering_negotiation_replied'];
+    /**
+     * Event yang boleh dikirim berulang (tidak dedup by job_application_id+event). HRIS
+     * mengirim subject+body verbatim untuk semua event di sini.
+     */
+    private const REPEATABLE_EVENTS = [
+        'interview_rescheduled', 'mcu_rescheduled', 'offering_negotiation_replied',
+        'offering_signed_accepted', 'offering_revision_requested',
+    ];
 
     /**
      * HRIS minta project ini mengirim SATU email pemberitahuan pelamar sesuai `event`

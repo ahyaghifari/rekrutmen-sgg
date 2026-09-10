@@ -32,6 +32,8 @@ class ApplicationNotification extends Model
                 ['url' => route('tes-online.show'), 'label' => 'Kerjakan Tes'],
             CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY =>
                 ['url' => route('dashboard'), 'label' => 'Unggah Surat Penawaran'],
+            CompanyMessageTemplate::EVENT_OFFERING_REVISION_REQUESTED =>
+                ['url' => route('dashboard'), 'label' => 'Unggah Ulang Surat Penawaran'],
             CompanyMessageTemplate::EVENT_MCU_PASSED =>
                 ['url' => route('data-diri.edit'), 'label' => 'Setujui & Lengkapi Data Diri'],
             CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED =>
@@ -124,6 +126,7 @@ class ApplicationNotification extends Model
             CompanyMessageTemplate::EVENT_MCU_REJECTED        => "Update Lamaran Kamu – {$jobTitle}",
             CompanyMessageTemplate::EVENT_ONBOARDING_INVITE   => "Selamat Bergabung! Undangan TTD & Onboarding – {$jobTitle}",
             CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY => "Surat Penawaran Kerja Sudah Bisa Diunduh – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_OFFERING_SIGNED_RECEIVED => "Surat Penawaran Bertanda Tangan Diterima – {$jobTitle}",
             CompanyMessageTemplate::EVENT_MANUAL_REJECTED     => "Update Lamaran Kamu – {$jobTitle}",
             default                                           => "Update Lamaran Kamu – {$jobTitle}",
         };
@@ -159,6 +162,10 @@ class ApplicationNotification extends Model
             return "Halo {$name},\n\nSelamat! Surat penawaran kerja (offering letter) untuk posisi {$jobTitle} sudah bisa kamu unduh lewat dashboard akunmu.\n\nSetelah dibaca dan ditandatangani, mohon unggah kembali surat tersebut lewat dashboard yang sama.\n\nSalam,\nTim Rekrutmen";
         }
 
+        if ($event === CompanyMessageTemplate::EVENT_OFFERING_SIGNED_RECEIVED) {
+            return "Halo {$name},\n\nSurat penawaran kerja yang sudah kamu tandatangani untuk posisi {$jobTitle} telah kami terima.\n\nTim rekrutmen akan memeriksa dan mengonfirmasi surat tersebut pada jam kerja. Kamu akan kami kabari lagi lewat email begitu ada hasilnya.\n\nTerima kasih atas kesabaranmu.\n\nSalam,\nTim Rekrutmen";
+        }
+
         if ($event === CompanyMessageTemplate::EVENT_MCU_PASSED) {
             return "Halo {$name},\n\nSelamat! Kamu dinyatakan fit/lulus Medical Check Up untuk posisi {$jobTitle}.\n\nSebelum lanjut ke tahap TTD & Onboarding, mohon lengkapi data diri kandidat lewat dashboard akunmu. Kamu perlu menyetujui semua persetujuan yang ditampilkan dulu sebelum bisa mengisi data diri.\n\nSalam,\nTim Rekrutmen";
         }
@@ -189,7 +196,11 @@ class ApplicationNotification extends Model
         }
 
         if ($event === CompanyMessageTemplate::EVENT_ONBOARDING_INVITE) {
-            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lolos seluruh tahap seleksi untuk posisi {$jobTitle} di Syifa Global Group.\n\nLangkah terakhir: penandatanganan kontrak dan onboarding. Tim rekrutmen kami akan segera menghubungimu untuk jadwal dan detail lebih lanjut.\n\nSelamat bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
+            $jadwal = ! empty($extra['onboarding_date'])
+                ? "\n\nJadwal onboarding kamu: {$extra['onboarding_date']}. Mohon hadir tepat waktu; detail lokasi dan agenda menyusul dari tim rekrutmen."
+                : "\n\nTim rekrutmen kami akan segera menghubungimu untuk jadwal dan detail lebih lanjut.";
+
+            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lolos seluruh tahap seleksi untuk posisi {$jobTitle} di Syifa Global Group.\n\nLangkah terakhir: penandatanganan kontrak dan onboarding.{$jadwal}\n\nSelamat bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
         }
 
         return "Halo {$name},\n\nTerima kasih telah melamar untuk posisi {$jobTitle}.\n\nSetelah melalui proses seleksi berkas, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nJangan menyerah ya! Terus tingkatkan diri dan semoga kesuksesan selalu menyertaimu.\n\nSalam hangat,\nTim Rekrutmen";
