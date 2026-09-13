@@ -189,6 +189,16 @@ class JobApplication extends Model
         return $this->hasOne(McuInvitee::class);
     }
 
+    public function offlineTestResults(): HasMany
+    {
+        return $this->hasMany(OfflineTestResult::class);
+    }
+
+    public function offlineTestInvitees(): HasMany
+    {
+        return $this->hasMany(OfflineTestInvitee::class);
+    }
+
     /**
      * Scope: hanya lamaran yang masih aktif (belum passed/rejected).
      */

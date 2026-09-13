@@ -27,6 +27,7 @@ class HrisIntegrationController extends Controller
         'onboarding_invite', 'offering_letter_ready', 'manual_rejected',
         'interview_rescheduled', 'mcu_rescheduled', 'offering_negotiation_replied',
         'offering_signed_received', 'offering_signed_accepted', 'offering_revision_requested',
+        'offline_test_scheduled', 'offline_test_rescheduled',
     ];
 
     /**
@@ -35,7 +36,7 @@ class HrisIntegrationController extends Controller
      */
     private const REPEATABLE_EVENTS = [
         'interview_rescheduled', 'mcu_rescheduled', 'offering_negotiation_replied',
-        'offering_signed_accepted', 'offering_revision_requested',
+        'offering_signed_accepted', 'offering_revision_requested', 'offline_test_rescheduled',
     ];
 
     /**

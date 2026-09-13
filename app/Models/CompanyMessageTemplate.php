@@ -29,6 +29,8 @@ class CompanyMessageTemplate extends Model
     public const EVENT_OFFERING_SIGNED_ACCEPTED   = 'offering_signed_accepted';
     public const EVENT_OFFERING_REVISION_REQUESTED = 'offering_revision_requested';
     public const EVENT_MANUAL_REJECTED     = 'manual_rejected';
+    public const EVENT_OFFLINE_TEST_SCHEDULED = 'offline_test_scheduled';
+    public const EVENT_OFFLINE_TEST_RESCHEDULED = 'offline_test_rescheduled';
 
     public static function forCompanyEvent(int $companyId, string $event): ?self
     {

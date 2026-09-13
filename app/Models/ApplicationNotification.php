@@ -46,6 +46,8 @@ class ApplicationNotification extends Model
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal Wawancara'],
             'mcu_rescheduled' =>
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal MCU'],
+            CompanyMessageTemplate::EVENT_OFFLINE_TEST_SCHEDULED, 'offline_test_rescheduled' =>
+                ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal Tes'],
             'offering_negotiation_replied' =>
                 ['url' => route('dashboard'), 'label' => 'Lihat Balasan Negosiasi'],
             default => null,
@@ -136,6 +138,7 @@ class ApplicationNotification extends Model
             CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY => "Surat Penawaran Kerja Sudah Bisa Diunduh – {$jobTitle}",
             CompanyMessageTemplate::EVENT_OFFERING_SIGNED_RECEIVED => "Surat Penawaran Bertanda Tangan Diterima – {$jobTitle}",
             CompanyMessageTemplate::EVENT_MANUAL_REJECTED     => "Update Lamaran Kamu – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_OFFLINE_TEST_SCHEDULED => "Jadwal Tes Offline – {$jobTitle}",
             default                                           => "Update Lamaran Kamu – {$jobTitle}",
         };
     }
@@ -184,6 +187,14 @@ class ApplicationNotification extends Model
             $location = $extra['location'] ? "\nLokasi: {$extra['location']}" : '';
             $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
             return "Halo {$name},\n\nSurat penawaran kerja (offering letter) kamu untuk posisi {$jobTitle} sudah kami terima. Proses dilanjutkan ke tahap Medical Check Up (MCU).\n\nMCU dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
+        }
+
+        if ($event === CompanyMessageTemplate::EVENT_OFFLINE_TEST_SCHEDULED) {
+            $date     = $extra['interview_date'] ?? '-';
+            $time     = $extra['interview_time'] ? " pukul {$extra['interview_time']}" : '';
+            $location = $extra['location'] ? "\nLokasi: {$extra['location']}" : '';
+            $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
+            return "Halo {$name},\n\nKamu diundang mengikuti tes offline untuk posisi {$jobTitle}.\n\nTes dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_QUIZ_REJECTED) {
