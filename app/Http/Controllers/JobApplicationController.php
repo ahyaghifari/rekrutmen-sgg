@@ -14,7 +14,9 @@ class JobApplicationController extends Controller
 {
     public function index()
     {
-        $applications = Auth::user()->jobApplications()->with('jobOpening')->latest()->get();
+        $applications = Auth::user()->jobApplications()
+            ->with(['jobOpening', 'jobOpening.quizzes', 'quizAttempts'])
+            ->latest()->get();
         return view('lamaran.index', compact('applications'));
     }
 

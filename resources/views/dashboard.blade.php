@@ -212,18 +212,44 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
     <div class="mt-3 text-[12px] text-slate-400">Dikirim {{ $activeApp->created_at->translatedFormat('j F Y') }}</div>
 
     @if($activeApp->status === 'shortlisted' && ! $activeApp->quiz_result)
-      @if($activeApp->quiz_sent_at)
+      @php
+        $totalKuis = $activeApp->jobOpening->quizzes->count();
+        $selesaiKuis = $activeApp->quizAttempts->where('status', 'submitted')->count();
+        $semuaKuisSelesai = $totalKuis > 0 && $selesaiKuis >= $totalKuis;
+      @endphp
+      @if($activeApp->quiz_sent_at && ! $semuaKuisSelesai)
       <a href="{{ route('tes-online.show') }}"
          class="mt-4 flex items-center justify-center gap-2 w-full py-[12px] rounded-[12px] text-white text-[13.5px] font-bold no-underline transition-opacity duration-150 hover:opacity-90"
          style="background:{{ $tlBrand }};">
         <i class="fa-solid fa-laptop text-xs"></i>Laksanakan Tes
       </a>
+      @elseif($semuaKuisSelesai)
+      <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3 bg-emerald-50 border border-emerald-200">
+        <i class="fa-solid fa-circle-check text-emerald-500 mt-px text-xs"></i>
+        <span class="text-[13px] text-emerald-700">Semua tes sudah kamu selesaikan. Menunggu keputusan dari tim rekrutmen.</span>
+      </div>
       @else
       <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3 bg-amber-50 border border-amber-200">
         <i class="fa-solid fa-circle-info text-amber-500 mt-px text-xs"></i>
         <span class="text-[13px] text-amber-700">Kuis belum dipublikasikan/diaktifkan oleh tim rekrutmen. Tunggu pemberitahuan selanjutnya sebelum bisa mengerjakan tes.</span>
       </div>
       @endif
+    @endif
+
+    @if($activeApp->status === 'shortlisted' && $activeApp->offlineTestInvitees->isNotEmpty())
+      @foreach($activeApp->offlineTestInvitees as $invitee)
+      @php $offlineSchedule = $invitee->schedule; @endphp
+      <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3" style="background:{{ $tlBrand }}14;border:1px solid {{ $tlBrand }}33;">
+        <i class="fa-solid fa-calendar-days mt-px text-xs" style="color:{{ $tlBrand }};"></i>
+        <div class="text-[13px]" style="color:{{ $tlBrand }};">
+          <strong>Jadwal {{ $offlineSchedule?->offlineTest?->name ?? 'Tes Offline' }}:</strong>
+          {{ $offlineSchedule?->test_date?->translatedFormat('l, j F Y') }}
+          @if($offlineSchedule?->test_time) &middot; {{ substr($offlineSchedule->test_time, 0, 5) }} WIB @endif
+          @if($offlineSchedule?->location) <br>Lokasi: {{ $offlineSchedule->location }} @endif
+          @if($offlineSchedule?->notes) <br>Catatan: {{ $offlineSchedule->notes }} @endif
+        </div>
+      </div>
+      @endforeach
     @endif
 
     @if($activeApp->status === 'interview')

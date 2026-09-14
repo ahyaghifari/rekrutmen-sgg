@@ -10,7 +10,14 @@ $statusMap = [
     'passed'      => ['label' => 'Diterima',             'badge' => 'badge-passed'],
     'rejected'    => ['label' => 'Tidak Dilanjutkan',    'badge' => 'badge-rejected'],
 ];
-$needsQuiz = $applications->first(fn ($a) => $a->status === 'shortlisted' && $a->quiz_sent_at && ! $a->quiz_result);
+$needsQuiz = $applications->first(function ($a) {
+    if ($a->status !== 'shortlisted' || ! $a->quiz_sent_at || $a->quiz_result) {
+        return false;
+    }
+    $total = $a->jobOpening->quizzes->count();
+    $selesai = $a->quizAttempts->where('status', 'submitted')->count();
+    return ! ($total > 0 && $selesai >= $total);
+});
 @endphp
 
 <div style="margin:0 auto;padding:20px 16px;">

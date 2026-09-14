@@ -15,7 +15,9 @@ Route::get('/', [PublicController::class, 'welcome'])->name('welcome');
 Route::get('/lowongan/{jobOpening}', [PublicController::class, 'lowongan'])->name('lowongan.show');
 
 Route::get('/dashboard', function () {
-    $applications = auth()->user()->jobApplications()->with('jobOpening.company')->latest()->get();
+    $applications = auth()->user()->jobApplications()
+        ->with(['jobOpening.company', 'jobOpening.quizzes', 'quizAttempts', 'interviewInvitee.schedule', 'mcuInvitee.schedule', 'offlineTestInvitees.schedule.offlineTest'])
+        ->latest()->get();
     $openings = JobOpening::with('company')->active()
         ->whereHas('company', fn ($q) => $q->where('is_active', true))
         ->orderBy('created_at', 'desc')->get();
