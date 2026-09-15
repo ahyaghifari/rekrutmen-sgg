@@ -30,6 +30,16 @@
         @error('email')<p class="mt-1.5 text-[12.5px] text-red-600">{{ $message }}</p>@enderror
       </div>
 
+      {{-- NIK --}}
+      <div>
+        <label for="nik" class="block mb-[7px] text-[13px] font-bold text-slate-700">NIK (KTP) <span class="text-red-700">*</span></label>
+        <input id="nik" type="text" name="nik" value="{{ old('nik') }}" required autocomplete="off"
+          inputmode="numeric" maxlength="16" pattern="\d{16}"
+          placeholder="16 digit sesuai KTP"
+          class="sg-input w-full box-border border {{ $errors->has('nik') ? 'border-red-600' : 'border-slate-200' }} rounded-xl py-3 px-3.5 text-sm text-slate-800 outline-none bg-white focus:border-navy transition-colors duration-150" />
+        @error('nik')<p class="mt-1.5 text-[12.5px] text-red-600">{{ $message }}</p>@enderror
+      </div>
+
       {{-- Password --}}
       <div x-data="{ pw: '' }">
         <label for="password" class="block mb-[7px] text-[13px] font-bold text-slate-700">Kata Sandi <span class="text-red-700">*</span></label>
