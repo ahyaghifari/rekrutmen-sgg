@@ -210,10 +210,6 @@
             </div>
             @endif
             <div class="flex items-center gap-3 text-[12.5px] text-slate-500">
-              <i class="fa-solid fa-briefcase w-4 text-center text-slate-400"></i>
-              <span>Full Time</span>
-            </div>
-            <div class="flex items-center gap-3 text-[12.5px] text-slate-500">
               <i class="fa-solid fa-circle-check w-4 text-center" style="color:{{ $brand }};"></i>
               <span>Lowongan aktif</span>
             </div>

@@ -20,8 +20,6 @@
     <div class="flex-1 min-w-0">
       <div class="flex flex-wrap gap-1.5 items-center">
         <h3 class="m-0 text-[15.5px] font-bold text-slate-800 leading-[1.3]">{{ $opening->title }}</h3>
-        <span class="px-[9px] py-[3px] rounded-full text-[11px] font-bold whitespace-nowrap"
-              style="background:rgba({{ $r }},{{ $g }},{{ $b }},0.10);color:{{ $color }};">Full Time</span>
       </div>
       <div class="mt-1 text-[13px] font-semibold text-slate-600">{{ $co?->name ?? $opening->company_name }}</div>
     </div>
