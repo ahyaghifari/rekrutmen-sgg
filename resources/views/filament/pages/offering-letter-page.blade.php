@@ -28,6 +28,12 @@
         </div>
     </div>
 
+    @if($this->jobOpeningId)
+        <div class="flex flex-wrap gap-3">
+            {{ $this->aturKompensasiAction }}
+        </div>
+    @endif
+
     {{-- Table --}}
     {{ $this->table }}
 

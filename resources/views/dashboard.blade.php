@@ -290,14 +290,77 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
 
     @if($activeApp->status === 'offering')
     <div class="mt-4 pt-4 sg-dd-border border-t">
-      @if(! $activeApp->offering_letter_path)
-      <div class="text-[13px] text-slate-500">Surat penawaran sedang disiapkan tim rekrutmen. Sambil menunggu, kamu tetap bisa mengajukan negosiasi di bawah.</div>
+      @if(! $activeApp->offering_data_confirmed_at)
+      <div class="rounded-[10px] px-3 py-2.5 mb-3 text-[12.5px] bg-amber-50 text-amber-700 border border-amber-200">
+        <i class="fa-solid fa-circle-info text-xs mr-1"></i>Lengkapi data berikut untuk bisa mengunduh surat penawaranmu.
+      </div>
+      <form method="POST" action="{{ route('offering-letter.data') }}" class="space-y-2.5" x-data="{ saving: false }" @submit="saving = true">
+        @csrf
+        <div>
+          <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Nama Lengkap</label>
+          <input type="text" name="offering_full_name" required maxlength="255"
+                 value="{{ old('offering_full_name', $activeApp->offering_full_name ?? $activeApp->answersMap()['full_name'] ?? $activeApp->user->name) }}"
+                 class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Tempat Lahir</label>
+            <input type="text" name="offering_birth_place" required maxlength="255"
+                   value="{{ old('offering_birth_place', $activeApp->offering_birth_place ?? $activeApp->answersMap()['birth_place'] ?? '') }}"
+                   class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
+          </div>
+          <div>
+            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Tanggal Lahir</label>
+            <input type="date" name="offering_birth_date" required
+                   value="{{ old('offering_birth_date', optional($activeApp->offering_birth_date)->format('Y-m-d') ?? $activeApp->answersMap()['birth_date'] ?? '') }}"
+                   class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Alamat</label>
+          <textarea name="offering_domicile_address" required rows="2" maxlength="2000"
+                    class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">{{ old('offering_domicile_address', $activeApp->offering_domicile_address ?? $activeApp->answersMap()['domicile_address'] ?? '') }}</textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Kelurahan/Desa</label>
+            <input type="text" name="offering_village" required maxlength="100"
+                   value="{{ old('offering_village', $activeApp->offering_village ?? '') }}"
+                   class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
+          </div>
+          <div>
+            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Kecamatan</label>
+            <input type="text" name="offering_district" required maxlength="100"
+                   value="{{ old('offering_district', $activeApp->offering_district ?? '') }}"
+                   class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Kota/Kabupaten</label>
+            <input type="text" name="offering_city" required maxlength="100"
+                   value="{{ old('offering_city', $activeApp->offering_city ?? '') }}"
+                   class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
+          </div>
+          <div>
+            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Provinsi</label>
+            <input type="text" name="offering_province" required maxlength="100"
+                   value="{{ old('offering_province', $activeApp->offering_province ?? '') }}"
+                   class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
+          </div>
+        </div>
+        <button type="submit" x-bind:disabled="saving"
+                class="w-full py-[11px] rounded-[10px] border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          <span x-text="saving ? 'Menyimpan...' : 'Simpan Data'">Simpan Data</span>
+        </button>
+      </form>
       @else
-        <a href="{{ route('offering-letter.unduh') }}" target="_blank"
-           class="flex items-center justify-center gap-2 w-full py-[12px] rounded-[12px] bg-slate-500 hover:bg-slate-600 text-white text-[13.5px] font-bold no-underline transition-colors duration-150">
-          <i class="fa-solid fa-download text-xs"></i>Unduh Surat Penawaran
-        </a>
-      @endif
+
+      {{-- Data sudah dikonfirmasi — surat selalu bisa diunduh, diolah langsung saat itu juga. --}}
+      <a href="{{ route('offering-letter.unduh') }}" target="_blank"
+         class="flex items-center justify-center gap-2 w-full py-[12px] rounded-[12px] bg-slate-500 hover:bg-slate-600 text-white text-[13.5px] font-bold no-underline transition-colors duration-150">
+        <i class="fa-solid fa-download text-xs"></i>Unduh Surat Penawaran
+      </a>
 
       {{-- Negosiasi: selalu tersedia selama status offering & belum tanda tangan, tidak menunggu surat --}}
       @php($negos = $activeApp->offeringNegotiations)
@@ -338,23 +401,27 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
             <i class="fa-solid fa-clock text-xs mr-1"></i>Pengajuan negosiasi kamu sedang ditinjau tim rekrutmen. Kamu bisa mengirim lagi setelah ada balasan.
           </div>
           @else
-          <div class="text-[12.5px] font-bold text-slate-700 mb-1.5">
-            <i class="fa-solid fa-comments text-xs mr-1"></i>Ada yang ingin dinegosiasikan dulu?
-          </div>
-          <form method="POST" action="{{ route('offering-letter.negosiasi') }}" x-data="{ sending: false }" @submit="sending = true">
-            @csrf
-            <textarea name="message" rows="3" required maxlength="2000"
-                      placeholder="Tuliskan poin yang ingin dinegosiasikan (mis. gaji, tanggal mulai, tunjangan)..."
-                      class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none"></textarea>
-            <button type="submit" x-bind:disabled="sending"
-                    class="mt-2 w-full py-[11px] rounded-[10px] border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-              <span x-text="sending ? 'Mengirim...' : 'Kirim Pengajuan Negosiasi'">Kirim Pengajuan Negosiasi</span>
+          <div x-data="{ open: false, sending: false }">
+            <button type="button" @click="open = ! open"
+                    class="w-full flex items-center justify-between text-[12.5px] font-bold text-slate-700 py-1.5">
+              <span><i class="fa-solid fa-comments text-xs mr-1"></i>Ada yang ingin dinegosiasikan dulu?</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform" :class="{ 'rotate-180': open }"></i>
             </button>
-          </form>
+            <form x-show="open" x-cloak style="display:none;" method="POST" action="{{ route('offering-letter.negosiasi') }}" @submit="sending = true">
+              @csrf
+              <textarea name="message" rows="3" required maxlength="2000"
+                        placeholder="Tuliskan poin yang ingin dinegosiasikan (mis. gaji, tanggal mulai, tunjangan)..."
+                        class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none"></textarea>
+              <button type="submit" x-bind:disabled="sending"
+                      class="mt-2 w-full py-[11px] rounded-[10px] border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                <span x-text="sending ? 'Mengirim...' : 'Kirim Pengajuan Negosiasi'">Kirim Pengajuan Negosiasi</span>
+              </button>
+            </form>
+          </div>
           @endif
         </div>
 
-        @if($activeApp->offering_letter_path)
+        @if($activeApp->offering_letter_path || $activeApp->offering_data_confirmed_at)
         <form method="POST" action="{{ route('offering-letter.upload-signed') }}" enctype="multipart/form-data" class="mt-3"
               x-data="{ fileName: null, dragging: false, submitting: false }"
               @submit="submitting = true">
@@ -378,6 +445,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
           </button>
         </form>
         @endif
+      @endif
       @endif
     </div>
     @endif

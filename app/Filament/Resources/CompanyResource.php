@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\CompanyResource\Pages;
 use App\Filament\Resources\CompanyResource\RelationManagers\FormSectionsRelationManager;
+use App\Enums\OfferingLetterTemplate;
 use App\Models\Company;
 use App\Models\CompanyMessageTemplate;
 use Filament\Forms;
@@ -98,6 +99,80 @@ class CompanyResource extends BaseResource
                     ->tel()
                     ->nullable(),
             ])->columns(2),
+
+            Forms\Components\Section::make('Offering Letter')
+                ->description('Penandatangan & tampilan berlaku untuk semua offering letter perusahaan ini. Komponen kompensasi (nominal beda tiap posisi) diatur per lowongan, bukan di sini.')
+                ->schema([
+                    Forms\Components\Select::make('offering_letter_template')
+                        ->label('Gaya Surat')
+                        ->options(OfferingLetterTemplate::options())
+                        ->default(OfferingLetterTemplate::Sgg->value)
+                        ->required()
+                        ->columnSpanFull(),
+
+                    Forms\Components\FileUpload::make('offering_letter_background_path')
+                        ->label('Background Surat (Letterhead)')
+                        ->image()
+                        ->disk('local')
+                        ->visibility('private')
+                        ->directory('offering-letter-bg')
+                        ->imagePreviewHeight('120')
+                        ->helperText('Gambar full A4 (mis. 1241x1755px) berisi kop surat, kontak, watermark. Kosongkan untuk pakai background default.')
+                        ->nullable()
+                        ->columnSpanFull(),
+
+                    Forms\Components\TextInput::make('offering_signatory_name')
+                        ->label('Nama Penandatangan')
+                        ->maxLength(255),
+
+                    Forms\Components\TextInput::make('offering_signatory_title')
+                        ->label('Jabatan Penandatangan')
+                        ->maxLength(255),
+
+                    Forms\Components\FileUpload::make('offering_signatory_signature_path')
+                        ->label('Gambar Tanda Tangan')
+                        ->image()
+                        ->directory('companies/signatures')
+                        ->imagePreviewHeight('60')
+                        ->nullable(),
+
+                    Forms\Components\TextInput::make('offering_benefit_note')
+                        ->label('Catatan Benefit Berbintang')
+                        ->helperText('Muncul di bawah daftar benefit kalau ada item yang ditandai bintang.')
+                        ->placeholder('*) akan diberikan jika telah menjadi karyawan tetap.')
+                        ->maxLength(255)
+                        ->columnSpanFull(),
+
+                    Forms\Components\Repeater::make('offeringBenefits')
+                        ->relationship()
+                        ->label('Daftar Benefit')
+                        ->schema([
+                            Forms\Components\TextInput::make('label')->label('Benefit')->required()->maxLength(255),
+                            Forms\Components\Toggle::make('is_starred')->label('Bintang (*)'),
+                        ])
+                        ->columns(2)
+                        ->orderColumn('sort_order')
+                        ->reorderable()
+                        ->collapsible()
+                        ->itemLabel(fn (array $state): ?string => $state['label'] ?? 'Benefit baru')
+                        ->addActionLabel('Tambah benefit')
+                        ->defaultItems(0)
+                        ->columnSpanFull(),
+
+                    Forms\Components\Repeater::make('offeringTerms')
+                        ->relationship()
+                        ->label('Ketentuan Umum')
+                        ->schema([
+                            Forms\Components\TextInput::make('label')->label('Ketentuan')->required()->maxLength(255),
+                        ])
+                        ->orderColumn('sort_order')
+                        ->reorderable()
+                        ->collapsible()
+                        ->itemLabel(fn (array $state): ?string => $state['label'] ?? 'Ketentuan baru')
+                        ->addActionLabel('Tambah ketentuan')
+                        ->defaultItems(0)
+                        ->columnSpanFull(),
+                ])->columns(2),
 
             Forms\Components\Section::make('Template Email Notifikasi')
                 ->description('Gunakan {nama} dan {posisi} sebagai placeholder. Jika kosong, sistem pakai pesan default.')

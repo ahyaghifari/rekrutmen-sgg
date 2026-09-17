@@ -137,6 +137,43 @@ class JobOpeningResource extends BaseResource
                     ->columnSpanFull(),
             ]),
 
+            Forms\Components\Section::make('Kompensasi Offering Letter')
+                ->description('Komponen & nominal kompensasi (mis. "Gaji Pokok") untuk offering letter posisi ini. Beda posisi/lowongan bisa beda nominal meski satu perusahaan.')
+                ->schema([
+                    Forms\Components\Repeater::make('offeringCompensationRows')
+                        ->relationship()
+                        ->label('')
+                        ->schema([
+                            Forms\Components\TextInput::make('label')
+                                ->label('Komponen')
+                                ->placeholder('Mis. Gaji Pokok')
+                                ->required()
+                                ->maxLength(255)
+                                ->columnSpanFull(),
+                            Forms\Components\TextInput::make('amount_orientasi')
+                                ->label('Nominal — Orientasi')
+                                ->numeric()
+                                ->default(0)
+                                ->required()
+                                ->prefix('Rp'),
+                            Forms\Components\TextInput::make('amount_kontrak')
+                                ->label('Nominal — Kontrak')
+                                ->numeric()
+                                ->default(0)
+                                ->required()
+                                ->prefix('Rp'),
+                        ])
+                        ->columns(2)
+                        ->orderColumn('sort_order')
+                        ->reorderable()
+                        ->collapsible()
+                        ->itemLabel(fn (array $state): ?string => $state['label'] ?? 'Komponen baru')
+                        ->addActionLabel('Tambah komponen')
+                        ->defaultItems(0),
+                ])
+                ->collapsible()
+                ->collapsed(),
+
             Forms\Components\Section::make('Persetujuan Khusus Jabatan')
                 ->description('Persetujuan yang khusus untuk jabatan ini (mis. jadwal absensi). Kalau judulnya SAMA PERSIS dengan salah satu persetujuan perusahaan, versi jabatan ini yang dipakai (menimpa). Judul baru = persetujuan tambahan.')
                 ->schema([

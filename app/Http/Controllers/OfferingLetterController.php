@@ -12,7 +12,11 @@ use Illuminate\Support\Facades\Storage;
 
 class OfferingLetterController extends Controller
 {
-    /** Admin: lihat/unduh surat penawaran (dari recruiter) atau surat yang sudah ditandatangani (dari kandidat). */
+    /**
+     * Admin: lihat/unduh surat penawaran. `type=signed` selalu file yang diunggah kandidat.
+     * `type=recruiter` = file yang diunggah manual recruiter kalau ada (override); kalau tidak
+     * ada, di-render LANGSUNG dari data & config saat ini (tidak disimpan ke disk).
+     */
     public function download(JobApplication $application, string $type)
     {
         $user = Auth::user();
@@ -20,20 +24,45 @@ class OfferingLetterController extends Controller
         $isCompanyStaff = $user->is_staff && $user->company_id === $application->jobOpening->company_id;
         abort_unless($isSuperAdmin || $isCompanyStaff, 403);
 
-        $path = $type === 'signed' ? $application->offering_letter_signed_path : $application->offering_letter_path;
-        abort_unless($path && Storage::disk('local')->exists($path), 404);
+        if ($type === 'signed') {
+            abort_unless($application->offering_letter_signed_path && Storage::disk('local')->exists($application->offering_letter_signed_path), 404);
 
-        return Storage::disk('local')->response($path);
+            return Storage::disk('local')->response($application->offering_letter_signed_path);
+        }
+
+        if ($application->offering_letter_path && Storage::disk('local')->exists($application->offering_letter_path)) {
+            return Storage::disk('local')->response($application->offering_letter_path);
+        }
+
+        abort_unless($application->offering_data_confirmed_at, 404);
+
+        return $this->streamFresh($application);
     }
 
-    /** Kandidat: unduh surat penawaran yang diupload recruiter. */
+    /**
+     * Kandidat: unduh surat penawaran — diolah LANGSUNG saat ini juga dari data & config
+     * terkini, tidak disimpan (selalu paling baru, tidak ada "generate ulang" manual). File
+     * unggahan manual recruiter (kalau ada) tetap jadi override.
+     */
     public function downloadForCandidate(): mixed
     {
         $application = $this->currentOfferingApplication();
 
-        abort_unless($application->offering_letter_path && Storage::disk('local')->exists($application->offering_letter_path), 404);
+        if ($application->offering_letter_path && Storage::disk('local')->exists($application->offering_letter_path)) {
+            return Storage::disk('local')->response($application->offering_letter_path);
+        }
 
-        return Storage::disk('local')->response($application->offering_letter_path);
+        abort_unless($application->offering_data_confirmed_at, 404);
+
+        return $this->streamFresh($application);
+    }
+
+    /** Stream PDF di-render on-the-fly dengan header no-cache — cegah browser nampilin versi lama. */
+    private function streamFresh(JobApplication $application): \Illuminate\Http\Response
+    {
+        return $application->renderOfferingLetterPdf()
+            ->stream('offering-letter.pdf')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     /**
@@ -72,6 +101,39 @@ class OfferingLetterController extends Controller
         ApplicationNotification::createAndSend($application, CompanyMessageTemplate::EVENT_OFFERING_SIGNED_RECEIVED);
 
         return back()->with('success', 'Surat penawaran bertanda tangan berhasil diupload. Tim rekrutmen akan mengonfirmasi pada jam kerja.');
+    }
+
+    /**
+     * Kandidat: isi/konfirmasi data (nama, TTL, alamat) yang dipakai di header offering
+     * letter. Field form lamaran dinamis per perusahaan jadi gak bisa diandalkan langsung —
+     * kandidat konfirmasi ulang di sini. Begitu tersimpan, surat langsung bisa diunduh
+     * (diolah on-the-fly saat diunduh, lihat downloadForCandidate()) — tidak ada langkah
+     * "generate" terpisah menunggu recruiter.
+     *
+     * Alamat terstruktur (village/district/city/province, sama field-nya dengan data diri
+     * kandidat) — begitu status naik ke onboarding/passed, JobApplication::booted() nuang
+     * ini otomatis ke Candidate, jadi kandidat tidak perlu isi alamat lagi di data diri.
+     */
+    public function updateData(Request $request): RedirectResponse
+    {
+        $application = $this->currentOfferingApplication();
+
+        $data = $request->validate([
+            'offering_full_name'        => ['required', 'string', 'max:255'],
+            'offering_birth_place'      => ['required', 'string', 'max:255'],
+            'offering_birth_date'       => ['required', 'date'],
+            'offering_domicile_address' => ['required', 'string', 'max:2000'],
+            'offering_village'          => ['required', 'string', 'max:100'],
+            'offering_district'         => ['required', 'string', 'max:100'],
+            'offering_city'             => ['required', 'string', 'max:100'],
+            'offering_province'         => ['required', 'string', 'max:100'],
+        ]);
+
+        $application->update([...$data, 'offering_data_confirmed_at' => now()]);
+
+        ApplicationNotification::createAndSend($application, CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY);
+
+        return back()->with('success', 'Data tersimpan — surat penawaranmu sudah bisa diunduh.');
     }
 
     /** Kandidat: ajukan negosiasi sebelum menandatangani. */

@@ -43,6 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/persetujuan', [CandidateProfileController::class, 'updateAgreements'])->name('persetujuan.update');
 
     Route::get('/offering-letter/unduh', [OfferingLetterController::class, 'downloadForCandidate'])->name('offering-letter.unduh');
+    Route::post('/offering-letter/data', [OfferingLetterController::class, 'updateData'])->middleware('throttle:10,1')->name('offering-letter.data');
     Route::post('/offering-letter/upload-signed', [OfferingLetterController::class, 'uploadSigned'])->middleware('throttle:10,1')->name('offering-letter.upload-signed');
     Route::post('/offering-letter/negosiasi', [OfferingLetterController::class, 'negotiate'])->middleware('throttle:10,1')->name('offering-letter.negosiasi');
 

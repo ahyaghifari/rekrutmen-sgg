@@ -36,6 +36,15 @@ class JobApplication extends Model
         'offering_signed_reviewed_at',
         'offering_signed_revision_reason',
         'onboarding_date',
+        'offering_full_name',
+        'offering_birth_place',
+        'offering_birth_date',
+        'offering_domicile_address',
+        'offering_village',
+        'offering_district',
+        'offering_city',
+        'offering_province',
+        'offering_data_confirmed_at',
     ];
 
     protected $casts = [
@@ -45,6 +54,8 @@ class JobApplication extends Model
         'offering_letter_signed_at'    => 'datetime',
         'offering_signed_reviewed_at'  => 'datetime',
         'onboarding_date'              => 'date',
+        'offering_birth_date'          => 'date',
+        'offering_data_confirmed_at'   => 'datetime',
     ];
 
     /**
@@ -84,9 +95,21 @@ class JobApplication extends Model
             $app->logStatusChange($app->getOriginal('status'), $app->status);
 
             if (in_array($app->status, [self::STATUS_ONBOARDING, self::STATUS_PASSED])) {
+                // Alamat sudah diisi kandidat sendiri di form offering letter (offering_village
+                // dkk) — tuang langsung ke Candidate saat dibuat, supaya tidak diminta isi ulang
+                // di form data diri. Cuma efektif saat CREATE (candidate baru); Candidate lama
+                // (rehire) tidak ditimpa di sini.
                 $candidate = Candidate::firstOrCreate(
                     ['user_id' => $app->user_id],
-                    ['job_application_id' => $app->id, 'name' => $app->answersMap()['full_name'] ?? $app->user->name]
+                    [
+                        'job_application_id' => $app->id,
+                        'name' => $app->answersMap()['full_name'] ?? $app->user->name,
+                        'ktp_address' => $app->offering_domicile_address,
+                        'village' => $app->offering_village,
+                        'district' => $app->offering_district,
+                        'city' => $app->offering_city,
+                        'province' => $app->offering_province,
+                    ]
                 );
 
                 if ($candidate->job_application_id !== $app->id) {
@@ -219,5 +242,61 @@ class JobApplication extends Model
             ->where('user_id', $userId)
             ->active()
             ->exists();
+    }
+
+    /**
+     * Render PDF offering letter dari template company (offering_letter_template + benefit/
+     * ketentuan/penandatangan, diatur di panel rekrutmen) + kompensasi lowongan ini + data
+     * kandidat yang sudah dikonfirmasi (offering_full_name dkk). DIOLAH LANGSUNG saat diminta
+     * (controller/admin action) — tidak disimpan ke disk/kolom apa pun, jadi selalu pakai
+     * data & config TERBARU tanpa perlu "generate ulang" manual. `offering_letter_path` cuma
+     * dipakai jalur unggah manual rekruter (override, lihat OfferingLetterController::download).
+     */
+    /** Alamat offering letter, gabungan dari field terstruktur (village/district/city/province) + detail jalan. */
+    public function offeringFullAddress(): string
+    {
+        return collect([
+            $this->offering_domicile_address,
+            $this->offering_village ? "Kel. {$this->offering_village}" : null,
+            $this->offering_district ? "Kec. {$this->offering_district}" : null,
+            $this->offering_city,
+            $this->offering_province,
+        ])->filter()->implode(', ');
+    }
+
+    public function renderOfferingLetterPdf(): \Barryvdh\DomPDF\PDF
+    {
+        $company = $this->jobOpening->company;
+
+        $compensationRows = $this->jobOpening->offeringCompensationRows->map(fn ($row) => [
+            'label' => $row->label,
+            'orientasi' => (float) $row->amount_orientasi,
+            'kontrak' => (float) $row->amount_kontrak,
+        ])->all();
+
+        $backgroundPath = $company->offering_letter_background_path
+            ? \Illuminate\Support\Facades\Storage::disk('local')->path($company->offering_letter_background_path)
+            : storage_path('app/private/offering-letter-bg/default.jpg');
+        $backgroundPath = str_replace('\\', '/', $backgroundPath);
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView($company->offering_letter_template->view(), [
+            'background_path' => $backgroundPath,
+            'full_name' => $this->offering_full_name,
+            'birth_place' => $this->offering_birth_place,
+            'birth_date' => \Illuminate\Support\Carbon::parse($this->offering_birth_date)->translatedFormat('d F Y'),
+            'domicile_address' => $this->offeringFullAddress(),
+            'jabatan' => $this->jobOpening->title,
+            'lokasi_kerja' => $company->name,
+            'tanggal_surat' => now()->translatedFormat('d F Y'),
+            'compensation_rows' => $compensationRows,
+            'benefits' => $company->offeringBenefits->map(fn ($b) => ['label' => $b->label, 'is_starred' => $b->is_starred])->all(),
+            'benefit_note' => $company->offering_benefit_note,
+            'terms' => $company->offeringTerms->pluck('label')->all(),
+            'signatory_name' => $company->offering_signatory_name ?? '-',
+            'signatory_title' => $company->offering_signatory_title ?? '-',
+            'signatory_signature_path' => $company->offering_signatory_signature_path
+                ? \Illuminate\Support\Facades\Storage::disk('public')->path($company->offering_signatory_signature_path)
+                : null,
+        ]);
     }
 }
