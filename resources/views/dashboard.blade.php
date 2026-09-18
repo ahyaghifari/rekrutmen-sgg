@@ -290,11 +290,20 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
 
     @if($activeApp->status === 'offering')
     <div class="mt-4 pt-4 sg-dd-border border-t">
-      @if(! $activeApp->offering_data_confirmed_at)
-      <div class="rounded-[10px] px-3 py-2.5 mb-3 text-[12.5px] bg-amber-50 text-amber-700 border border-amber-200">
-        <i class="fa-solid fa-circle-info text-xs mr-1"></i>Lengkapi data berikut untuk bisa mengunduh surat penawaranmu.
-      </div>
-      <form method="POST" action="{{ route('offering-letter.data') }}" class="space-y-2.5" x-data="{ saving: false }" @submit="saving = true">
+      @if(! $activeApp->offering_letter_signed_path)
+      <div x-data="{ open: {{ $activeApp->offering_data_confirmed_at ? 'false' : 'true' }}, saving: false }" class="mb-1">
+        @if($activeApp->offering_data_confirmed_at)
+        <button type="button" @click="open = ! open"
+                class="w-full flex items-center justify-between text-[12.5px] font-bold text-slate-700 py-1.5">
+          <span><i class="fa-solid fa-pen text-xs mr-1"></i>Perbarui Data Diri</span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform" :class="{ 'rotate-180': open }"></i>
+        </button>
+        @else
+        <div class="rounded-[10px] px-3 py-2.5 mb-3 text-[12.5px] bg-amber-50 text-amber-700 border border-amber-200">
+          <i class="fa-solid fa-circle-info text-xs mr-1"></i>Lengkapi data berikut untuk bisa mengunduh surat penawaranmu.
+        </div>
+        @endif
+      <form x-show="open" @if($activeApp->offering_data_confirmed_at) x-cloak style="display:none;" @endif method="POST" action="{{ route('offering-letter.data') }}" class="space-y-2.5 mt-2" @submit="saving = true">
         @csrf
         <div>
           <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Nama Lengkap</label>
@@ -319,6 +328,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
         <div>
           <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Alamat</label>
           <textarea name="offering_domicile_address" required rows="2" maxlength="2000"
+                    placeholder="Contoh: Jl. Ahmad Yani Komp. Griya Indah No. 12 RT 03 RW 05"
                     class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">{{ old('offering_domicile_address', $activeApp->offering_domicile_address ?? $activeApp->answersMap()['domicile_address'] ?? '') }}</textarea>
         </div>
         <div class="grid grid-cols-2 gap-2.5">
@@ -354,7 +364,10 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
           <span x-text="saving ? 'Menyimpan...' : 'Simpan Data'">Simpan Data</span>
         </button>
       </form>
-      @else
+      </div>
+      @endif
+
+      @if($activeApp->offering_data_confirmed_at)
 
       {{-- Data sudah dikonfirmasi — surat selalu bisa diunduh, diolah langsung saat itu juga. --}}
       <a href="{{ route('offering-letter.unduh') }}" target="_blank"
