@@ -6,7 +6,7 @@
         @page { margin: 0; }
         body { font-family: 'Arial', sans-serif; font-size: 12px; color: #1a1a1a; margin: 0; }
         .bg { position: fixed; top: 0; left: 0; width: 100%; }
-        .content { position: relative; padding: 4cm 3cm 3cm 3cm; }
+        .content { position: relative; padding: 4cm 3cm 3cm 3.5cm; }
         h1.title { text-align: center; text-decoration: underline; font-size: 14px; margin: 0 0 16px; }
         table.info { width: 100%; margin-bottom: 14px; }
         table.info td { padding: 2px 0; vertical-align: top; }
@@ -17,9 +17,10 @@
         table.comp thead th { background: #b4c6e7; text-align: center; }
         table.comp td.komponen { width: 40%; }
         ul { margin: 0.3cm 0 12px; padding-left: 18px; }
-        ul li { margin-bottom: 0.1cm; }
-        .section-title { font-weight: bold; margin-top: 0.3cm; margin-bottom: 4px; }
-        table.sign { width: 100%; margin-top: 0.5cm; }
+        ul li { margin-bottom: 0.25cm; }
+        .justify { text-align: justify; }
+        .section-title { font-weight: bold; margin-top: 0.35cm; margin-bottom: 4px; }
+        table.sign { width: 100%; margin-top: 0.8cm; table-layout: fixed; }
         table.sign td { width: 50%; vertical-align: top; }
         .sign-space { height: 1cm; }
         .sign-space img { height: 2cm; }
@@ -35,9 +36,9 @@
         <table class="info">
             <tr><td class="label">Nama</td><td class="sep">:</td><td>{{ $full_name }}</td></tr>
             <tr><td class="label">Tempat / Tanggal Lahir</td><td class="sep">:</td><td>{{ $birth_place }}, {{ $birth_date }}</td></tr>
-            <tr><td class="label">Alamat</td><td class="sep">:</td><td>{{ $domicile_address }}</td></tr>
+            <tr><td class="label">Alamat</td><td class="sep">:</td><td class="justify">{{ $domicile_address }}</td></tr>
             <tr><td class="label">Jabatan / Departemen</td><td class="sep">:</td><td>{{ $jabatan }}</td></tr>
-            <tr><td class="label">Lokasi Kerja</td><td class="sep">:</td><td>{{ $lokasi_kerja }}</td></tr>
+            <tr><td class="label">Lokasi Kerja</td><td class="sep">:</td><td>PT Syifa Global Group, Banjarbaru</td></tr>
         </table>
 
         <div class="section-title">Kompensasi:</div>
@@ -56,30 +57,26 @@
                 @foreach ($compensation_rows as $row)
                     <tr>
                         <td class="komponen">{{ $row['label'] }}</td>
-                        <td>{{ $row['orientasi'] > 0 ? 'Rp' . number_format($row['orientasi'], 0, ',', '.') : '' }}</td>
-                        <td>{{ $row['kontrak'] > 0 ? 'Rp' . number_format($row['kontrak'], 0, ',', '.') : '' }}</td>
+                        <td>{{ $row['orientasi'] }}</td>
+                        <td>{{ $row['kontrak'] }}</td>
                     </tr>
                 @endforeach
-                <tr>
-                    <td class="komponen"><strong>Total</strong></td>
-                    <td><strong>Rp{{ number_format(collect($compensation_rows)->sum('orientasi'), 0, ',', '.') }}</strong></td>
-                    <td><strong>Rp{{ number_format(collect($compensation_rows)->sum('kontrak'), 0, ',', '.') }}</strong></td>
-                </tr>
             </tbody>
         </table>
 
-        <div class="section-title">Benefit :</div>
-        <ul>
-            @foreach ($benefits as $benefit)
-                <li>{{ $benefit['label'] }}{{ $benefit['is_starred'] ? '*' : '' }}</li>
-            @endforeach
-        </ul>
+        <div class="justify">
+            @php
+                $benefitLabels = collect($benefits)->map(fn ($b) => $b['label'] . ($b['is_starred'] ? '*' : ''));
+            @endphp
+            <span class="section-title" style="margin-top:0;">Benefit Lain:</span>
+            {{ $benefitLabels->count() > 1 ? $benefitLabels->slice(0, -1)->implode(', ') . ' & ' . $benefitLabels->last() : $benefitLabels->first() }}
+        </div>
         @if ($benefit_note && collect($benefits)->contains('is_starred', true))
-            <div>{{ $benefit_note }}</div>
+            <div style="margin-top: 0.2cm">{{ $benefit_note }}</div>
         @endif
 
         <div class="section-title">Syarat &amp; Ketentuan Umum :</div>
-        <ul>
+        <ul class="justify">
             @foreach ($terms as $term)
                 <li>{{ $term }}</li>
             @endforeach
@@ -87,7 +84,11 @@
 
         <table class="sign">
             <tr>
-                <td>Banjarbaru, {{ $tanggal_surat }}<br>Dibuat Oleh,</td>
+                <td>Banjarbaru, {{ $tanggal_surat }}</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Dibuat Oleh,</td>
                 <td>Disetujui Oleh,</td>
             </tr>
             <tr>
