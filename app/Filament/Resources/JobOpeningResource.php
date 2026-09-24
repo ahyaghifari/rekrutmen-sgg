@@ -33,16 +33,14 @@ class JobOpeningResource extends BaseResource
         return $query->where('company_id', static::companyId());
     }
 
+    /**
+     * Semua lowongan wajib dibuat dari HRIS - mode 'free' (admin di sini boleh menambah lowongan
+     * sendiri) sudah tidak dipakai lagi. Kolom companies.management_mode dibiarkan ada supaya tidak
+     * perlu ubah skema lagi (sempat dihapus lalu dikembalikan), tapi nilainya selalu 'hris'.
+     */
     public static function canCreate(): bool
     {
-        // Perusahaan mode 'hris' hanya bisa ditambah lowongannya dari HRIS.
-        if (! static::isSuperAdmin()) {
-            $co = Company::find(static::companyId());
-
-            return $co && $co->management_mode === 'free';
-        }
-
-        return Company::where('management_mode', 'free')->exists();
+        return false;
     }
 
     /**
@@ -65,9 +63,10 @@ class JobOpeningResource extends BaseResource
             Forms\Components\Section::make('Informasi Lowongan')->schema([
                 Forms\Components\Select::make('company_id')
                     ->label('Perusahaan')
-                    // Hanya perusahaan mode 'free' — yang mode 'hris' dikelola di HRIS.
+                    // Tidak disaring per mode lagi: form ini cuma dipakai halaman Lihat (semua
+                    // lowongan dikelola dari HRIS, lihat canCreate()), jadi menyaring 'free' malah
+                    // bikin nama perusahaannya kosong waktu dilihat.
                     ->options(fn () => Company::query()
-                        ->where('management_mode', 'free')
                         ->when(! static::isSuperAdmin(), fn ($q) => $q->where('id', static::companyId()))
                         ->pluck('name', 'id'))
                     ->searchable()
@@ -89,6 +88,12 @@ class JobOpeningResource extends BaseResource
                     ->label('Posisi / Jabatan')
                     ->required()
                     ->maxLength(255),
+
+                Forms\Components\TextInput::make('division_name')
+                    ->label('Divisi')
+                    ->maxLength(255)
+                    ->nullable()
+                    ->helperText('Dipakai token {divisi} di naskah persetujuan. Terisi otomatis kalau lowongan dibuat dari HRIS.'),
 
                 Forms\Components\TextInput::make('quota')
                     ->label('Kuota Posisi')
@@ -249,7 +254,8 @@ class JobOpeningResource extends BaseResource
                             Forms\Components\RichEditor::make('content')
                                 ->label('Naskah')
                                 ->required()
-                                ->columnSpanFull(),
+                                ->columnSpanFull()
+                                ->helperText('Bisa pakai token {jabatan} (nama lowongan) dan {divisi} — terisi otomatis per kandidat.'),
                         ])
                         ->orderColumn('sort_order')
                         ->reorderable()
@@ -411,12 +417,17 @@ class JobOpeningResource extends BaseResource
                         ");
                     }),
 
+                // Lowongan dari HRIS (hris_job_opening_id terisi) read-only di sini - HRIS yang
+                // menimpanya tiap sinkron, jadi editan di sini bakal hilang. Sisa lowongan lama yang
+                // dibuat di project ini sebelum semuanya dipindah ke HRIS tetap bisa dirawat, karena
+                // HRIS tidak punya cara menautkannya (RecruitmentSync::getUnlinkedJobOpenings() ada
+                // tapi belum ada halaman yang memakainya).
                 Tables\Actions\EditAction::make()
-                    ->visible(fn ($record) => $record->hris_job_opening_id === null && $record->company?->management_mode !== 'hris'),
+                    ->visible(fn ($record) => $record->hris_job_opening_id === null),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn ($record) => $record->hris_job_opening_id === null && $record->company?->management_mode !== 'hris'),
+                    ->visible(fn ($record) => $record->hris_job_opening_id === null),
                 Tables\Actions\ViewAction::make()
-                    ->visible(fn ($record) => $record->hris_job_opening_id !== null || $record->company?->management_mode === 'hris'),
+                    ->visible(fn ($record) => $record->hris_job_opening_id !== null),
             ])
             ->bulkActions([]);
     }

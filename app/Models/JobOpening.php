@@ -19,6 +19,7 @@ class JobOpening extends Model
         'id',
         'company_id',
         'title',
+        'division_name',
         'company_name',
         'quota',
         'max_applicants',
@@ -119,18 +120,45 @@ class JobOpening extends Model
         $items = collect();
         foreach ($this->company?->agreements ?? collect() as $a) {
             $items[mb_strtolower(trim($a->title))] = [
-                'title' => $a->title, 'content' => $a->content,
+                'title' => $a->title, 'content' => $this->fillAgreementTokens($a->content),
                 'company_agreement_id' => $a->id, 'job_opening_agreement_id' => null,
             ];
         }
         foreach ($this->agreements as $a) {
             $items[mb_strtolower(trim($a->title))] = [
-                'title' => $a->title, 'content' => $a->content,
+                'title' => $a->title, 'content' => $this->fillAgreementTokens($a->content),
                 'company_agreement_id' => null, 'job_opening_agreement_id' => $a->id,
             ];
         }
 
         return $items->values();
+    }
+
+    /**
+     * Ganti token naskah persetujuan dengan data lowongan ini. Sengaja dilakukan di
+     * effectiveAgreements(), bukan di blade: isi naskah DI-SNAPSHOT ke candidate_agreements saat
+     * kandidat mencentang setuju (lihat CandidateProfileController::updateAgreements), jadi bukti
+     * persetujuannya ikut menyimpan jabatan & divisi yang asli, bukan tokennya. Naskah yang sudah
+     * terlanjur disetujui tidak ikut berubah kalau masternya diedit — itu memang yang diinginkan.
+     *
+     * {jabatan} sengaja memakai title lowongan (boleh dikustom per lowongan, mis. "Perawat Rawat
+     * Inap Lantai 3"), BUKAN nama jabatan mentah dari master HRIS.
+     *
+     * ponytail: str_ireplace biasa, bukan parser template. Token yang terpotong tag HTML dari
+     * RichEditor (mis. sebagian di-bold) tidak akan terganti — belum pernah kejadian, tambahkan
+     * penanganannya kalau memang muncul.
+     */
+    private function fillAgreementTokens(?string $content): ?string
+    {
+        if ($content === null || $content === '') {
+            return $content;
+        }
+
+        return str_ireplace(
+            ['{jabatan}', '{divisi}'],
+            [trim((string) $this->title) ?: '—', trim((string) $this->division_name) ?: '—'],
+            $content
+        );
     }
 
     public function creator(): BelongsTo

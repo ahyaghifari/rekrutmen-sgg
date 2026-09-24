@@ -56,7 +56,9 @@ class CompanyAgreementResource extends BaseResource
                 Forms\Components\RichEditor::make('content')
                     ->label('Naskah')
                     ->required()
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    // Diganti di JobOpening::effectiveAgreements() saat naskah dirakit per kandidat.
+                    ->helperText('Bisa pakai token yang terisi otomatis per kandidat: {jabatan} (nama lowongan) dan {divisi}. Tulis persis dengan kurung kurawal.'),
             ])->columns(2),
         ]);
     }
