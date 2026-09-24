@@ -34,8 +34,6 @@
   <p class="m-0 text-[12px] leading-[1.55] text-slate-500">
     @if($locked)
       Kamu sudah menyetujui semua naskah di bawah. Halaman ini hanya untuk dibaca kembali.
-    @else
-      Baca setiap naskah lalu tandai persetujuanmu. Semua harus disetujui untuk melanjutkan proses onboarding.
     @endif
   </p>
 
@@ -105,7 +103,7 @@
 
       {{-- Naskah --}}
       <div class="px-5">
-        <div class="rounded-[12px] bg-slate-50 border border-slate-100 px-4 py-3 text-[11.5px] leading-[1.7] text-slate-600 max-h-[260px] overflow-y-auto
+        <div class="rounded-[12px] bg-slate-50 border border-slate-100 px-4 py-3 text-[13.5px] md:text-[14.5px] leading-[1.75] text-slate-600
                     [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2 [&_strong]:text-slate-800 [&_h1]:font-bold [&_h2]:font-bold">
           {!! $content !!}
         </div>
