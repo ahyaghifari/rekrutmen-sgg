@@ -306,9 +306,9 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
       <form x-show="open" @if($activeApp->offering_data_confirmed_at) x-cloak style="display:none;" @endif method="POST" action="{{ route('offering-letter.data') }}" class="space-y-2.5 mt-2" @submit="saving = true">
         @csrf
         <div>
-          <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Nama Lengkap</label>
+          <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Nama Lengkap dengan Gelar</label>
           <input type="text" name="offering_full_name" required maxlength="255"
-                 value="{{ old('offering_full_name', $activeApp->offering_full_name ?? $activeApp->answersMap()['full_name'] ?? $activeApp->user->name) }}"
+                 value="{{ old('offering_full_name') }}"
                  class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
         </div>
         <div class="grid grid-cols-2 gap-2.5">
