@@ -34,6 +34,10 @@ class ApplicationNotification extends Model
                 ['url' => route('dashboard'), 'label' => 'Unggah Surat Penawaran'],
             CompanyMessageTemplate::EVENT_OFFERING_REVISION_REQUESTED =>
                 ['url' => route('dashboard'), 'label' => 'Unggah Ulang Surat Penawaran'],
+            // Form data surat penawaran ada di dashboard (route offering-letter.data), bukan di
+            // halaman data diri kandidat - makanya tujuannya dashboard.
+            CompanyMessageTemplate::EVENT_INTERVIEW_PASSED =>
+                ['url' => route('dashboard'), 'label' => 'Lengkapi Data Surat Penawaran'],
             CompanyMessageTemplate::EVENT_MCU_PASSED =>
                 ['url' => route('data-diri.edit'), 'label' => 'Setujui & Lengkapi Data Diri'],
             CompanyMessageTemplate::EVENT_ONBOARDING_INVITE =>
@@ -76,10 +80,16 @@ class ApplicationNotification extends Model
         }
     }
 
-    public static function createDraftFor(JobApplication $app, string $event, array $extra = []): static|null
+    /**
+     * $allowRepeat: lewati penyaring "sudah pernah ada" untuk event yang memang boleh berulang -
+     * dipakai interview_scheduled sejak 2026-09-30, karena wawancara bisa dijadwalkan berkali-kali
+     * dan undangan sesi kedua dan seterusnya harus tetap terkirim. Pemanggil lain tidak berubah.
+     */
+    public static function createDraftFor(JobApplication $app, string $event, array $extra = [], bool $allowRepeat = false): static|null
     {
-        $exists = static::where('job_application_id', $app->id)->where('event', $event)->exists();
-        if ($exists) return null;
+        if (! $allowRepeat && static::where('job_application_id', $app->id)->where('event', $event)->exists()) {
+            return null;
+        }
 
         $app->loadMissing('jobOpening');
         $companyId     = $app->jobOpening->company_id;
@@ -93,7 +103,9 @@ class ApplicationNotification extends Model
             $extra['data_diri_belum_lengkap'] = ! ($app->candidate?->requiredDataComplete() ?? false);
         }
 
-        $placeholders = ['{nama}', '{posisi}', '{tanggal}', '{waktu}', '{lokasi}', '{catatan}'];
+        // {tahap} = nama sesi wawancara ("Wawancara HR", "Wawancara Tahap 2"), dikirim HRIS sejak
+        // wawancara boleh berkali-kali. Template lama yang tidak memakainya tidak terpengaruh.
+        $placeholders = ['{nama}', '{posisi}', '{tanggal}', '{waktu}', '{lokasi}', '{catatan}', '{tahap}'];
         $values       = [
             $applicantName,
             $jobTitle,
@@ -101,6 +113,7 @@ class ApplicationNotification extends Model
             $extra['interview_time'] ?? '-',
             $extra['location']       ?? '-',
             $extra['notes']          ?? '',
+            $extra['tahap']          ?? '-',
         ];
         $replace = fn (string $s) => str_replace($placeholders, $values, $s);
 
@@ -150,11 +163,17 @@ class ApplicationNotification extends Model
         }
 
         if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED) {
+            // ?? di tiap kunci: HRIS tidak selalu mengirim waktu/lokasi/catatan, dan tanpa ini tiap
+            // undangan menyemburkan "Undefined array key" ke log.
             $date     = $extra['interview_date'] ?? '-';
-            $time     = $extra['interview_time'] ? " pukul {$extra['interview_time']}" : '';
-            $location = $extra['location'] ? "\nLokasi/Link: {$extra['location']}" : '';
-            $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
-            return "Halo {$name},\n\nSelamat! Kamu terpilih untuk mengikuti tahap wawancara posisi {$jobTitle}.\n\nWawancara dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
+            $time     = ($extra['interview_time'] ?? null) ? " pukul {$extra['interview_time']}" : '';
+            $location = ($extra['location'] ?? null) ? "\nLokasi/Link: {$extra['location']}" : '';
+            $notes    = ($extra['notes'] ?? null) ? "\n\nCatatan: {$extra['notes']}" : '';
+            // Nama sesi ("Wawancara HR") disebut kalau ada, supaya undangan sesi kedua tidak terbaca
+            // seolah-olah undangan wawancara pertama.
+            $tahap    = ($extra['tahap'] ?? null) ? " ({$extra['tahap']})" : '';
+
+            return "Halo {$name},\n\nSelamat! Kamu terpilih untuk mengikuti tahap wawancara{$tahap} posisi {$jobTitle}.\n\nWawancara dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_QUIZ_SENT) {
@@ -166,7 +185,10 @@ class ApplicationNotification extends Model
         }
 
         if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_PASSED) {
-            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lolos tahap wawancara untuk posisi {$jobTitle}.\n\nTahap selanjutnya adalah penawaran kerja (offering letter). Mohon menunggu — tim rekrutmen kami akan memberi tahu kamu begitu surat penawaran sudah bisa diunduh lewat dashboard akunmu.\n\nSalam,\nTim Rekrutmen";
+            // Kandidat diminta MENGISI DATA dulu, bukan menunggu (permintaan user 2026-09-30):
+            // surat penawarannya baru bisa disusun setelah datanya masuk, dan formnya ada di
+            // dashboard (lihat route offering-letter.data).
+            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lolos tahap wawancara untuk posisi {$jobTitle}.\n\nTahap selanjutnya adalah penawaran kerja (offering letter). Mohon masuk ke dashboard akunmu dan lengkapi data diri untuk surat penawaran — suratnya bisa kamu unduh setelahnya.\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY) {

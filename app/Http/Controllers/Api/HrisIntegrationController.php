@@ -31,11 +31,17 @@ class HrisIntegrationController extends Controller
     ];
 
     /**
-     * Event yang boleh dikirim berulang (tidak dedup by job_application_id+event). HRIS
-     * mengirim subject+body verbatim untuk semua event di sini.
+     * Event yang boleh dikirim berulang (tidak dedup by job_application_id+event). HRIS mengirim
+     * subject+body verbatim untuk sebagian besar event di sini; `interview_scheduled` perkecualian -
+     * dia tetap disusun dari template perusahaan lewat createDraftFor().
+     *
+     * interview_scheduled masuk sini sejak 2026-09-30: wawancara boleh dijadwalkan berkali-kali untuk
+     * pelamar yang sama, dan tanpa ini undangan sesi KEDUA dan seterusnya berhenti di `already_sent`
+     * alias pelamarnya tidak pernah dikabari. Aman karena unik (job_application_id, event) di
+     * application_notifications sudah tidak ada lagi, jadi barisnya boleh lebih dari satu.
      */
     private const REPEATABLE_EVENTS = [
-        'interview_rescheduled', 'mcu_rescheduled', 'offering_negotiation_replied',
+        'interview_scheduled', 'interview_rescheduled', 'mcu_rescheduled', 'offering_negotiation_replied',
         'offering_signed_accepted', 'offering_revision_requested', 'offline_test_rescheduled',
     ];
 
@@ -103,7 +109,12 @@ class HrisIntegrationController extends Controller
                     'body'               => $data['body'],
                     'status'             => 'draft',
                 ])
-                : ApplicationNotification::createDraftFor($app, $data['event'], $data['extra'] ?? []);
+                : ApplicationNotification::createDraftFor(
+                    $app,
+                    $data['event'],
+                    $data['extra'] ?? [],
+                    in_array($data['event'], self::REPEATABLE_EVENTS, true),
+                );
         }
 
         if (! $notif) {
