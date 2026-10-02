@@ -107,6 +107,12 @@ class JobOpening extends Model
         return $this->hasMany(JobOpeningOfferingCompensationRow::class)->orderBy('sort_order');
     }
 
+    /** Kompensasi mode LIST (RS) — type mitra | kontrak. Mode TABEL (SGG) pakai offeringCompensationRows. */
+    public function offeringCompensationItems(): HasMany
+    {
+        return $this->hasMany(JobOpeningOfferingCompensationItem::class)->orderBy('sort_order');
+    }
+
     /**
      * Daftar persetujuan efektif untuk kandidat lowongan ini: persetujuan
      * perusahaan, dengan yang judulnya sama ditimpa oleh versi jabatan, plus

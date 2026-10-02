@@ -288,6 +288,12 @@ class JobApplication extends Model
             'kontrak' => $formatAmount($row->amount_kontrak),
         ])->all();
 
+        $items = $this->jobOpening->offeringCompensationItems->map(fn ($i) => [
+            'type' => $i->type,
+            'label' => $i->label,
+            'amount' => $i->amount,
+        ]);
+
         $backgroundPath = $company->offering_letter_background_path
             ? \Illuminate\Support\Facades\Storage::disk('local')->path($company->offering_letter_background_path)
             : storage_path('app/private/offering-letter-bg/default.jpg');
@@ -303,6 +309,8 @@ class JobApplication extends Model
             'lokasi_kerja' => $company->name,
             'tanggal_surat' => now()->translatedFormat('d F Y'),
             'compensation_rows' => $compensationRows,
+            'mitra_items' => $items->where('type', 'mitra')->values()->all(),
+            'kontrak_items' => $items->where('type', 'kontrak')->values()->all(),
             'benefits' => $company->offeringBenefits->map(fn ($b) => ['label' => $b->label, 'is_starred' => $b->is_starred])->all(),
             'benefit_note' => $company->offering_benefit_note,
             'terms' => $company->offeringTerms->pluck('label')->all(),

@@ -160,7 +160,7 @@ class JobOpeningResource extends BaseResource
                 ->description('Komponen kompensasi (mis. "Gaji Pokok", "Seragam Kerja") untuk offering letter posisi ini. Beda posisi/lowongan bisa beda meski satu perusahaan. Bentuknya ngikut Gaya Surat perusahaan (Master > Perusahaan) — TABEL (SGG): satu daftar, tiap baris punya nominal Orientasi & Kontrak berdampingan, angka polos otomatis diformat jadi "Rp3.000.000". LIST (RS): dua daftar terpisah (Mitra & Kontrak), masing-masing tambah komponen sendiri-sendiri, nominal bebas teks/kosongkan.')
                 ->schema([
                     Forms\Components\Repeater::make('offeringCompensationRows')
-                        ->relationship('offeringCompensationRows', modifyQueryUsing: fn ($query) => $query->whereNull('kind'))
+                        ->relationship('offeringCompensationRows')
                         ->label('')
                         ->schema([
                             Forms\Components\TextInput::make('label')
@@ -188,17 +188,17 @@ class JobOpeningResource extends BaseResource
                         ->defaultItems(0),
 
                     Forms\Components\Repeater::make('offeringCompensationRowsMitra')
-                        ->relationship('offeringCompensationRows', modifyQueryUsing: fn ($query) => $query->where('kind', 'mitra'))
+                        ->relationship('offeringCompensationItems', modifyQueryUsing: fn ($query) => $query->where('type', 'mitra'))
                         ->label('Komponen Mitra (Orientasi)')
                         ->schema([
-                            Forms\Components\Hidden::make('kind')->default('mitra'),
+                            Forms\Components\Hidden::make('type')->default('mitra'),
                             Forms\Components\TextInput::make('label')
                                 ->label('Komponen')
                                 ->placeholder('Mis. Gaji Pokok')
                                 ->required()
                                 ->maxLength(255)
                                 ->columnSpanFull(),
-                            Forms\Components\TextInput::make('amount_orientasi')
+                            Forms\Components\TextInput::make('amount')
                                 ->label('Nominal')
                                 ->placeholder('Bebas teks atau kosongkan')
                                 ->maxLength(255)
@@ -213,17 +213,17 @@ class JobOpeningResource extends BaseResource
                         ->defaultItems(0),
 
                     Forms\Components\Repeater::make('offeringCompensationRowsKontrak')
-                        ->relationship('offeringCompensationRows', modifyQueryUsing: fn ($query) => $query->where('kind', 'kontrak'))
+                        ->relationship('offeringCompensationItems', modifyQueryUsing: fn ($query) => $query->where('type', 'kontrak'))
                         ->label('Komponen Kontrak')
                         ->schema([
-                            Forms\Components\Hidden::make('kind')->default('kontrak'),
+                            Forms\Components\Hidden::make('type')->default('kontrak'),
                             Forms\Components\TextInput::make('label')
                                 ->label('Komponen')
                                 ->placeholder('Mis. Gaji Yang Didapatkan')
                                 ->required()
                                 ->maxLength(255)
                                 ->columnSpanFull(),
-                            Forms\Components\TextInput::make('amount_kontrak')
+                            Forms\Components\TextInput::make('amount')
                                 ->label('Nominal')
                                 ->placeholder('Bebas teks atau kosongkan')
                                 ->maxLength(255)
