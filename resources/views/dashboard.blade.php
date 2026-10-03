@@ -303,7 +303,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
           <i class="fa-solid fa-circle-info text-xs mr-1"></i>Lengkapi data berikut untuk bisa mengunduh surat penawaranmu.
         </div>
         @endif
-      <form x-show="open" @if($activeApp->offering_data_confirmed_at) x-cloak style="display:none;" @endif method="POST" action="{{ route('offering-letter.data') }}" class="space-y-2.5 mt-2" @submit="saving = true">
+      <form x-show="open" @if($activeApp->offering_data_confirmed_at) x-cloak style="display:none;" @endif method="POST" action="{{ route('offering-letter.data') }}" class="space-y-4 mt-3" @submit="saving = true">
         @csrf
         <div>
           <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Nama Lengkap dengan Gelar</label>
@@ -311,7 +311,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
                  value="{{ old('offering_full_name') }}"
                  class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
         </div>
-        <div class="grid grid-cols-2 gap-2.5">
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Tempat Lahir</label>
             <input type="text" name="offering_birth_place" required maxlength="255"
@@ -331,34 +331,103 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
                     placeholder="Contoh: Jl. Ahmad Yani Komp. Griya Indah No. 12 RT 03 RW 05"
                     class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">{{ old('offering_domicile_address', $activeApp->offering_domicile_address ?? $activeApp->answersMap()['domicile_address'] ?? '') }}</textarea>
         </div>
-        <div class="grid grid-cols-2 gap-2.5">
-          <div>
-            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Kelurahan/Desa</label>
-            <input type="text" name="offering_village" required maxlength="100"
-                   value="{{ old('offering_village', $activeApp->offering_village ?? '') }}"
-                   class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
+        {{-- Pilihan wilayah dari wilayah.id (lewat proxy route('wilayah')); gagal diraih -> input teks biasa. --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"             x-data="wilayah(@js(['province' => old('offering_province', $activeApp->offering_province ?? ''), 'city' => old('offering_city', $activeApp->offering_city ?? ''), 'district' => old('offering_district', $activeApp->offering_district ?? ''), 'village' => old('offering_village', $activeApp->offering_village ?? '')]), @js(url('/wilayah')))">
+          @foreach ([['province', 'Provinsi'], ['city', 'Kota/Kabupaten'], ['district', 'Kecamatan'], ['village', 'Kelurahan/Desa']] as $i => [$key, $label])
+          <div class="relative" @click.outside="if (openKey === '{{ $key }}') { openKey = null; pick({{ $i }}) }">
+            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">{{ $label }}</label>
+            <div class="relative">
+              <input type="text" name="offering_{{ $key }}" x-model="names['{{ $key }}']" required maxlength="100" autocomplete="off"
+                     :disabled="!fallback && !opts['{{ $key }}'].length"
+                     :placeholder="fallback ? '' : (opts['{{ $key }}'].length ? 'Ketik untuk mencari...' : '{{ $i === 0 ? 'Memuat...' : 'Pilih ' . $label . ' dulu' }}')"
+                     @focus="show('{{ $key }}')"
+                     @input="show('{{ $key }}')"
+                     @keydown.arrow-down.prevent="move('{{ $key }}', 1)"
+                     @keydown.arrow-up.prevent="move('{{ $key }}', -1)"
+                     @keydown.enter="if (openKey === '{{ $key }}') { $event.preventDefault(); choose({{ $i }}, filtered('{{ $key }}')[hi]) }"
+                     @keydown.escape="openKey = null; pick({{ $i }})"
+                     @keydown.tab="openKey = null; pick({{ $i }})"
+                     class="w-full rounded-[10px] border border-slate-300 py-2 pl-3 pr-8 text-[13px] focus:border-navy focus:outline-none disabled:bg-slate-50 disabled:text-slate-400">
+              <i x-show="!fallback" class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 pointer-events-none"></i>
+            </div>
+            {{-- Inline (di alur halaman, mendorong field di bawahnya): tidak terpotong overflow kartu dan tidak bergantung koordinat/keyboard mobile. --}}
+            <ul x-show="openKey === '{{ $key }}'" x-cloak style="display:none;"
+                class="mt-1 max-h-48 overflow-y-auto rounded-[10px] border border-slate-200 bg-white py-1 shadow-lg">
+              <template x-for="(o, idx) in filtered('{{ $key }}')" :key="o.code">
+                <li @mousedown.prevent="choose({{ $i }}, o)" @mouseenter="hi = idx"
+                    :class="idx === hi ? 'bg-navy text-white' : 'text-slate-700'"
+                    class="cursor-pointer px-3 py-1.5 text-[12.5px]" x-text="o.name"></li>
+              </template>
+              <li x-show="!filtered('{{ $key }}').length" class="px-3 py-2 text-[12px] text-slate-400">Tidak ditemukan</li>
+            </ul>
           </div>
-          <div>
-            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Kecamatan</label>
-            <input type="text" name="offering_district" required maxlength="100"
-                   value="{{ old('offering_district', $activeApp->offering_district ?? '') }}"
-                   class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
-          </div>
+          @endforeach
         </div>
-        <div class="grid grid-cols-2 gap-2.5">
-          <div>
-            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Kota/Kabupaten</label>
-            <input type="text" name="offering_city" required maxlength="100"
-                   value="{{ old('offering_city', $activeApp->offering_city ?? '') }}"
-                   class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
-          </div>
-          <div>
-            <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Provinsi</label>
-            <input type="text" name="offering_province" required maxlength="100"
-                   value="{{ old('offering_province', $activeApp->offering_province ?? '') }}"
-                   class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
-          </div>
-        </div>
+        <script>
+          document.addEventListener('alpine:init', () => {
+            Alpine.data('wilayah', (names, base) => ({
+              fallback: false,
+              names,
+              codes: { province: '', city: '', district: '', village: '' },
+              opts: { province: [], city: [], district: [], village: [] },
+              levels: ['province', 'city', 'district', 'village'],
+              async load(level, parent) {
+                try {
+                  const r = await fetch(`${base}/${parent}`, { headers: { Accept: 'application/json' } });
+                  if (!r.ok) throw new Error();
+                  this.opts[level] = (await r.json()).data;
+                } catch (e) { this.fallback = true; }
+              },
+              async init() {
+                await this.load('province', '');
+                for (let i = 0; i < 4 && !this.fallback; i++) {
+                  const l = this.levels[i];
+                  const hit = this.opts[l].find(o => o.name === this.names[l]);
+                  if (!hit) break;
+                  this.codes[l] = hit.code;
+                  if (i < 3) await this.load(this.levels[i + 1], hit.code);
+                }
+              },
+              openKey: null,
+              hi: 0,
+              show(l) {
+                if (this.fallback) return;
+                this.openKey = l; this.hi = 0;
+              },
+              filtered(l) {
+                const q = (this.names[l] || '').trim().toLowerCase();
+                return this.opts[l].filter(o => o.name.toLowerCase().includes(q)).slice(0, 200);
+              },
+              move(l, d) {
+                const n = this.filtered(l).length;
+                this.openKey = l;
+                if (n) this.hi = (this.hi + d + n) % n;
+              },
+              choose(i, o) {
+                this.openKey = null;
+                if (o) this.settle(i, o);
+              },
+              // Ketikan harus cocok persis dengan salah satu nama wilayah; kalau tidak, dikosongkan.
+              pick(i) {
+                if (this.fallback) return;
+                const l = this.levels[i];
+                const q = (this.names[l] || '').trim().toLowerCase();
+                this.settle(i, this.opts[l].find(o => o.name.toLowerCase() === q));
+              },
+              async settle(i, hit) {
+                const l = this.levels[i];
+                if (hit && hit.code === this.codes[l]) { this.names[l] = hit.name; return; }
+                this.codes[l] = hit?.code ?? '';
+                this.names[l] = hit?.name ?? '';
+                for (let j = i + 1; j < 4; j++) {
+                  const n = this.levels[j];
+                  this.codes[n] = ''; this.names[n] = ''; this.opts[n] = [];
+                }
+                if (hit && i < 3) await this.load(this.levels[i + 1], hit.code);
+              },
+            }));
+          });
+        </script>
         <button type="submit" x-bind:disabled="saving"
                 class="w-full py-[11px] rounded-[10px] border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
           <span x-text="saving ? 'Menyimpan...' : 'Simpan Data'">Simpan Data</span>
