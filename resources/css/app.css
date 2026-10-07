@@ -70,7 +70,7 @@ input::placeholder, textarea::placeholder { color: #94a3b8; }
 .form-field {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 14px;

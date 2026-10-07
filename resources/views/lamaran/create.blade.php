@@ -106,10 +106,46 @@
     <form id="lamaran-form" method="POST" action="{{ route('lamaran.store', $jobOpening) }}" enctype="multipart/form-data">
       @csrf
 
+      {{-- Section 1 tetap (Data Utama), selalu paling atas; section master mulai dari nomor 2. --}}
+      @php $sec0 = $sectionColors[0]; @endphp
+      <section class="sg-card mt-4 rounded-[20px] py-[26px] px-7" style="border-top: 3px solid {{ $sec0 }};">
+        <div class="flex gap-3 items-center mb-5">
+          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold"
+               style="color:{{ $sec0 }};background:{{ $sec0 }}1a;">1</div>
+          <h2 class="m-0 text-[17px] font-extrabold text-slate-800 tracking-[-0.3px]">Data Utama</h2>
+        </div>
+        <div class="sg-fields">
+          @foreach([
+            ['full_name', 'Nama Lengkap', 'text'],
+            ['birth_place', 'Tempat Lahir', 'text'],
+            ['birth_date', 'Tanggal Lahir', 'date'],
+            ['gender', 'Jenis Kelamin', 'select'],
+            ['education_level', 'Jenjang Pendidikan', 'select'],
+            ['domicile', 'Domisili', 'text'],
+          ] as [$n, $lbl, $t])
+          <div @if(in_array($n, ['full_name', 'domicile'])) class="col-span-full" @endif>
+            <label class="block mb-[7px] text-[13px] font-bold text-slate-700">{{ $lbl }} <span class="text-red-700">*</span></label>
+            @if($t === 'select')
+              <select name="fields[{{ $n }}]" required class="form-field {{ $errors->has("fields.$n") ? 'border-red-600' : '' }}">
+                <option value="">Pilih...</option>
+                @foreach($n === 'gender' ? ['Laki-laki', 'Perempuan'] : ['SMA/SMK', 'D-III', 'D-IV', 'S-I', 'S-II', 'Profesi'] as $c)
+                  <option value="{{ $c }}" {{ old("fields.$n") === $c ? 'selected' : '' }}>{{ $c }}</option>
+                @endforeach
+              </select>
+            @else
+              <input type="{{ $t }}" name="fields[{{ $n }}]" value="{{ old("fields.$n") }}" required
+                class="form-field {{ $errors->has("fields.$n") ? 'border-red-600' : '' }}" />
+            @endif
+            @error("fields.$n")<p class="mt-1.5 text-[12.5px] text-red-600">{{ $message }}</p>@enderror
+          </div>
+          @endforeach
+        </div>
+      </section>
+
       @foreach($co->formSections as $sectionIndex => $formSection)
       @php
-        $secColor = $sectionColors[$sectionIndex % count($sectionColors)];
-        $secNum   = $sectionIndex + 1;
+        $secColor = $sectionColors[($sectionIndex + 1) % count($sectionColors)];
+        $secNum   = $sectionIndex + 2;
       @endphp
       <section class="sg-card mt-4 rounded-[20px] py-[26px] px-7" style="border-top: 3px solid {{ $secColor }};">
         <div class="flex gap-3 items-center mb-5">
@@ -120,8 +156,9 @@
 
         <div class="sg-fields">
           @foreach($formSection->fields as $field)
+          @continue(in_array($field->name, ['full_name', 'birth_place', 'birth_date', 'gender', 'domicile', 'education_level']))
           @php
-            $isWide    = in_array($field->type, ['textarea']);
+            $isWide   = in_array($field->type, ['textarea']);
             $opts      = $field->options ?? [];
             $isFile    = $field->type === 'file';
             $inputName = $isFile ? "files[{$field->name}]" : "fields[{$field->name}]";

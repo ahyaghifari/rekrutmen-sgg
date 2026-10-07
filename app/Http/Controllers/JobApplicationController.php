@@ -61,9 +61,20 @@ class JobApplicationController extends Controller
                 ->with('warning', 'Kamu sudah memiliki lamaran aktif.');
         }
 
-        $rules = [];
+        // Data Utama: section tetap paling atas, wajib di semua lowongan. Field master bernama sama diabaikan.
+        $rules = [
+            'fields.full_name'   => 'required|string|max:255',
+            'fields.birth_place' => 'required|string|max:100',
+            'fields.birth_date'  => 'required|date|before:today',
+            'fields.gender'      => 'required|in:Laki-laki,Perempuan',
+            'fields.domicile'    => 'required|string|max:255',
+            'fields.education_level' => 'required|in:SMA/SMK,D-III,D-IV,S-I,S-II,Profesi',
+        ];
         foreach ($jobOpening->company->formSections as $section) {
             foreach ($section->fields as $field) {
+                if (in_array($field->name, ['full_name', 'birth_place', 'birth_date', 'gender', 'domicile', 'education_level'])) {
+                    continue;
+                }
                 $base = $field->is_required ? 'required' : 'nullable';
                 $opts = $field->options ?? [];
 
