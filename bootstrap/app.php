@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
         $middleware->throttleApi();
+        $middleware->redirectGuestsTo(fn ($request) => $request->is('dokter*') ? route('dokter.masuk') : route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -218,6 +218,16 @@ class CompanyResource extends BaseResource
                 ->collapsed(),
 
             Forms\Components\Section::make('Status')->schema([
+                Forms\Components\Toggle::make('is_hospital')
+                    ->label('Rumah Sakit')
+                    ->helperText('Tampil sebagai tujuan lamaran di portal dokter.')
+                    ->live()
+                    ->disabled(fn () => !static::isSuperAdmin()),
+                Forms\Components\Toggle::make('dokter_umum_open')
+                    ->label('Penerimaan Dokter Umum Dibuka')
+                    ->helperText('Buka/tutup rekrutmen dokter umum di rumah sakit ini (tanpa lowongan).')
+                    ->visible(fn (Forms\Get $get) => (bool) $get('is_hospital'))
+                    ->disabled(fn () => !static::isSuperAdmin()),
                 Forms\Components\Toggle::make('is_active')
                     ->label('Perusahaan Aktif')
                     ->helperText('Nonaktifkan untuk menyembunyikan lowongan dari halaman publik.')
@@ -252,6 +262,14 @@ class CompanyResource extends BaseResource
 
                 Tables\Columns\TextColumn::make('phone')
                     ->label('Telepon'),
+
+                Tables\Columns\IconColumn::make('is_hospital')
+                    ->label('RS')
+                    ->boolean(),
+
+                Tables\Columns\IconColumn::make('dokter_umum_open')
+                    ->label('Dokter Umum Buka')
+                    ->boolean(),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Aktif')

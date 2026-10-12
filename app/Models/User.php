@@ -60,6 +60,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmailContr
         'password',
         'company_id',
         'is_staff',
+        'account_type',
+        'phone',
     ];
 
     /**

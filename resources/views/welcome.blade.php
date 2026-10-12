@@ -95,6 +95,11 @@
               Daftar &amp; Lamar <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
             </a>
             @endguest
+            {{-- Disembunyikan dulu; buka komentar ini untuk menampilkan tombol lagi.
+            <a href="{{ route('dokter.index') }}" class="inline-flex items-center gap-2 px-[22px] py-[12px] rounded-[11px] text-sm font-bold no-underline text-white bg-teal-600 hover:bg-teal-700 transition-colors duration-150" style="touch-action:manipulation;">
+              <i class="fa-solid fa-user-doctor text-xs" aria-hidden="true"></i> Anda dokter?
+            </a>
+            --}}
           </div>
 
           {{-- Slide dots --}}
@@ -227,6 +232,21 @@
         @endforelse
       </div>
     </section>
+
+    {{-- Portal dokter: disembunyikan dulu; ganti @if(false) jadi @if(true) untuk menampilkan lagi. --}}
+    @if(false)
+    <section class="sg-fade mt-8 relative overflow-hidden rounded-[20px] text-white flex flex-wrap gap-7 items-center justify-between bg-gradient-to-br from-teal-600 to-teal-900" style="padding:clamp(28px,5vw,40px) clamp(24px,5vw,44px);" aria-labelledby="dokter-heading">
+      <div class="absolute w-[280px] h-[280px] rounded-full -right-[60px] -top-[140px] pointer-events-none bg-white/[0.06]" aria-hidden="true"></div>
+      <div class="relative z-[1]">
+        <div class="text-[11.5px] font-bold tracking-[0.1em] uppercase text-white/70 mb-[10px]">Khusus Tenaga Dokter</div>
+        <h2 id="dokter-heading" class="m-0 mb-[10px] text-[26px] font-extrabold tracking-[-0.6px]">Anda seorang dokter?</h2>
+        <p class="m-0 text-[15px] leading-[1.6] text-white/[0.82] max-w-[480px]">Lamar ke lowongan dokter yang dibuka atau ajukan diri langsung lewat portal khusus dokter.</p>
+      </div>
+      <a href="{{ route('dokter.index') }}" class="relative z-[1] inline-flex items-center gap-2 px-6 py-[13px] rounded-[11px] text-sm font-bold no-underline bg-white text-teal-800 hover:bg-teal-50 transition-colors duration-150" style="touch-action:manipulation;">
+        Masuk Portal Dokter <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+      </a>
+    </section>
+    @endif
 
   </main>
 

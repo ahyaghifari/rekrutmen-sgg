@@ -14,7 +14,29 @@ use Maatwebsite\Excel\Facades\Excel;
 Route::get('/', [PublicController::class, 'welcome'])->name('welcome');
 Route::get('/lowongan/{jobOpening}', [PublicController::class, 'lowongan'])->name('lowongan.show');
 
+Route::get('/dokter', [\App\Http\Controllers\DokterPortalController::class, 'index'])->name('dokter.index');
+Route::middleware('guest')->group(function () {
+    Route::get('/dokter/masuk', [\App\Http\Controllers\DokterAuthController::class, 'loginForm'])->name('dokter.masuk');
+    Route::post('/dokter/masuk', [\App\Http\Controllers\DokterAuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::get('/dokter/daftar', [\App\Http\Controllers\DokterAuthController::class, 'registerForm'])->name('dokter.daftar');
+    Route::post('/dokter/daftar', [\App\Http\Controllers\DokterAuthController::class, 'register'])->middleware('throttle:5,1');
+});
+Route::middleware(['auth', 'verified'])->prefix('dokter')->group(function () {
+    Route::get('/lamar', [\App\Http\Controllers\DokterPortalController::class, 'lamar'])->name('dokter.lamar');
+    Route::post('/lamar', [\App\Http\Controllers\DokterPortalController::class, 'store'])->middleware('throttle:5,1')->name('dokter.kirim');
+    Route::get('/riwayat', [\App\Http\Controllers\DokterPortalController::class, 'riwayat'])->name('dokter.riwayat');
+    Route::post('/riwayat/dokumen/{key}', [\App\Http\Controllers\DokterPortalController::class, 'uploadDokumen'])->middleware('throttle:20,1')->name('dokter.dokumen');
+    Route::get('/riwayat/berkas/{key}', [\App\Http\Controllers\DokterPortalController::class, 'berkas'])->name('dokter.berkas');
+});
+
+// Data wilayah publik, dipakai form portal dokter (belum login) dan dashboard.
+Route::get('/wilayah/{code?}', [\App\Http\Controllers\WilayahController::class, 'show'])
+    ->where('code', '[0-9.]*')->middleware('throttle:60,1')->name('wilayah');
+
 Route::get('/dashboard', function () {
+    if (auth()->user()->account_type === 'dokter') {
+        return redirect()->route('dokter.riwayat');
+    }
     $applications = auth()->user()->jobApplications()
         ->with(['jobOpening.company', 'jobOpening.quizzes', 'quizAttempts', 'interviewInvitee.schedule', 'mcuInvitee.schedule', 'offlineTestInvitees.schedule.offlineTest'])
         ->latest()->get();
@@ -42,8 +64,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/persetujuan', [CandidateProfileController::class, 'agreements'])->name('persetujuan.edit');
     Route::patch('/persetujuan', [CandidateProfileController::class, 'updateAgreements'])->name('persetujuan.update');
 
-    Route::get('/wilayah/{code?}', [\App\Http\Controllers\WilayahController::class, 'show'])
-        ->where('code', '[0-9.]*')->middleware('throttle:60,1')->name('wilayah');
     Route::get('/offering-letter/unduh', [OfferingLetterController::class, 'downloadForCandidate'])->name('offering-letter.unduh');
     Route::post('/offering-letter/data', [OfferingLetterController::class, 'updateData'])->middleware('throttle:10,1')->name('offering-letter.data');
     Route::post('/offering-letter/upload-signed', [OfferingLetterController::class, 'uploadSigned'])->middleware('throttle:10,1')->name('offering-letter.upload-signed');
