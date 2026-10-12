@@ -24,6 +24,7 @@ class QuestionsRelationManager extends RelationManager
             ->recordTitleAttribute('question')
             ->columns([
                 Tables\Columns\TextColumn::make('sort_order')->label('#')->width(50)->sortable(),
+                Tables\Columns\TextColumn::make('section.name')->label('Subtest')->placeholder('—'),
                 Tables\Columns\ImageColumn::make('image_path')->label('Gambar')->disk('public')->height(40),
                 Tables\Columns\TextColumn::make('question')->label('Pertanyaan')->limit(60),
                 Tables\Columns\TextColumn::make('correct_option')->label('Jawaban Benar')->badge()->color('success'),

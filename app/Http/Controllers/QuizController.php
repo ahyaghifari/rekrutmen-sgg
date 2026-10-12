@@ -94,7 +94,9 @@ class QuizController extends Controller
             return redirect()->route('tes-online.detail', $quiz);
         }
 
-        $questions = $quiz->questions;
+        // Soal dikelompokkan per subtest (urut subtest, lalu urut soal); tanpa subtest di depan.
+        $questions = $quiz->questions()->with('section')->get()
+            ->sortBy(fn ($q) => $q->section?->sort_order ?? -1)->values();
 
         return view('tes-online.work', compact('application', 'quiz', 'attempt', 'questions'));
     }

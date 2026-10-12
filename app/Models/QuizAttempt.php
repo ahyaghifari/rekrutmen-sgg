@@ -35,9 +35,13 @@ class QuizAttempt extends Model
         return $this->hasMany(QuizAnswer::class);
     }
 
+    /** Toleransi detik setelah deadline, supaya auto-submit dari browser yang tiba telat tetap dinilai. */
+    private const GRACE_SECONDS = 15;
+
     public function isExpired(): bool
     {
-        return $this->status === 'in_progress' && now()->greaterThan($this->deadline_at);
+        return $this->status === 'in_progress'
+            && now()->greaterThan($this->deadline_at->copy()->addSeconds(self::GRACE_SECONDS));
     }
 
     /** Lama pengerjaan dari mulai sampai dikumpulkan, mis. "12 menit 34 detik". */
@@ -65,7 +69,15 @@ class QuizAttempt extends Model
             $question  = $questions->get($questionId);
             if (! $question) continue;
 
-            $isCorrect = $selected !== null && $selected === $question->correct_option;
+            // Soal multi-jawaban: jawaban berupa array, dibandingkan sebagai himpunan label (urut, dipisah koma).
+            // ponytail: label pilihan yang mengandung koma tidak didukung di soal multi-jawaban.
+            $normalize = fn ($v) => collect(is_array($v) ? $v : explode(',', (string) $v))->filter()->sort()->values()->implode(',');
+            if ($question->max_select) {
+                $selected  = $normalize($selected) ?: null;
+                $isCorrect = $selected !== null && $selected === $normalize($question->correct_option);
+            } else {
+                $isCorrect = $selected !== null && $selected === $question->correct_option;
+            }
             if ($isCorrect) $correctCount++;
 
             $this->answers()->create([

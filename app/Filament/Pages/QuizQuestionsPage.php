@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
+use App\Models\QuizSection;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -67,11 +68,16 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
 
         $this->form->fill([
             'questions' => $questions->map(fn (QuizQuestion $q) => [
+                'quiz_section_id' => $q->quiz_section_id,
                 'question'   => $q->question,
                 'image_path' => $q->image_path,
+                'max_select' => $q->max_select,
                 'options'    => collect($q->options ?? [])->map(fn ($opt) => [
                     'label'      => $opt,
-                    'is_correct' => $opt === $q->correct_option,
+                    'image'      => $q->option_images[$opt] ?? null,
+                    'is_correct' => $q->max_select
+                        ? in_array($opt, explode(',', (string) $q->correct_option), true)
+                        : $opt === $q->correct_option,
                 ])->all(),
             ])->all(),
         ]);
@@ -85,6 +91,14 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
                 Forms\Components\Repeater::make('questions')
                     ->label('Daftar Soal')
                     ->schema([
+                        Forms\Components\Select::make('quiz_section_id')
+                            ->label('Subtest')
+                            ->options(fn () => $this->quizId
+                                ? QuizSection::where('quiz_id', $this->quizId)->orderBy('sort_order')->pluck('name', 'id')
+                                : [])
+                            ->placeholder('Tanpa subtest')
+                            ->columnSpanFull(),
+
                         Forms\Components\Textarea::make('question')
                             ->label('Pertanyaan')
                             ->required()
@@ -99,6 +113,13 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
                             ->nullable()
                             ->columnSpanFull(),
 
+                        Forms\Components\TextInput::make('max_select')
+                            ->label('Maks. pilihan dipilih (kosong = pilih satu)')
+                            ->numeric()
+                            ->minValue(2)
+                            ->nullable()
+                            ->helperText('Isi untuk soal multi-jawaban, lalu centang semua jawaban benar.'),
+
                         Forms\Components\Repeater::make('options')
                             ->label('Pilihan Jawaban')
                             ->schema([
@@ -108,6 +129,13 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
                                     ->columnSpan(2),
                                 Forms\Components\Checkbox::make('is_correct')
                                     ->label('Jawaban Benar'),
+                                Forms\Components\FileUpload::make('image')
+                                    ->label('Gambar Pilihan (opsional)')
+                                    ->image()
+                                    ->directory('quiz-options')
+                                    ->imagePreviewHeight('80')
+                                    ->nullable()
+                                    ->columnSpanFull(),
                             ])
                             ->columns(3)
                             ->minItems(2)
@@ -138,10 +166,15 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
 
             QuizQuestion::create([
                 'quiz_id'        => $this->quizId,
+                'quiz_section_id' => $q['quiz_section_id'] ?? null,
                 'question'       => $q['question'],
                 'image_path'     => $q['image_path'] ?? null,
                 'options'        => $options->pluck('label')->all(),
-                'correct_option' => $options->firstWhere('is_correct', true)['label'] ?? null,
+                'option_images'  => $options->filter(fn ($o) => ! empty($o['image']))->pluck('image', 'label')->all() ?: null,
+                'max_select'     => $q['max_select'] ?: null,
+                'correct_option' => ($q['max_select'] ?? null)
+                    ? $options->where('is_correct', true)->pluck('label')->implode(',')
+                    : ($options->firstWhere('is_correct', true)['label'] ?? null),
                 'sort_order'     => $i,
             ]);
         }
@@ -267,6 +300,7 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
             )
             ->columns([
                 Tables\Columns\TextColumn::make('sort_order')->label('#')->width(50)->sortable(),
+                Tables\Columns\TextColumn::make('section.name')->label('Subtest')->placeholder('—'),
                 Tables\Columns\ImageColumn::make('image_path')->label('Gambar')->disk('public')->height(40),
                 Tables\Columns\TextColumn::make('question')->label('Pertanyaan')->limit(60),
                 Tables\Columns\TextColumn::make('correct_option')->label('Jawaban Benar')->badge()->color('success'),
