@@ -16,8 +16,8 @@ class DokterPortalController extends Controller
 
     public function index()
     {
-        $banners = collect(glob(public_path('dokter/banner-*.{jpg,jpeg,png,webp}'), GLOB_BRACE))
-            ->map(fn ($p) => asset('dokter/'.basename($p)))->values();
+        $banners = collect(glob(public_path('banner-dokter/banner-*.{jpg,jpeg,png,webp}'), GLOB_BRACE))
+            ->map(fn ($p) => asset('banner-dokter/'.basename($p)))->values();
         $hospitals = $this->hospitals();
 
         return view('dokter.index', [

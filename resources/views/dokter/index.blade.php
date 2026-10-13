@@ -24,7 +24,7 @@
   </header>
 
   <main class="max-w-[1180px] mx-auto px-6 pt-8 pb-[72px]">
-    {{-- Banner: taruh foto di public/dokter/banner-1.jpg, banner-2.jpg, dst. --}}
+    {{-- Banner: taruh foto di public/banner-dokter/banner-1.jpg, banner-2.jpg, dst. --}}
     <section x-data="{ i: 0, n: {{ max($banners->count(), 1) }} }" x-init="{{ $banners->count() > 1 ? 'setInterval(() => i = (i + 1) % n, 5000)' : '' }}"
              class="relative overflow-hidden rounded-[20px] text-white bg-gradient-to-br from-teal-500 to-teal-900">
       <div class="sg-hero-wrap md:!min-h-[260px] relative z-[2]">
