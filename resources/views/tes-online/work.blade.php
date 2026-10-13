@@ -146,7 +146,7 @@ $pages = $p + 1;
         <div class="text-[12px] text-slate-500" x-text="answered() + ' / ' + total + ' terjawab total'"></div>
       </div>
 
-      <button type="button" @click="confirmOpen = true" :disabled="answered() < total"
+      <button type="button" @click="confirmOpen = true"
         class="w-full py-[13px] rounded-xl border-0 bg-navy hover:bg-navy-dark text-white text-[14.5px] font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
         Kumpulkan Jawaban
       </button>
@@ -157,19 +157,23 @@ $pages = $p + 1;
   <template x-teleport="body">
   <div x-show="confirmOpen" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-900/50" @click="confirmOpen = false"></div>
-    <div class="relative sg-card rounded-[18px] p-6 w-full max-w-[400px]" @keydown.escape.window="confirmOpen = false">
-      <div class="text-[16px] font-extrabold text-slate-800 mb-1">Kumpulkan jawaban?</div>
+    <div class="relative sg-card rounded-[18px] p-6 w-full max-w-[400px] max-h-[90vh] overflow-y-auto break-words" @keydown.escape.window="confirmOpen = false">
+      <div class="text-[16px] font-extrabold text-slate-800 mb-1" x-text="answered() < total ? 'Masih ada soal yang belum dijawab' : 'Kumpulkan jawaban?'"></div>
+      <div x-show="answered() < total" x-cloak class="mb-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[13px] leading-[1.5] text-amber-900">
+        <strong x-text="total - answered()"></strong> dari <span x-text="total"></span> soal belum dijawab. Soal yang tidak dijawab dihitung tidak benar.
+        Kembali ke soal untuk melengkapinya, atau tetap kumpulkan sekarang.
+      </div>
       <p class="text-[13px] leading-[1.6] text-slate-500 m-0 mb-5">
-        Setelah dikumpulkan, jawaban tidak bisa diubah lagi. Pastikan semua soal sudah kamu jawab dengan yakin.
+        Setelah dikumpulkan, jawaban tidak bisa diubah lagi.
       </p>
       <div class="flex justify-end gap-2">
         <button type="button" @click="confirmOpen = false"
           class="px-4 py-[10px] rounded-xl border border-slate-200 text-slate-600 text-[13px] font-bold cursor-pointer bg-white">
-          Batal
+          <span x-text="answered() < total ? 'Kembali ke soal' : 'Batal'">Batal</span>
         </button>
         <button type="button" @click="submitQuiz()"
           class="px-5 py-[10px] rounded-xl border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold cursor-pointer">
-          Ya, Kumpulkan
+          <span x-text="answered() < total ? 'Tetap kumpulkan' : 'Ya, Kumpulkan'">Ya, Kumpulkan</span>
         </button>
       </div>
     </div>
