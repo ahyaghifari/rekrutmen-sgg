@@ -1,7 +1,7 @@
 <x-public-layout>
 <x-slot name="title">Portal Dokter — Syifa Global Group</x-slot>
 
-<div class="min-h-screen bg-teal-50/40">
+<div class="min-h-screen dokter-bg">
   <div class="h-1 bg-gradient-to-r from-teal-800 via-teal-600 to-teal-400" aria-hidden="true"></div>
 
   <header class="border-b border-teal-100 bg-white">

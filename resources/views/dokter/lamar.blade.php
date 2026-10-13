@@ -9,7 +9,7 @@
 <x-public-layout>
 <x-slot name="title">Lamaran Dokter — Syifa Global Group</x-slot>
 
-<div class="min-h-screen bg-teal-50/40" x-data="{ jenis: '{{ $jenis }}' }">
+<div class="min-h-screen dokter-bg" x-data="{ jenis: '{{ $jenis }}' }">
   <div class="h-1 bg-gradient-to-r from-teal-800 via-teal-600 to-teal-400" aria-hidden="true"></div>
   <header class="border-b border-teal-100 bg-white">
     <div class="max-w-[1180px] mx-auto px-6 py-[14px] flex items-center gap-4">

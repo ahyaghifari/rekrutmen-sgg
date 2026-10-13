@@ -280,3 +280,11 @@ input::placeholder, textarea::placeholder { color: #94a3b8; }
 /* subtle button (Detail) */
 .sg-btn-subtle { background: #f1f5f9; color: #042c6c; }
 [data-theme="dark"] .sg-btn-subtle { background: #1e2d45; color: #93b4e8; }
+
+/* ── Portal dokter: foto gedung RS sebagai latar, diberi lapisan teal pucat agar kartu & teks tetap terbaca ── */
+.dokter-bg {
+  background:
+    linear-gradient(180deg, rgba(240, 253, 250, 0.80) 0%, rgba(240, 253, 250, 0.90) 45%, rgba(240, 253, 250, 0.95) 100%),
+    url('/syifa-medika.webp') center top / cover no-repeat;
+  background-attachment: fixed;
+}

@@ -1,7 +1,7 @@
 @props(['title', 'subtitle'])
 <x-public-layout>
 <x-slot name="title">{{ $title }} — Portal Dokter</x-slot>
-<div class="min-h-screen bg-teal-50/40">
+<div class="min-h-screen dokter-bg">
   <div class="h-1 bg-gradient-to-r from-teal-800 via-teal-600 to-teal-400" aria-hidden="true"></div>
   <div class="max-w-[480px] mx-auto px-6 py-10">
     <a href="{{ route('dokter.index') }}" class="inline-flex items-center gap-2 mb-6 px-[14px] py-2 rounded-[10px] border border-teal-100 bg-white text-slate-600 text-[13px] font-bold no-underline hover:border-teal-300">

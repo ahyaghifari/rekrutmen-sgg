@@ -7,7 +7,7 @@
 <x-public-layout>
 <x-slot name="title">Riwayat Lamaran — Portal Dokter</x-slot>
 
-<div class="min-h-screen bg-teal-50/40">
+<div class="min-h-screen dokter-bg">
   <div class="h-1 bg-gradient-to-r from-teal-800 via-teal-600 to-teal-400" aria-hidden="true"></div>
   <header class="border-b border-teal-100 bg-white">
     <div class="max-w-[960px] mx-auto px-6 py-[14px] flex items-center gap-4">
