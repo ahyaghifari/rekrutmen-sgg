@@ -179,7 +179,8 @@ class JobApplication extends Model
 
     public function jobOpening(): BelongsTo
     {
-        return $this->belongsTo(JobOpening::class);
+        // Lowongan boleh sudah dihapus (soft delete); lamaran lama tetap harus bisa menampilkan judulnya.
+        return $this->belongsTo(JobOpening::class)->withTrashed();
     }
 
     public function candidate(): HasOne

@@ -5,7 +5,7 @@ namespace App\Support;
 /**
  * Definisi form lamaran dokter, dipakai view (render) dan controller (validasi).
  * Fase rekrutmen dari knowledge/data-dokter.md. SIP & credentialing sengaja tidak ada: pasca-rekrutmen.
- * Berkas (type 'file') opsional saat kirim; dokter melengkapinya kemudian dari halaman riwayat.
+ * Berkas bertanda req wajib saat kirim; sisanya opsional dan bisa dilengkapi kemudian dari halaman riwayat.
  */
 class DokterForm
 {
@@ -41,10 +41,12 @@ class DokterForm
                 $f('spesialisasi', 'Spesialisasi utama', 'text', true, 'spesialis'), $f('subspesialisasi', 'Subspesialisasi', 'text', false, 'spesialis'),
                 $s('status_kepegawaian', 'Status kepegawaian yang diminati', ['Tetap', 'Kontrak', 'Mitra (visiting)', 'Part-time']),
             ]],
-            ['Lisensi (STR)', 'fa-certificate', [
+            ['STR (Surat Tanda Registrasi)', 'fa-certificate', [
                 $f('str_nomor', 'Nomor STR'), $f('str_kolegium', 'Kolegium / penerbit', 'text', false),
-                $f('str_terbit', 'Tanggal terbit', 'date'), $f('str_berlaku', 'Berlaku sampai', 'date'), $f('str_file', 'Scan STR', 'file', false),
-                $f('strkt_nomor', 'Nomor STR-KT (opsional)', 'text', false), $f('strkt_berlaku', 'STR-KT berlaku sampai', 'date', false), $f('strkt_file', 'Scan STR-KT', 'file', false),
+                $f('str_terbit', 'Tanggal terbit', 'date'), $f('str_file', 'Scan STR', 'file'),
+            ]],
+            ['STR-KT (Kewenangan Tambahan, opsional)', 'fa-award', [
+                $f('strkt_nomor', 'Nomor STR-KT', 'text', false), $f('strkt_berlaku', 'Berlaku sampai', 'date', false), $f('strkt_file', 'Scan STR-KT', 'file', false),
             ]],
             ['Rekening & Pajak', 'fa-wallet', [
                 $f('npwp', 'NPWP', 'text', false), $f('nama_bank', 'Nama bank'), $f('nomor_rekening', 'Nomor rekening'), $f('atas_nama', 'Atas nama'),
@@ -53,8 +55,8 @@ class DokterForm
                 $f('no_hp', 'No. HP / WhatsApp', 'tel'), $f('email', 'Email', 'email'),
             ]],
             ['Dokumen', 'fa-folder-open', [
-                $f('d_cv', 'CV', 'file', false), $f('d_ktp', 'KTP', 'file', false), $f('d_npwp', 'NPWP', 'file', false),
-                $f('d_ijazah_dokter', 'Ijazah dokter', 'file', false), $f('d_ijazah_spesialis', 'Ijazah spesialis', 'file', false), $f('d_ijazah_subspesialis', 'Ijazah subspesialis', 'file', false),
+                $f('d_cv', 'CV', 'file'), $f('d_ktp', 'KTP', 'file'), $f('d_npwp', 'NPWP', 'file', false),
+                $f('d_ijazah_dokter', 'Ijazah dokter', 'file'), $f('d_ijazah_spesialis', 'Ijazah spesialis', 'file', false), $f('d_ijazah_subspesialis', 'Ijazah subspesialis', 'file', false),
                 $f('d_transkrip', 'Transkrip', 'file', false), $f('d_kompetensi', 'Sertifikat kompetensi', 'file', false),
                 $f('d_rekening', 'Buku rekening', 'file', false),
             ]],
@@ -71,10 +73,25 @@ class DokterForm
         ];
     }
 
-    /** Semua berkas yang bisa dikumpulkan: [key => label], semuanya opsional saat kirim. */
+    /** Key berkas yang wajib saat kirim (pas_foto selalu). */
+    public static function requiredDocuments(): array
+    {
+        $req = ['pas_foto'];
+        foreach (self::sections() as [, , $fields]) {
+            foreach ($fields as $fl) {
+                if ($fl['type'] === 'file' && $fl['req']) {
+                    $req[] = $fl['name'];
+                }
+            }
+        }
+
+        return $req;
+    }
+
+    /** Semua berkas yang bisa dikumpulkan: [key => label]. pas_foto wajib saat kirim, sisanya opsional. */
     public static function documents(): array
     {
-        $docs = [];
+        $docs = ['pas_foto' => 'Pas foto'];
         foreach (self::sections() as [, , $fields]) {
             foreach ($fields as $fl) {
                 if ($fl['type'] === 'file') {

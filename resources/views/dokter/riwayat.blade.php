@@ -72,7 +72,7 @@
             <div class="flex items-center gap-3 min-w-[220px] flex-1">
               <i class="fa-solid {{ $has ? 'fa-circle-check text-teal-600' : 'fa-circle text-slate-300' }}" aria-hidden="true"></i>
               <div>
-                <div class="text-sm font-semibold text-slate-800">{{ $label }}</div>
+                <div class="text-sm font-semibold text-slate-800">{{ $label }} @if(in_array($key, \App\Support\DokterForm::requiredDocuments()))<span class="text-red-500">*</span>@endif</div>
                 @if ($has)
                   <a href="{{ route('dokter.berkas', $key) }}" class="text-[12.5px] font-semibold text-teal-700 hover:underline">{{ $files[$key]['name'] }}</a>
                 @else

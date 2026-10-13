@@ -21,8 +21,8 @@ Route::middleware('guest')->group(function () {
     Route::get('/dokter/daftar', [\App\Http\Controllers\DokterAuthController::class, 'registerForm'])->name('dokter.daftar');
     Route::post('/dokter/daftar', [\App\Http\Controllers\DokterAuthController::class, 'register'])->middleware('throttle:5,1');
 });
+Route::get('/dokter/lamar', [\App\Http\Controllers\DokterPortalController::class, 'lamar'])->name('dokter.lamar'); // publik: dokter boleh lihat form dulu, kirim tetap wajib login
 Route::middleware(['auth', 'verified'])->prefix('dokter')->group(function () {
-    Route::get('/lamar', [\App\Http\Controllers\DokterPortalController::class, 'lamar'])->name('dokter.lamar');
     Route::post('/lamar', [\App\Http\Controllers\DokterPortalController::class, 'store'])->middleware('throttle:5,1')->name('dokter.kirim');
     Route::get('/riwayat', [\App\Http\Controllers\DokterPortalController::class, 'riwayat'])->name('dokter.riwayat');
     Route::post('/riwayat/dokumen/{key}', [\App\Http\Controllers\DokterPortalController::class, 'uploadDokumen'])->middleware('throttle:20,1')->name('dokter.dokumen');

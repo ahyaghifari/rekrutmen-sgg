@@ -233,8 +233,7 @@
       </div>
     </section>
 
-    {{-- Portal dokter: disembunyikan dulu; ganti @if(false) jadi @if(true) untuk menampilkan lagi. --}}
-    @if(false)
+    {{-- Portal dokter --}}
     <section class="sg-fade mt-8 relative overflow-hidden rounded-[20px] text-white flex flex-wrap gap-7 items-center justify-between bg-gradient-to-br from-teal-600 to-teal-900" style="padding:clamp(28px,5vw,40px) clamp(24px,5vw,44px);" aria-labelledby="dokter-heading">
       <div class="absolute w-[280px] h-[280px] rounded-full -right-[60px] -top-[140px] pointer-events-none bg-white/[0.06]" aria-hidden="true"></div>
       <div class="relative z-[1]">
@@ -246,7 +245,6 @@
         Masuk Portal Dokter <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
       </a>
     </section>
-    @endif
 
   </main>
 

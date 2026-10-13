@@ -1,5 +1,6 @@
 @php
-    $pre = ['nama' => auth()->user()->name, 'nik' => auth()->user()->nik, 'email' => auth()->user()->email, 'no_hp' => auth()->user()->phone];
+    $u = auth()->user();
+    $pre = $u ? ['nama' => $u->name, 'nik' => $u->nik, 'email' => $u->email, 'no_hp' => $u->phone] : [];
     $in = 'w-full rounded-xl border-2 border-slate-300 px-4 py-3.5 text-base focus:border-teal-600 focus:ring-teal-600';
     $lb = 'block text-sm font-semibold text-slate-700 mb-2';
     $sections  = \App\Support\DokterForm::sections();
@@ -15,15 +16,30 @@
       <img src="/logo-sgg.png" alt="Syifa Global Group" class="h-9 w-auto" width="36" height="36" />
       <div class="text-[11px] font-bold tracking-[0.06em] uppercase text-teal-800">Portal Dokter</div>
       <a href="{{ route('dokter.index') }}" class="ml-auto text-sm font-semibold text-slate-600 hover:text-teal-700"><i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i> Kembali</a>
-      <form method="POST" action="{{ route('logout') }}" class="m-0">@csrf<button class="px-4 py-2 rounded-xl border border-teal-200 text-sm font-bold text-teal-800 hover:bg-teal-50">Keluar</button></form>
+      @auth
+        <form method="POST" action="{{ route('logout') }}" class="m-0">@csrf<button class="px-4 py-2 rounded-xl border border-teal-200 text-sm font-bold text-teal-800 hover:bg-teal-50">Keluar</button></form>
+      @endauth
     </div>
   </header>
 
   <main class="max-w-[1180px] mx-auto px-6 pt-8 pb-[72px]">
+    @guest
+      <div class="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div class="text-sm font-bold text-amber-900">Masuk dulu untuk mengirim lamaran</div>
+          <div class="text-sm text-amber-800/90">Anda dapat melihat dan mempersiapkan data di bawah. Untuk mengirim, masuk atau daftar akun dokter terlebih dahulu.</div>
+        </div>
+        <div class="flex gap-3">
+          <a href="{{ route('dokter.masuk') }}" class="px-5 py-2.5 rounded-xl border-2 border-amber-600 text-amber-800 text-sm font-bold no-underline hover:bg-white">Masuk</a>
+          <a href="{{ route('dokter.daftar') }}" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold no-underline">Daftar</a>
+        </div>
+      </div>
+    @endguest
+
     <h1 class="m-0 text-2xl font-extrabold text-slate-800">Formulir Lamaran Dokter</h1>
     <p class="mt-1 mb-6 text-sm text-slate-500">Dokter umum melamar ke rumah sakit yang sedang membuka penerimaan. Dokter spesialis mengajukan diri langsung ke rumah sakit.</p>
 
-    <form x-data="{ ok: false }" x-init="setInterval(() => ok = $el.checkValidity(), 300)" method="POST" action="{{ route('dokter.kirim') }}" enctype="multipart/form-data" class="space-y-8">
+    <form x-data="{ ok: false, guest: {{ auth()->check() ? 'false' : 'true' }} }" x-init="setInterval(() => ok = $el.checkValidity(), 300)" method="POST" action="{{ route('dokter.kirim') }}" enctype="multipart/form-data" class="space-y-8">
       @csrf
       @if ($errors->any())
         <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"><ul class="m-0 pl-5">@foreach ($errors->all() as $er)<li>{{ $er }}</li>@endforeach</ul></div>
@@ -37,21 +53,15 @@
         <input type="hidden" name="jenis" :value="jenis">
         <div x-show="jenis==='umum'">
           <label class="{{ $lb }}">Rumah sakit yang membuka penerimaan <span class="text-red-500">*</span></label>
-          <select name="company_id" class="{{ $in }}" :disabled="jenis!=='umum'" required>
-            <option value="">— Pilih rumah sakit —</option>
-            @foreach ($umumOpen as $c)<option value="{{ $c->id }}">{{ $c->name }}</option>@endforeach
-          </select>
+          <x-dokter.hospital-picker :hospitals="$umumOpen" when="jenis==='umum'" />
           @if ($umumOpen->isEmpty())<p class="mt-2 text-xs text-slate-500">Penerimaan dokter umum sedang ditutup di semua rumah sakit.</p>@endif
         </div>
-        <div x-show="jenis==='spesialis'" x-cloak class="grid gap-x-6 gap-y-7 md:grid-cols-2">
+        <div x-show="jenis==='spesialis'" x-cloak class="space-y-6">
           <div>
             <label class="{{ $lb }}">Rumah sakit tujuan <span class="text-red-500">*</span></label>
-            <select name="company_id" class="{{ $in }}" :disabled="jenis!=='spesialis'" required>
-              <option value="">— Pilih rumah sakit —</option>
-              @foreach ($hospitals as $c)<option value="{{ $c->id }}">{{ $c->name }}</option>@endforeach
-            </select>
+            <x-dokter.hospital-picker :hospitals="$hospitals" when="jenis==='spesialis'" />
           </div>
-          <div>
+          <div class="md:max-w-[50%]">
             <label class="{{ $lb }}">Poli / unit yang diminati</label>
             <input type="text" name="unit_minat" class="{{ $in }}" :disabled="jenis!=='spesialis'">
           </div>
@@ -81,6 +91,10 @@
           </div>
           @if ($title === 'Identitas')
             <x-wilayah-picker prefix="dokter_" :count="2" accent="teal" :big="true" class="mt-7 gap-x-6 gap-y-7" />
+            <div class="mt-7">
+              <label class="{{ $lb }}">Pas foto <span class="text-red-500">*</span></label>
+              <input type="file" name="pas_foto" accept=".jpg,.jpeg,.png" required class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-teal-600 file:px-4 file:py-3 file:text-white file:font-semibold">
+            </div>
           @endif
         </section>
       @endforeach
@@ -109,6 +123,7 @@
         </section>
       @endforeach
 
+      @auth
       <section class="rounded-2xl bg-white border border-teal-100 p-8">
         <label class="flex items-start gap-3 text-sm text-slate-700">
           <input type="checkbox" required class="mt-1 rounded border-2 border-slate-300 text-teal-600 focus:ring-teal-600">
@@ -116,7 +131,8 @@
         </label>
       </section>
 
-      <div class="text-center"><button type="submit" :disabled="!ok" class="px-8 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-teal-600">Kirim lamaran</button></div>
+      <div class="text-center"><button type="submit" :disabled="!ok || guest" class="px-8 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-teal-600">Kirim lamaran</button></div>
+      @endauth
     </form>
   </main>
 </div>

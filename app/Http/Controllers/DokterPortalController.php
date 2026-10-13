@@ -57,6 +57,7 @@ class DokterPortalController extends Controller
         $rules = [
             'company_id' => ['required', Rule::in($hospital)],
             'unit_minat' => ['nullable', 'string', 'max:255'],
+            'pas_foto'   => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ];
         $scalar = [];
         foreach (DokterForm::sections() as [, , $fields]) {
@@ -65,7 +66,7 @@ class DokterPortalController extends Controller
                     continue;
                 }
                 if ($fl['type'] === 'file') {
-                    $rules[$fl['name']] = ['nullable', ...self::FILE];
+                    $rules[$fl['name']] = [$fl['req'] ? 'required' : 'nullable', ...self::FILE];
                     continue;
                 }
                 $scalar[] = $fl['name'];
@@ -183,6 +184,6 @@ class DokterPortalController extends Controller
 
     private function hospitals()
     {
-        return Company::active()->where('is_hospital', true)->orderBy('name')->get(['id', 'name', 'dokter_umum_open']);
+        return Company::active()->where('is_hospital', true)->orderBy('name')->get(['id', 'name', 'logo_path', 'dokter_umum_open']);
     }
 }

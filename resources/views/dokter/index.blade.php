@@ -27,15 +27,15 @@
     {{-- Banner: taruh foto di public/dokter/banner-1.jpg, banner-2.jpg, dst. --}}
     <section x-data="{ i: 0, n: {{ max($banners->count(), 1) }} }" x-init="{{ $banners->count() > 1 ? 'setInterval(() => i = (i + 1) % n, 5000)' : '' }}"
              class="relative overflow-hidden rounded-[20px] text-white bg-gradient-to-br from-teal-500 to-teal-900">
-      <div class="sg-hero-wrap relative z-[2]">
-        <div class="sg-hero flex-1 min-w-0 flex flex-col justify-center">
+      <div class="sg-hero-wrap md:!min-h-[260px] relative z-[2]">
+        <div class="sg-hero md:!py-9 flex-1 min-w-0 flex flex-col justify-center">
           <div class="inline-flex items-center gap-2 px-[14px] py-[7px] rounded-full text-xs font-bold tracking-[0.05em] uppercase bg-white/[0.16] w-fit">
             <i class="fa-solid fa-user-doctor" aria-hidden="true"></i> Khusus tenaga dokter
           </div>
-          <h1 class="mt-4 mb-3 text-3xl md:text-5xl font-extrabold leading-[1.1] tracking-tight">Bergabung bersama jaringan rumah sakit kami</h1>
+          <h1 class="mt-4 mb-3 text-3xl md:text-4xl font-extrabold leading-[1.1] tracking-tight">Bergabung bersama jaringan rumah sakit kami</h1>
           <p class="m-0 text-[15px] leading-[1.6] text-white/85">Dokter umum melamar ke rumah sakit yang sedang membuka penerimaan. Dokter spesialis dan subspesialis dapat mengajukan diri langsung ke rumah sakit tujuan.</p>
         </div>
-        <div class="sg-hero-right relative" style="min-height:260px" aria-hidden="true">
+        <div class="sg-hero-right md:!w-[34%] relative" style="min-height:220px" aria-hidden="true">
           @foreach ($banners as $k => $src)
             <img src="{{ $src }}" alt="" class="sg-hero-img absolute inset-0 w-full h-full transition-opacity duration-700"
                  :class="i === {{ $k }} ? 'opacity-100' : 'opacity-0'">
