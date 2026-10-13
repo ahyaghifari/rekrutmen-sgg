@@ -32,6 +32,20 @@
           </div>
           <h1 class="mt-4 mb-3 text-3xl md:text-4xl font-extrabold leading-[1.1] tracking-tight">Bergabung bersama jaringan rumah sakit kami</h1>
           <p class="m-0 text-[15px] leading-[1.6] text-white/85">Dokter umum melamar ke rumah sakit yang sedang membuka penerimaan. Dokter spesialis dan subspesialis dapat mengajukan diri langsung ke rumah sakit tujuan.</p>
+          @if ($hospitalList->isNotEmpty())
+            <div class="mt-5 flex flex-wrap items-center gap-2">
+              @foreach ($hospitalList as $h)
+                <div class="flex items-center gap-2 rounded-xl bg-white px-2.5 py-1.5 shadow-sm" title="{{ $h->name }}">
+                  @if ($h->logo_url)
+                    <img src="{{ $h->logo_url }}" alt="{{ $h->name }}" class="h-6 w-auto max-w-[100px] object-contain">
+                  @else
+                    <span class="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-teal-100 text-[11px] text-teal-700" aria-hidden="true"><i class="fa-solid fa-hospital"></i></span>
+                    <span class="text-xs font-bold leading-tight text-slate-800">{{ $h->name }}</span>
+                  @endif
+                </div>
+              @endforeach
+            </div>
+          @endif
         </div>
         <div class="sg-hero-right md:!w-[34%] relative" style="min-height:220px" aria-hidden="true">
           @foreach ($banners as $k => $src)

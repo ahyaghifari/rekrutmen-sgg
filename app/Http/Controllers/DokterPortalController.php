@@ -24,6 +24,7 @@ class DokterPortalController extends Controller
             'banners'     => $banners,
             'umumOpen'    => $hospitals->where('dokter_umum_open', true)->count(),
             'hospitals'   => $hospitals->count(),
+            'hospitalList' => $hospitals,
             'application' => $this->application(),
         ]);
     }
