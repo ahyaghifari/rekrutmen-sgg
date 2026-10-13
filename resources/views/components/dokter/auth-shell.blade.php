@@ -9,7 +9,7 @@
     </a>
     <div class="flex items-center gap-3 mb-5">
       <img src="/logo-sgg.png" alt="Syifa Global Group" class="h-9 w-auto" width="36" height="36" />
-      <div class="text-[11px] font-bold tracking-[0.06em] uppercase text-teal-800">Portal Dokter</div>
+      <div class="text-[11px] font-bold tracking-[0.06em] uppercase text-teal-800">Karir Dokter</div>
     </div>
     <h1 class="m-0 mb-1.5 text-[26px] font-extrabold text-slate-800 tracking-[-0.7px]">{{ $title }}</h1>
     <p class="m-0 mb-7 text-sm text-slate-500">{{ $subtitle }}</p>

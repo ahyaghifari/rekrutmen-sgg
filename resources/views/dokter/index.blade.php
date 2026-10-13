@@ -5,19 +5,17 @@
   <div class="h-1 bg-gradient-to-r from-teal-800 via-teal-600 to-teal-400" aria-hidden="true"></div>
 
   <header class="border-b border-teal-100 bg-white">
-    <div class="max-w-[1180px] mx-auto px-6 py-[14px] flex items-center gap-4">
+    <div class="max-w-[1180px] mx-auto px-4 sm:px-6 py-[14px] flex items-center gap-3 sm:gap-4">
       <img src="/logo-sgg.png" alt="Syifa Global Group" class="h-9 w-auto" width="36" height="36" />
-      <div class="text-[11px] font-bold tracking-[0.06em] uppercase text-teal-800">Portal Dokter</div>
-      <nav class="ml-auto flex items-center gap-3 text-sm font-semibold">
-        <a href="{{ route('welcome') }}" class="text-slate-600 hover:text-teal-700"><i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i> Portal umum</a>
+      <div class="text-[11px] font-bold tracking-[0.06em] uppercase text-teal-800">Karir Dokter</div>
+      <nav class="ml-auto flex items-center gap-2 sm:gap-3 text-sm font-semibold">
         @auth
           <a href="{{ route('dokter.riwayat') }}" class="text-slate-600 hover:text-teal-700">Riwayat</a>
           <form method="POST" action="{{ route('logout') }}" class="m-0">@csrf
             <button class="px-4 py-2 rounded-xl border border-teal-200 text-teal-800 hover:bg-teal-50 font-bold">Keluar</button>
           </form>
         @else
-          <a href="{{ route('dokter.masuk') }}" class="px-4 py-2 rounded-xl border border-teal-200 text-teal-800 hover:bg-teal-50 font-bold no-underline">Masuk</a>
-          <a href="{{ route('dokter.daftar') }}" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold no-underline">Daftar</a>
+          <a href="{{ route('dokter.masuk') }}" class="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold no-underline">Masuk</a>
         @endauth
       </nav>
     </div>

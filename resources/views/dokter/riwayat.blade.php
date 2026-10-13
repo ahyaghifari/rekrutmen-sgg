@@ -12,7 +12,7 @@
   <header class="border-b border-teal-100 bg-white">
     <div class="max-w-[960px] mx-auto px-6 py-[14px] flex items-center gap-4">
       <img src="/logo-sgg.png" alt="Syifa Global Group" class="h-9 w-auto" width="36" height="36" />
-      <div class="text-[11px] font-bold tracking-[0.06em] uppercase text-teal-800">Portal Dokter</div>
+      <div class="text-[11px] font-bold tracking-[0.06em] uppercase text-teal-800">Karir Dokter</div>
       <a href="{{ route('dokter.index') }}" class="ml-auto text-sm font-semibold text-slate-600 hover:text-teal-700">Beranda</a>
       <form method="POST" action="{{ route('logout') }}" class="m-0">@csrf
         <button class="px-4 py-2 rounded-xl border border-teal-200 text-sm font-bold text-teal-800 hover:bg-teal-50">Keluar</button>
