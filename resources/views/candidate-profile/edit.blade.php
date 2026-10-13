@@ -131,6 +131,11 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
           <input type="date" name="marriage_date" value="{{ old('marriage_date', $candidate->marriage_date?->format('Y-m-d')) }}" class="form-field" /></div>
         <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Nama Ibu Kandung</label>
           <input type="text" name="mother_name" value="{{ old('mother_name', $candidate->mother_name) }}" class="form-field" /></div>
+        {{-- STR hanya untuk jabatan nakes (job_openings.is_nakes, diisi dari HRIS). --}}
+        @if($candidate->jobApplication?->jobOpening?->is_nakes)
+        <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">No. STR (Surat Tanda Registrasi) *</label>
+          <input type="text" name="no_str" value="{{ old('no_str', $candidate->no_str) }}" class="form-field" /></div>
+        @endif
       </div>
     </section>
 

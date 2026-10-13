@@ -28,6 +28,7 @@ class Candidate extends Model
         'status_marital',
         'marriage_date',
         'mother_name',
+        'no_str',
         'ktp_address',
         'village',
         'district',
@@ -122,7 +123,7 @@ class Candidate extends Model
         $docTypeHas = fn (string $needle) => $this->documents
             ->contains(fn ($d) => str_contains(mb_strtolower((string) $d->doc_type), $needle));
 
-        return [
+        $items = [
             'name'           => ['label' => 'Nama sesuai KTP',           'filled' => $has($this->name),           'tab' => 1],
             'nik'            => ['label' => 'NIK',                       'filled' => $has($this->nik),            'tab' => 1],
             'no_kk'          => ['label' => 'No. Kartu Keluarga',       'filled' => $has($this->no_kk),          'tab' => 1],
@@ -139,6 +140,16 @@ class Candidate extends Model
             'doc_ktp'        => ['label' => 'Dokumen KTP',              'filled' => $docTypeHas('ktp'),          'tab' => 12],
             'doc_kk'         => ['label' => 'Dokumen Kartu Keluarga',   'filled' => $docTypeHas('kk') || $docTypeHas('kartu keluarga'), 'tab' => 12],
         ];
+
+        // STR wajib hanya untuk jabatan nakes (job_openings.is_nakes, diisi dari HRIS). Disisipkan
+        // setelah Status pernikahan supaya urutan checklist mengikuti urutan form.
+        $this->loadMissing('jobApplication.jobOpening');
+        if ($this->jobApplication?->jobOpening?->is_nakes) {
+            $str = ['no_str' => ['label' => 'No. STR', 'filled' => $has($this->no_str), 'tab' => 1]];
+            $items = array_slice($items, 0, 5, true) + $str + array_slice($items, 5, null, true);
+        }
+
+        return $items;
     }
 
     /** Semua data wajib sudah dilengkapi. */

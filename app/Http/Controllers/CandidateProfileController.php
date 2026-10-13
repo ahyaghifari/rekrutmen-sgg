@@ -119,6 +119,7 @@ class CandidateProfileController extends Controller
             'status_marital'        => ['nullable', 'in:Belum Menikah,Sudah Menikah'],
             'marriage_date'         => ['nullable', 'date'],
             'mother_name'           => ['nullable', 'string', 'max:255'],
+            'no_str'                => ['nullable', 'string', 'max:100'],
             'ktp_address'           => ['nullable', 'string'],
             'village'               => ['nullable', 'string', 'max:100'],
             'district'              => ['nullable', 'string', 'max:100'],
@@ -205,7 +206,7 @@ class CandidateProfileController extends Controller
         DB::transaction(function () use ($candidate, $data, $request) {
             $candidate->update(collect($data)->only([
                 'name', 'nickname', 'nik', 'no_kk', 'blood_type', 'body_height_weight',
-                'religion', 'nationality', 'status_marital', 'marriage_date', 'mother_name',
+                'religion', 'nationality', 'status_marital', 'marriage_date', 'mother_name', 'no_str',
                 'ktp_address', 'village', 'district', 'city', 'province', 'social_media_accounts',
                 'no_bpjskes', 'faskes', 'no_bpjstk', 'company_bpjstk', 'bsi_bank_number',
             ])->all());

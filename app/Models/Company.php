@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Company extends Model
 {
     protected $fillable = [
-        'hris_code', 'name', 'logo_path', 'hero_image_path', 'brand_color', 'email', 'phone', 'is_active', 'is_hospital', 'dokter_umum_open', 'requires_mcu', 'management_mode',
+        'hris_code', 'name', 'logo_path', 'hero_image_path', 'brand_color', 'email', 'phone', 'is_active', 'is_hospital', 'dokter_umum_open', 'requires_mcu', 'requires_agreement', 'management_mode',
         'offering_signatory_name', 'offering_signatory_title', 'offering_signatory_signature_path', 'offering_benefit_note', 'offering_letter_template',
         'offering_letter_background_path',
     ];
@@ -19,6 +19,7 @@ class Company extends Model
         'is_hospital' => 'boolean',
         'dokter_umum_open' => 'boolean',
         'requires_mcu' => 'boolean',
+        'requires_agreement' => 'boolean',
         'offering_letter_template' => OfferingLetterTemplate::class,
     ];
 

@@ -20,6 +20,7 @@ class JobOpening extends Model
         'company_id',
         'title',
         'division_name',
+        'is_nakes',
         'company_name',
         'quota',
         'max_applicants',
@@ -38,6 +39,7 @@ class JobOpening extends Model
 
     protected $casts = [
         'is_active'             => 'boolean',
+        'is_nakes'              => 'boolean',
         'quota'                 => 'integer',
         'max_applicants'        => 'integer',
         'applications_deadline' => 'date',
@@ -122,6 +124,12 @@ class JobOpening extends Model
     public function effectiveAgreements(): \Illuminate\Support\Collection
     {
         $this->loadMissing('company.agreements', 'agreements');
+
+        // Perusahaan yang tidak memakai persetujuan: tidak ada naskah efektif, jadi semua pemanggil
+        // (agreementsPending, halaman Persetujuan, TTD & Onboarding) otomatis melewatinya.
+        if ($this->company && ! $this->company->requires_agreement) {
+            return collect();
+        }
 
         $items = collect();
         foreach ($this->company?->agreements ?? collect() as $a) {
