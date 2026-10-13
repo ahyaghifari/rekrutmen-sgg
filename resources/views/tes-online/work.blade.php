@@ -43,6 +43,7 @@ $pages = $p + 1;
                 const saved = JSON.parse(localStorage.getItem(this.storageKey));
                 if (saved) { this.answers = Object.assign(this.answers, saved.answers || {}); this.current = saved.current || 0; }
             } catch (e) {}
+            this.$watch('confirmOpen', open => { document.body.style.overflow = open ? 'hidden' : ''; });
             this.$watch('answers', () => this.save());
             this.$watch('current', () => { this.save(); window.scrollTo({ top: 0 }); });
         },
@@ -153,8 +154,8 @@ $pages = $p + 1;
   </form>
 
   {{-- Modal konfirmasi kumpulkan jawaban --}}
-  <div x-show="confirmOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
-       x-transition.opacity>
+  <template x-teleport="body">
+  <div x-show="confirmOpen" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-900/50" @click="confirmOpen = false"></div>
     <div class="relative sg-card rounded-[18px] p-6 w-full max-w-[400px]" @keydown.escape.window="confirmOpen = false">
       <div class="text-[16px] font-extrabold text-slate-800 mb-1">Kumpulkan jawaban?</div>
@@ -173,6 +174,7 @@ $pages = $p + 1;
       </div>
     </div>
   </div>
+  </template>
 
 </div>
 </x-app-layout>
