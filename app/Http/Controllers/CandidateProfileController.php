@@ -107,6 +107,12 @@ class CandidateProfileController extends Controller
                 ->with('warning', 'Setujui semua persetujuan dulu sebelum mengisi data diri.');
         }
 
+        // Checkbox yang tidak dicentang tidak ikut terkirim; STR seumur hidup tidak punya tanggal.
+        if ($request->has('no_str')) {
+            $lifetime = $request->boolean('str_seumur_hidup');
+            $request->merge(['str_seumur_hidup' => $lifetime] + ($lifetime ? ['str_berlaku_mulai' => null, 'str_berlaku_sampai' => null] : []));
+        }
+
         $data = $request->validate([
             'name'                  => ['required', 'string', 'max:255'],
             'nickname'              => ['nullable', 'string', 'max:100'],
@@ -120,6 +126,9 @@ class CandidateProfileController extends Controller
             'marriage_date'         => ['nullable', 'date'],
             'mother_name'           => ['nullable', 'string', 'max:255'],
             'no_str'                => ['nullable', 'string', 'max:100'],
+            'str_seumur_hidup'      => ['boolean'],
+            'str_berlaku_mulai'     => ['nullable', 'date'],
+            'str_berlaku_sampai'    => ['nullable', 'date', 'after_or_equal:str_berlaku_mulai'],
             'ktp_address'           => ['nullable', 'string'],
             'village'               => ['nullable', 'string', 'max:100'],
             'district'              => ['nullable', 'string', 'max:100'],
@@ -207,6 +216,7 @@ class CandidateProfileController extends Controller
             $candidate->update(collect($data)->only([
                 'name', 'nickname', 'nik', 'no_kk', 'blood_type', 'body_height_weight',
                 'religion', 'nationality', 'status_marital', 'marriage_date', 'mother_name', 'no_str',
+                'str_seumur_hidup', 'str_berlaku_mulai', 'str_berlaku_sampai',
                 'ktp_address', 'village', 'district', 'city', 'province', 'social_media_accounts',
                 'no_bpjskes', 'faskes', 'no_bpjstk', 'company_bpjstk', 'bsi_bank_number',
             ])->all());

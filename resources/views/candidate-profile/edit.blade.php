@@ -135,6 +135,18 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
         @if($candidate->jobApplication?->jobOpening?->is_nakes)
         <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">No. STR (Surat Tanda Registrasi) *</label>
           <input type="text" name="no_str" value="{{ old('no_str', $candidate->no_str) }}" class="form-field" /></div>
+        <div class="col-span-full" x-data="{ lifetime: {{ old('str_seumur_hidup', $candidate->str_seumur_hidup) ? 'true' : 'false' }} }">
+          <label class="flex items-center gap-2 mb-3 text-[13px] font-bold text-slate-700 cursor-pointer">
+            <input type="checkbox" name="str_seumur_hidup" value="1" x-model="lifetime" class="rounded border-slate-300">
+            STR berlaku seumur hidup
+          </label>
+          <div x-show="!lifetime" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">STR Berlaku Mulai *</label>
+              <input type="date" name="str_berlaku_mulai" :disabled="lifetime" value="{{ old('str_berlaku_mulai', $candidate->str_berlaku_mulai?->format('Y-m-d')) }}" class="form-field" /></div>
+            <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">STR Berlaku Sampai *</label>
+              <input type="date" name="str_berlaku_sampai" :disabled="lifetime" value="{{ old('str_berlaku_sampai', $candidate->str_berlaku_sampai?->format('Y-m-d')) }}" class="form-field" /></div>
+          </div>
+        </div>
         @endif
       </div>
     </section>

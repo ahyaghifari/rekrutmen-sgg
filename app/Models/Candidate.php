@@ -29,6 +29,9 @@ class Candidate extends Model
         'marriage_date',
         'mother_name',
         'no_str',
+        'str_seumur_hidup',
+        'str_berlaku_mulai',
+        'str_berlaku_sampai',
         'ktp_address',
         'village',
         'district',
@@ -47,6 +50,9 @@ class Candidate extends Model
 
     protected $casts = [
         'marriage_date' => 'date',
+        'str_seumur_hidup' => 'boolean',
+        'str_berlaku_mulai' => 'date',
+        'str_berlaku_sampai' => 'date',
         'is_onboarded' => 'boolean',
     ];
 
@@ -145,7 +151,10 @@ class Candidate extends Model
         // setelah Status pernikahan supaya urutan checklist mengikuti urutan form.
         $this->loadMissing('jobApplication.jobOpening');
         if ($this->jobApplication?->jobOpening?->is_nakes) {
-            $str = ['no_str' => ['label' => 'No. STR', 'filled' => $has($this->no_str), 'tab' => 1]];
+            $str = [
+                'no_str' => ['label' => 'No. STR', 'filled' => $has($this->no_str), 'tab' => 1],
+                'str_masa_berlaku' => ['label' => 'Masa berlaku STR', 'filled' => $this->str_seumur_hidup || ($this->str_berlaku_mulai && $this->str_berlaku_sampai), 'tab' => 1],
+            ];
             $items = array_slice($items, 0, 5, true) + $str + array_slice($items, 5, null, true);
         }
 
