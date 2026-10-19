@@ -251,7 +251,7 @@ class JobApplication extends Model
     }
 
     /** Tidak boleh melamar: lowongan ini sudah dilamar (status apa pun), atau sudah diterima (passed) di lowongan mana pun. */
-    public static function cannotApplyTo(int $userId, int $jobOpeningId): bool
+    public static function cannotApplyTo(int|string $userId, int|string $jobOpeningId): bool
     {
         return static::where('user_id', $userId)
             ->where(fn ($q) => $q->where('job_opening_id', $jobOpeningId)->orWhere('status', self::STATUS_PASSED))
