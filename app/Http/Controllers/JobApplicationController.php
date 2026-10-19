@@ -34,9 +34,9 @@ class JobApplicationController extends Controller
         $jobOpening->load('company.formSections.fields');
         abort_if(! ($jobOpening->company?->is_active ?? false), 404);
 
-        if (JobApplication::hasAppliedTo(Auth::id(), $jobOpening->id)) {
+        if (JobApplication::cannotApplyTo(Auth::id(), $jobOpening->id)) {
             return redirect()->route('dashboard')
-                ->with('warning', 'Kamu sudah melamar lowongan ini.');
+                ->with('warning', 'Kamu tidak bisa melamar lowongan ini (sudah dilamar atau sudah diterima di lowongan lain).');
         }
 
         $previousApp = Auth::user()->jobApplications()->with(['jobOpening', 'answers'])->latest()->first();
@@ -56,9 +56,9 @@ class JobApplicationController extends Controller
         $jobOpening->load('company.formSections.fields');
         abort_if(! ($jobOpening->company?->is_active ?? false), 404);
 
-        if (JobApplication::hasAppliedTo(Auth::id(), $jobOpening->id)) {
+        if (JobApplication::cannotApplyTo(Auth::id(), $jobOpening->id)) {
             return redirect()->route('dashboard')
-                ->with('warning', 'Kamu sudah melamar lowongan ini.');
+                ->with('warning', 'Kamu tidak bisa melamar lowongan ini (sudah dilamar atau sudah diterima di lowongan lain).');
         }
 
         // Data Utama: section tetap paling atas, wajib di semua lowongan. Field master bernama sama diabaikan.
@@ -115,7 +115,7 @@ class JobApplicationController extends Controller
         $duplicate = DB::transaction(function () use ($jobOpening, $answers) {
             User::whereKey(Auth::id())->lockForUpdate()->first();
 
-            if (JobApplication::hasAppliedTo(Auth::id(), $jobOpening->id)) {
+            if (JobApplication::cannotApplyTo(Auth::id(), $jobOpening->id)) {
                 return true;
             }
 
@@ -132,7 +132,7 @@ class JobApplicationController extends Controller
 
         if ($duplicate) {
             return redirect()->route('dashboard')
-                ->with('warning', 'Kamu sudah melamar lowongan ini.');
+                ->with('warning', 'Kamu tidak bisa melamar lowongan ini (sudah dilamar atau sudah diterima di lowongan lain).');
         }
 
         return redirect()->route('dashboard')

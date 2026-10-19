@@ -119,6 +119,11 @@ class JobApplication extends Model
 
             if ($app->status === self::STATUS_PASSED) {
                 $app->closeJobOpeningIfQuotaFilled();
+
+                // Sudah diterima: lamaran lain milik user yang masih berjalan dihentikan.
+                static::where('user_id', $app->user_id)->whereKeyNot($app->id)
+                    ->whereNotIn('status', [self::STATUS_PASSED, self::STATUS_REJECTED])
+                    ->get()->each->update(['status' => self::STATUS_REJECTED]);
             }
         });
     }
@@ -245,10 +250,12 @@ class JobApplication extends Model
             ->exists();
     }
 
-    /** User sudah pernah melamar lowongan ini (status apa pun) - tidak boleh melamar dua kali. */
-    public static function hasAppliedTo(int $userId, int $jobOpeningId): bool
+    /** Tidak boleh melamar: lowongan ini sudah dilamar (status apa pun), atau sudah diterima (passed) di lowongan mana pun. */
+    public static function cannotApplyTo(int $userId, int $jobOpeningId): bool
     {
-        return static::where('user_id', $userId)->where('job_opening_id', $jobOpeningId)->exists();
+        return static::where('user_id', $userId)
+            ->where(fn ($q) => $q->where('job_opening_id', $jobOpeningId)->orWhere('status', self::STATUS_PASSED))
+            ->exists();
     }
 
     /**
