@@ -158,10 +158,10 @@
           <div class="text-[13px] text-slate-500 mb-5">{{ $co?->name ?? $jobOpening->company_name }}</div>
 
           @auth
-            @php $hasActive = \App\Models\JobApplication::hasActiveApplication(auth()->id()); @endphp
+            @php $hasActive = \App\Models\JobApplication::hasAppliedTo(auth()->id(), $jobOpening->id); @endphp
             @if($hasActive)
               <div class="w-full py-[13px] rounded-[12px] text-center text-[13.5px] font-bold text-slate-400 bg-slate-100 cursor-not-allowed">
-                Kamu sudah memiliki lamaran aktif
+                Kamu sudah melamar lowongan ini
               </div>
               <a href="{{ route('dashboard') }}" class="mt-3 block text-center text-[12.5px] font-semibold no-underline hover:underline" style="color:{{ $brand }};">
                 Pantau status lamaran →

@@ -245,6 +245,12 @@ class JobApplication extends Model
             ->exists();
     }
 
+    /** User sudah pernah melamar lowongan ini (status apa pun) - tidak boleh melamar dua kali. */
+    public static function hasAppliedTo(int $userId, int $jobOpeningId): bool
+    {
+        return static::where('user_id', $userId)->where('job_opening_id', $jobOpeningId)->exists();
+    }
+
     /**
      * Render PDF offering letter dari template company (offering_letter_template + benefit/
      * ketentuan/penandatangan, diatur di panel rekrutmen) + kompensasi lowongan ini + data

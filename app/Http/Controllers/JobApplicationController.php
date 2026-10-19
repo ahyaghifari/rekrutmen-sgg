@@ -34,9 +34,9 @@ class JobApplicationController extends Controller
         $jobOpening->load('company.formSections.fields');
         abort_if(! ($jobOpening->company?->is_active ?? false), 404);
 
-        if (JobApplication::hasActiveApplication(Auth::id())) {
+        if (JobApplication::hasAppliedTo(Auth::id(), $jobOpening->id)) {
             return redirect()->route('dashboard')
-                ->with('warning', 'Kamu sudah memiliki lamaran aktif. Selesaikan atau tunggu hasilnya sebelum melamar posisi lain.');
+                ->with('warning', 'Kamu sudah melamar lowongan ini.');
         }
 
         $previousApp = Auth::user()->jobApplications()->with(['jobOpening', 'answers'])->latest()->first();
@@ -56,9 +56,9 @@ class JobApplicationController extends Controller
         $jobOpening->load('company.formSections.fields');
         abort_if(! ($jobOpening->company?->is_active ?? false), 404);
 
-        if (JobApplication::hasActiveApplication(Auth::id())) {
+        if (JobApplication::hasAppliedTo(Auth::id(), $jobOpening->id)) {
             return redirect()->route('dashboard')
-                ->with('warning', 'Kamu sudah memiliki lamaran aktif.');
+                ->with('warning', 'Kamu sudah melamar lowongan ini.');
         }
 
         // Data Utama: section tetap paling atas, wajib di semua lowongan. Field master bernama sama diabaikan.
@@ -111,11 +111,11 @@ class JobApplicationController extends Controller
             }
         }
 
-        // Lock user row biar dua request bersamaan gak lolos cek "1 lamaran aktif" bareng-bareng (race condition).
+        // Lock user row biar dua request bersamaan gak lolos cek "sudah melamar" bareng-bareng (race condition).
         $duplicate = DB::transaction(function () use ($jobOpening, $answers) {
             User::whereKey(Auth::id())->lockForUpdate()->first();
 
-            if (JobApplication::hasActiveApplication(Auth::id())) {
+            if (JobApplication::hasAppliedTo(Auth::id(), $jobOpening->id)) {
                 return true;
             }
 
@@ -132,7 +132,7 @@ class JobApplicationController extends Controller
 
         if ($duplicate) {
             return redirect()->route('dashboard')
-                ->with('warning', 'Kamu sudah memiliki lamaran aktif.');
+                ->with('warning', 'Kamu sudah melamar lowongan ini.');
         }
 
         return redirect()->route('dashboard')
