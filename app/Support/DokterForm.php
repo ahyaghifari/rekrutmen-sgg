@@ -39,7 +39,7 @@ class DokterForm
             ['Profesi & Spesialisasi', 'fa-user-doctor', [
                 $s('jenis_dokter', 'Jenis dokter', ['Spesialis', 'Subspesialis'], true, 'spesialis'),
                 $f('spesialisasi', 'Spesialisasi utama', 'text', true, 'spesialis'), $f('subspesialisasi', 'Subspesialisasi', 'text', false, 'spesialis'),
-                $s('status_kepegawaian', 'Status kepegawaian yang diminati', ['Tetap', 'Kontrak', 'Mitra (visiting)', 'Part-time']),
+                $s('status_kepegawaian', 'Status kepegawaian yang diminati', ['Tetap', 'Kontrak', 'Mitra (visiting)']),
             ]],
             ['STR (Surat Tanda Registrasi)', 'fa-certificate', [
                 $f('str_nomor', 'Nomor STR'), $f('str_kolegium', 'Kolegium / penerbit', 'text', false),
@@ -68,7 +68,7 @@ class DokterForm
     {
         return [
             ['pendidikan', 'Pendidikan', 'fa-graduation-cap', [['jenjang', 'Jenjang (Profesi/Spesialis/Subspesialis)'], ['institusi', 'Institusi'], ['program', 'Program / jurusan'], ['tahun_masuk', 'Tahun masuk', 'number'], ['tahun_lulus', 'Tahun lulus', 'number'], ['ipk', 'IPK'], ['negara', 'Negara']], ['jenjang', 'institusi', 'program', 'tahun_lulus']],
-            ['pelatihan', 'Pelatihan & Sertifikat (ACLS, ATLS, BTCLS, dll)', 'fa-award', [['nama', 'Nama pelatihan'], ['penyelenggara', 'Penyelenggara'], ['tanggal', 'Tanggal', 'date'], ['skp', 'SKP / jam', 'number'], ['nomor', 'Nomor sertifikat'], ['berlaku', 'Berlaku sampai', 'date']], []],
+            ['pelatihan', 'Pelatihan & Sertifikat (ACLS, ATLS, BTCLS, dll)', 'fa-award', [['nama', 'Nama pelatihan'], ['penyelenggara', 'Penyelenggara'], ['tanggal', 'Tanggal', 'date'], ['nomor', 'Nomor sertifikat'], ['berlaku', 'Berlaku sampai', 'date']], []],
             ['pengalaman', 'Pengalaman Kerja', 'fa-briefcase', [['faskes', 'Nama fasilitas kesehatan'], ['jabatan', 'Jabatan'], ['jenis_faskes', 'Jenis faskes'], ['mulai', 'Mulai', 'date'], ['selesai', 'Selesai', 'date'], ['alasan', 'Alasan berhenti'], ['referensi', 'Referensi (nama & kontak)']], []],
         ];
     }
