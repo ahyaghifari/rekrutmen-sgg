@@ -30,7 +30,9 @@ $pages = $p + 1;
         pageIds: @js($pageIds),
         pageAnswered() { return (this.pageIds[this.current] || []).filter(k => this.has(k)).length; },
         answers: { @foreach($questions->where('max_select', '>', 0) as $mq) '{{ $mq->id }}': [], @endforeach },
-        has(k) { const v = this.answers[k]; return Array.isArray(v) ? v.length > 0 : !!v; },
+        need: { @foreach($questions->where('max_select', '>', 0) as $mq) '{{ $mq->id }}': {{ $mq->max_select }}, @endforeach },
+        // Soal multi-jawaban baru dianggap terjawab kalau jumlah pilihan = max_select.
+        has(k) { const v = this.answers[k]; return Array.isArray(v) ? v.length >= this.need[k] : !!v; },
         answered() { return Object.keys(this.answers).filter(k => this.has(k)).length; },
         confirmOpen: false,
         storageKey: 'quiz-draft-{{ $attempt->id }}',
@@ -81,14 +83,19 @@ $pages = $p + 1;
         @if($q->image_url)
         <img src="{{ $q->image_url }}" alt="Gambar soal {{ $localNo[$i] }}" class="w-full rounded-xl mb-3 border border-slate-200" />
         @endif
+        @if($q->max_select)
+        <div class="text-[12.5px] font-semibold mb-2" style="color:{{ $brand }};">
+          Pilih {{ $q->max_select }} jawaban (<span x-text="answers['{{ $q->id }}'].length"></span>/{{ $q->max_select }})
+        </div>
+        @endif
         <div class="flex flex-col gap-2">
           @foreach($q->options as $opt)
           <label class="sg-radio-opt flex items-center gap-[10px] border rounded-xl py-3 px-4 text-[13.5px] font-semibold cursor-pointer transition-all duration-150 select-none"
             :class="@if($q->max_select)answers['{{ $q->id }}'].includes(@js($opt))@else answers['{{ $q->id }}'] === @js($opt)@endif ? 'sg-radio-checked' : ''"
             :style="@if($q->max_select)answers['{{ $q->id }}'].includes(@js($opt))@else answers['{{ $q->id }}'] === @js($opt)@endif ? 'border-color:{{ $brand }};background:{{ $brand }}14;color:{{ $brand }};' : ''">
-            <span class="sg-radio-ring relative w-[18px] h-[18px] rounded-full border-2 shrink-0 transition-colors duration-150"
+            <span class="sg-radio-ring relative w-[18px] h-[18px] {{ $q->max_select ? 'rounded-[5px]' : 'rounded-full' }} border-2 shrink-0 transition-colors duration-150"
               :style="@if($q->max_select)answers['{{ $q->id }}'].includes(@js($opt))@else answers['{{ $q->id }}'] === @js($opt)@endif ? 'border-color:{{ $brand }}' : ''">
-              <span class="absolute top-1/2 left-1/2 w-[8px] h-[8px] rounded-full transition-all duration-150"
+              <span class="absolute top-1/2 left-1/2 w-[8px] h-[8px] {{ $q->max_select ? 'rounded-[2px]' : 'rounded-full' }} transition-all duration-150"
                 style="transform:translate(-50%,-50%) scale(0);"
                 :style="@if($q->max_select)answers['{{ $q->id }}'].includes(@js($opt))@else answers['{{ $q->id }}'] === @js($opt)@endif ? 'transform:translate(-50%,-50%) scale(1);background:{{ $brand }};' : 'transform:translate(-50%,-50%) scale(0);background:transparent;'"></span>
             </span>
