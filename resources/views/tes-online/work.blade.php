@@ -91,10 +91,10 @@ $pages = $p + 1;
           @foreach($q->options as $opt)
           <div class="rounded-l-xl bg-slate-50 py-3 px-4 text-[13.5px] font-semibold text-slate-800">{{ $opt }}</div>
           <label class="flex justify-center bg-slate-50 py-3 cursor-pointer">
-            <input type="radio" name="jawaban[{{ $q->id }}]" value="{{ $opt }}" x-model="answers['{{ $q->id }}']" class="w-5 h-5" style="accent-color:{{ $brand }};" aria-label="MOST: {{ $opt }}" />
+            <input type="radio" name="jawaban[{{ $q->id }}]" value="{{ $opt }}" x-model="answers['{{ $q->id }}']" @change="if (answers['{{ $least->id }}'] === @js($opt)) answers['{{ $least->id }}'] = ''" class="w-5 h-5" style="accent-color:{{ $brand }};" aria-label="MOST: {{ $opt }}" />
           </label>
           <label class="flex justify-center rounded-r-xl bg-slate-50 py-3 cursor-pointer">
-            <input type="radio" name="jawaban[{{ $least->id }}]" value="{{ $opt }}" x-model="answers['{{ $least->id }}']" class="w-5 h-5" style="accent-color:{{ $brand }};" aria-label="LEAST: {{ $opt }}" />
+            <input type="radio" name="jawaban[{{ $least->id }}]" value="{{ $opt }}" x-model="answers['{{ $least->id }}']" @change="if (answers['{{ $q->id }}'] === @js($opt)) answers['{{ $q->id }}'] = ''" class="w-5 h-5" style="accent-color:{{ $brand }};" aria-label="LEAST: {{ $opt }}" />
           </label>
           @endforeach
         </div>
