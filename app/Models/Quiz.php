@@ -11,7 +11,7 @@ class Quiz extends Model
 {
     use HasUlids;
 
-    protected $fillable = ['name', 'duration_minutes', 'instructions'];
+    protected $fillable = ['name', 'type', 'duration_minutes', 'instructions'];
 
     protected $casts = ['duration_minutes' => 'integer'];
 

@@ -174,7 +174,8 @@ class QuizQuestionsPage extends Page implements HasTable, HasForms
                 'max_select'     => $q['max_select'] ?: null,
                 'correct_option' => ($q['max_select'] ?? null)
                     ? $options->where('is_correct', true)->pluck('label')->implode(',')
-                    : ($options->firstWhere('is_correct', true)['label'] ?? null),
+                    // DISC tidak punya kunci; kolom correct_option NOT NULL.
+                    : ($options->firstWhere('is_correct', true)['label'] ?? (Quiz::whereKey($this->quizId)->value('type') === 'disc' ? '' : null)),
                 'sort_order'     => $i,
             ]);
         }

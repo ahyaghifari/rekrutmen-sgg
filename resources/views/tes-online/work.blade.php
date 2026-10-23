@@ -6,14 +6,17 @@ $brand = $application->jobOpening->company?->brand_color ?? '#042c6c';
 $applicantName = $application->answersMap()['full_name'] ?? $application->user->name;
 
 // Kuis bersubtest: satu halaman per subtest. Tanpa subtest: satu soal per halaman.
+// DISC: semua subtest di satu halaman; tiap subtest = 2 soal (MOST, LEAST) yang tampil sebagai satu matriks.
+$disc = $quiz->type === 'disc';
 $sectioned = $questions->contains(fn ($q) => $q->quiz_section_id);
-$pageOf = []; $localNo = []; $pageSize = []; $pageIds = []; $p = -1; $prevSection = null; $n = 0;
+$pageOf = []; $localNo = []; $pageSize = []; $pageIds = []; $newSec = []; $p = -1; $prevSection = null; $n = 0;
 foreach ($questions as $i => $q) {
-    if (! $sectioned || $i === 0 || $q->quiz_section_id !== $prevSection) $p++;
+    $newSec[$i] = $i === 0 || $q->quiz_section_id !== $prevSection;
+    if ($i === 0 || (! $disc && (! $sectioned || $newSec[$i]))) $p++;
     $prevSection = $q->quiz_section_id;
     $pageOf[$i] = $p;
     $n = ($i > 0 && $pageOf[$i - 1] === $p) ? $n + 1 : 1;
-    $localNo[$i] = $sectioned ? $n : $i + 1;
+    $localNo[$i] = $disc ? (preg_replace('/\D/', '', $q->section?->name ?? '') ?: intdiv($i, 2) + 1) : ($sectioned ? $n : $i + 1);
     $pageSize[$p] = $n;
     $pageIds[$p][] = $q->id;
 }
@@ -71,13 +74,31 @@ $pages = $p + 1;
 
     <div class="flex flex-col gap-4">
       @foreach($questions as $i => $q)
+      @continue($disc && ! $newSec[$i])
       <div id="q-{{ $q->id }}" class="sg-card rounded-[16px] p-5" x-show="current === {{ $pageOf[$i] }}" x-cloak>
-        @if($q->section && ($i === 0 || $pageOf[$i] !== $pageOf[$i - 1]))
+        @if($q->section && $newSec[$i])
         <div class="text-[12px] font-extrabold uppercase tracking-wide mb-1" style="color:{{ $brand }};">{{ $q->section->name }}</div>
         @if($q->section->instructions)
         <p class="text-[13px] text-slate-600 leading-relaxed mb-2">{{ $q->section->instructions }}</p>
         @endif
         @endif
+        @if($disc)
+        @php $least = $questions->get($i + 1); @endphp
+        <div class="grid grid-cols-[1fr_64px_64px] items-center gap-x-2 gap-y-2 mt-3">
+          <div></div>
+          <div class="text-center text-[12px] font-extrabold tracking-wide text-slate-500">MOST</div>
+          <div class="text-center text-[12px] font-extrabold tracking-wide text-slate-500">LEAST</div>
+          @foreach($q->options as $opt)
+          <div class="rounded-l-xl bg-slate-50 py-3 px-4 text-[13.5px] font-semibold text-slate-800">{{ $opt }}</div>
+          <label class="flex justify-center bg-slate-50 py-3 cursor-pointer">
+            <input type="radio" name="jawaban[{{ $q->id }}]" value="{{ $opt }}" x-model="answers['{{ $q->id }}']" class="w-5 h-5" style="accent-color:{{ $brand }};" aria-label="MOST: {{ $opt }}" />
+          </label>
+          <label class="flex justify-center rounded-r-xl bg-slate-50 py-3 cursor-pointer">
+            <input type="radio" name="jawaban[{{ $least->id }}]" value="{{ $opt }}" x-model="answers['{{ $least->id }}']" class="w-5 h-5" style="accent-color:{{ $brand }};" aria-label="LEAST: {{ $opt }}" />
+          </label>
+          @endforeach
+        </div>
+        @else
         <div class="text-[13px] font-bold text-slate-400 mb-1.5">Soal {{ $localNo[$i] }} dari {{ $sectioned ? $pageSize[$pageOf[$i]] : $questions->count() }}</div>
         <div class="text-[14.5px] lg:text-[13px] font-semibold text-slate-800 mb-3">{{ $q->question }}</div>
         @if($q->image_url)
@@ -112,8 +133,9 @@ $pages = $p + 1;
           </label>
           @endforeach
         </div>
+        @endif
 
-        @if($i === $questions->count() - 1 || $pageOf[$i + 1] !== $pageOf[$i])
+        @if(! $disc && ($i === $questions->count() - 1 || $pageOf[$i + 1] !== $pageOf[$i]))
         <div class="flex items-center justify-between gap-3 mt-5">
           <button type="button" @click="prev()" :disabled="current === 0"
             class="px-4 py-2 rounded-xl border border-slate-200 text-[13.5px] font-bold text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:border-navy transition-colors">
@@ -135,19 +157,21 @@ $pages = $p + 1;
         <div class="text-[12px] font-bold uppercase tracking-wide text-slate-400 mb-3">Navigasi Soal</div>
         <div class="grid grid-cols-5 lg:grid-cols-4 gap-2 mb-4">
           @foreach($questions as $i => $q)
+          @continue($disc && ! $newSec[$i])
+          @php $done = $disc ? "has('{$q->id}') && has('" . ($questions->get($i + 1)?->id ?? $q->id) . "')" : "has('{$q->id}')"; @endphp
           <button type="button"
             @if($sectioned) x-show="current === {{ $pageOf[$i] }}" @click="document.getElementById('q-{{ $q->id }}').scrollIntoView({ behavior: 'smooth', block: 'start' })"
             @else @click="current = {{ $pageOf[$i] }}" @endif
             class="w-9 h-9 rounded-lg text-[13px] font-bold border transition-colors duration-150"
-            :class="{{ $sectioned ? 'false' : 'current === ' . $pageOf[$i] }} ? '' : (has('{{ $q->id }}') ? 'border-transparent' : 'border-slate-200 text-slate-500')"
+            :class="{{ $sectioned ? 'false' : 'current === ' . $pageOf[$i] }} ? '' : ({!! $done !!} ? 'border-transparent' : 'border-slate-200 text-slate-500')"
             :style="{{ $sectioned ? 'false' : 'current === ' . $pageOf[$i] }}
               ? 'background:{{ $brand }};border-color:{{ $brand }};color:#fff;'
-              : (has('{{ $q->id }}') ? 'background:{{ $brand }}14;color:{{ $brand }};' : '')">
+              : ({!! $done !!} ? 'background:{{ $brand }}14;color:{{ $brand }};' : '')">
             {{ $localNo[$i] }}
           </button>
           @endforeach
         </div>
-        @if($sectioned)
+        @if($sectioned && ! $disc)
         <div class="text-[12px] text-slate-500 mb-1" x-text="pageAnswered() + ' / ' + (pageIds[current] || []).length + ' terjawab di subtest ini'"></div>
         @endif
         <div class="text-[12px] text-slate-500" x-text="answered() + ' / ' + total + ' terjawab total'"></div>

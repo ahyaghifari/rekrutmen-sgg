@@ -30,6 +30,13 @@ class QuizResource extends Resource
                     ->maxLength(255)
                     ->helperText('Contoh: "Tes Logika Umum" — satu kuis bisa dipakai di banyak lowongan.'),
 
+                Forms\Components\Select::make('type')
+                    ->label('Jenis Tes')
+                    ->options(['bidang' => 'Tes Bidang', 'psikotes' => 'Psikotes (CFIT)', 'disc' => 'Psikotes DISC'])
+                    ->default('bidang')
+                    ->required()
+                    ->native(false),
+
                 Forms\Components\TextInput::make('duration_minutes')
                     ->label('Batas Waktu (menit)')
                     ->numeric()
