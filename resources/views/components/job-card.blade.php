@@ -9,19 +9,19 @@
 
 <article class="sg-job-card sg-fade" style="--brand:{{ $color }};transition-delay:{{ $index * 0.07 }}s;border-left:3px solid var(--brand);">
   <div class="flex gap-[14px] items-start">
-    <div class="w-[84px] h-[84px] shrink-0 rounded-[16px] grid place-items-center overflow-hidden" aria-hidden="true"
+    <div class="w-[64px] h-[64px] shrink-0 rounded-[14px] grid place-items-center overflow-hidden" aria-hidden="true"
          style="background:rgba({{ $r }},{{ $g }},{{ $b }},0.10);">
       @if($logo)
         <img src="{{ $logo }}" alt="{{ $co->name }}" class="w-full h-full object-contain p-[6px]">
       @else
-        <i class="fa-solid {{ sgJobIcon($opening->title) }}" style="color:{{ $color }};font-size:30px;"></i>
+        <i class="fa-solid {{ sgJobIcon($opening->title) }}" style="color:{{ $color }};font-size:24px;"></i>
       @endif
     </div>
     <div class="flex-1 min-w-0">
       <div class="flex flex-wrap gap-1.5 items-center">
-        <h3 class="m-0 text-[15.5px] font-bold text-slate-800 leading-[1.3]">{{ $opening->title }}</h3>
+        <h3 class="m-0 text-[18px] font-bold text-slate-800 leading-[1.3]">{{ $opening->title }}</h3>
       </div>
-      <div class="mt-1 text-[13px] font-semibold text-slate-600">{{ $co?->name ?? $opening->company_name }}</div>
+      <div class="mt-1 text-[14px] font-semibold text-slate-600">{{ $co?->name ?? $opening->company_name }}</div>
     </div>
   </div>
 
