@@ -75,9 +75,6 @@
         {{-- Chips --}}
         <div class="flex flex-wrap gap-2">
           <div class="flex items-center gap-2 px-3 py-[7px] rounded-[10px] bg-white/[0.12] text-[12.5px] font-semibold">
-            <i class="fa-solid fa-users text-white/70 text-[11px]"></i>{{ $jobOpening->quota }} posisi
-          </div>
-          <div class="flex items-center gap-2 px-3 py-[7px] rounded-[10px] bg-white/[0.12] text-[12.5px] font-semibold">
             <i class="fa-solid fa-clock text-white/70 text-[11px]"></i>Full Time
           </div>
           @if($jobOpening->applications_deadline)
@@ -186,10 +183,6 @@
           @endauth
 
           <div class="mt-5 pt-4 border-t border-slate-100 flex flex-col gap-[10px]">
-            <div class="flex items-center gap-3 text-[12.5px] text-slate-500">
-              <i class="fa-solid fa-users w-4 text-center text-slate-400"></i>
-              <span>Kuota <strong class="text-slate-700">{{ $jobOpening->quota }} orang</strong></span>
-            </div>
             @if($jobOpening->max_applicants)
             <div class="flex items-center gap-3 text-[12.5px] text-slate-500">
               <i class="fa-solid fa-person-circle-check w-4 text-center text-slate-400"></i>

@@ -44,7 +44,7 @@
           <div>
             <div class="text-[11.5px] font-bold tracking-[0.08em] uppercase opacity-[0.82]">Melamar untuk posisi</div>
             <h1 class="mt-1 mb-1 text-2xl font-extrabold tracking-[-0.5px]">{{ $jobOpening->title }}</h1>
-            <div class="text-[13.5px] text-white/[0.82]">{{ $co?->name ?? $jobOpening->company_name }} · Kuota: {{ $jobOpening->quota }} orang</div>
+            <div class="text-[13.5px] text-white/[0.82]">{{ $co?->name ?? $jobOpening->company_name }}</div>
           </div>
         </div>
       </div>

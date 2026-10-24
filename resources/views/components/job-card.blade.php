@@ -26,10 +26,7 @@
   </div>
 
   <div class="sg-job-card-footer">
-    <span class="text-[12.5px] text-slate-500">
-      <i class="fa-solid fa-users text-slate-400 mr-[5px]" aria-hidden="true"></i>Kuota: {{ $opening->quota }} orang
-    </span>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;margin-left:auto;">
       <a href="{{ route('lowongan.show', $opening) }}" class="sg-job-card-btn"
          style="background:rgba({{ $r }},{{ $g }},{{ $b }},0.10);color:{{ $color }};">Detail</a>
       @if($hasActiveApp)
