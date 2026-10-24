@@ -9,12 +9,12 @@
 
 <article class="sg-job-card sg-fade" style="--brand:{{ $color }};transition-delay:{{ $index * 0.07 }}s;border-left:3px solid var(--brand);">
   <div class="flex gap-[14px] items-start">
-    <div class="w-[58px] h-[58px] shrink-0 rounded-[14px] grid place-items-center overflow-hidden" aria-hidden="true"
+    <div class="w-[84px] h-[84px] shrink-0 rounded-[16px] grid place-items-center overflow-hidden" aria-hidden="true"
          style="background:rgba({{ $r }},{{ $g }},{{ $b }},0.10);">
       @if($logo)
-        <img src="{{ $logo }}" alt="{{ $co->name }}" class="w-full h-full object-contain p-[8px]">
+        <img src="{{ $logo }}" alt="{{ $co->name }}" class="w-full h-full object-contain p-[6px]">
       @else
-        <i class="fa-solid {{ sgJobIcon($opening->title) }}" style="color:{{ $color }};font-size:22px;"></i>
+        <i class="fa-solid {{ sgJobIcon($opening->title) }}" style="color:{{ $color }};font-size:30px;"></i>
       @endif
     </div>
     <div class="flex-1 min-w-0">
@@ -26,7 +26,7 @@
   </div>
 
   <div class="sg-job-card-footer">
-    <div style="display:flex;gap:8px;margin-left:auto;">
+    <div style="display:flex;gap:8px;">
       <a href="{{ route('lowongan.show', $opening) }}" class="sg-job-card-btn"
          style="background:rgba({{ $r }},{{ $g }},{{ $b }},0.10);color:{{ $color }};">Detail</a>
       @if($hasActiveApp)
