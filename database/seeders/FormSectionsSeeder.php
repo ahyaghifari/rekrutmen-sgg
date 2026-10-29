@@ -35,7 +35,7 @@ class FormSectionsSeeder extends Seeder
                 'fields' => [
                     ['name' => 'full_name',        'label' => 'Nama Lengkap',            'type' => 'text',     'is_required' => true,  'sort_order' => 1],
                     ['name' => 'gender',            'label' => 'Jenis Kelamin',           'type' => 'radio',    'is_required' => true,  'sort_order' => 2, 'options' => ['choices' => ['Laki-laki', 'Perempuan']]],
-                    ['name' => 'whatsapp_number',   'label' => 'No WA',                   'type' => 'text',     'is_required' => true,  'sort_order' => 3, 'options' => ['is_phone' => true]],
+                    ['name' => 'whatsapp_number',   'label' => 'No WA',                   'type' => 'text',     'is_required' => true,  'sort_order' => 3],
                     // ['name' => 'usia',              'label' => 'Usia',                    'type' => 'number',   'is_required' => true,  'sort_order' => 4],
                     ['name' => 'domicile_address',  'label' => 'Alamat Domisili',         'type' => 'textarea', 'is_required' => true,  'sort_order' => 4],
                     ['name' => 'birth_place',       'label' => 'Tempat Lahir',            'type' => 'text',     'is_required' => true,  'sort_order' => 5],
@@ -109,7 +109,7 @@ class FormSectionsSeeder extends Seeder
                     ['name' => 'birth_place',     'label' => 'Tempat Lahir',                         'type' => 'text',     'is_required' => true,  'sort_order' => 4],
                     ['name' => 'birth_date',      'label' => 'Tanggal Lahir',                        'type' => 'date',     'is_required' => true,  'sort_order' => 5],
                     ['name' => 'domicile_address','label' => 'Alamat Domisili',                      'type' => 'textarea', 'is_required' => true,  'sort_order' => 6],
-                    ['name' => 'whatsapp_number', 'label' => 'Nomor Telepon (Terhubung WhatsApp)',   'type' => 'text',     'is_required' => true,  'sort_order' => 7, 'options' => ['is_phone' => true]],
+                    ['name' => 'whatsapp_number', 'label' => 'Nomor Telepon (Terhubung WhatsApp)',   'type' => 'text',     'is_required' => true,  'sort_order' => 7],
                 ],
             ],
             [
