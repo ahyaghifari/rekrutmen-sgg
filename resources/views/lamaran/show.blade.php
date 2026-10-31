@@ -72,7 +72,7 @@ $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#
       <div class="text-[11.5px] font-bold tracking-[0.08em] uppercase text-white/70">Melamar untuk</div>
       <h1 class="mt-2 mb-1 text-2xl font-extrabold tracking-[-0.5px]">{{ $application->jobOpening->title }}</h1>
       <div class="text-[13.5px] text-white/80">{{ $co?->name ?? $application->jobOpening->company_name }}</div>
-      <div class="mt-2 text-[12.5px] text-white/60">Dikirim {{ $application->created_at->translatedFormat('j F Y, H:i') }} WIB</div>
+      <div class="mt-2 text-[12.5px] text-white/60">Dikirim {{ $application->created_at->translatedFormat('j F Y, H:i') }} WITA</div>
     </div>
     <span class="badge {{ $statusMap[$application->status]['badge'] ?? 'badge-applied' }} mt-1 text-[12px] px-[12px] py-[5px]">
       <i class="fa-solid {{ $statusMap[$application->status]['icon'] ?? 'fa-paper-plane' }}"></i>
@@ -129,7 +129,7 @@ $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#
       @if($interviewSchedule)
         <div class="font-extrabold text-slate-800 mb-1">Jadwal Wawancara</div>
         <div>{{ $interviewSchedule->interview_date?->translatedFormat('l, j F Y') }}
-          @if($interviewSchedule->interview_time) &middot; {{ substr($interviewSchedule->interview_time, 0, 5) }} WIB @endif
+          @if($interviewSchedule->interview_time) &middot; {{ substr($interviewSchedule->interview_time, 0, 5) }} WITA @endif
         </div>
         @if($interviewSchedule->location)<div class="mt-1">Lokasi: {{ $interviewSchedule->location }}</div>@endif
         @if($interviewSchedule->notes)<div class="mt-1 text-slate-500">Catatan: {{ $interviewSchedule->notes }}</div>@endif
@@ -151,7 +151,7 @@ $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#
       @if($mcuSchedule)
         <div class="font-extrabold text-slate-800 mb-1">Jadwal Medical Check Up</div>
         <div>{{ $mcuSchedule->mcu_date?->translatedFormat('l, j F Y') }}
-          @if($mcuSchedule->mcu_time) &middot; {{ substr($mcuSchedule->mcu_time, 0, 5) }} WIB @endif
+          @if($mcuSchedule->mcu_time) &middot; {{ substr($mcuSchedule->mcu_time, 0, 5) }} WITA @endif
         </div>
         @if($mcuSchedule->location)<div class="mt-1">Lokasi: {{ $mcuSchedule->location }}</div>@endif
         @if($mcuSchedule->notes)<div class="mt-1 text-slate-500">Catatan: {{ $mcuSchedule->notes }}</div>@endif

@@ -244,7 +244,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
         <div class="text-[13px]" style="color:{{ $tlBrand }};">
           <strong>Jadwal {{ $offlineSchedule?->offlineTest?->name ?? 'Tes Offline' }}:</strong>
           {{ $offlineSchedule?->test_date?->translatedFormat('l, j F Y') }}
-          @if($offlineSchedule?->test_time) &middot; {{ substr($offlineSchedule->test_time, 0, 5) }} WIB @endif
+          @if($offlineSchedule?->test_time) &middot; {{ substr($offlineSchedule->test_time, 0, 5) }} WITA @endif
           @if($offlineSchedule?->location) <br>Lokasi: {{ $offlineSchedule->location }} @endif
           @if($offlineSchedule?->notes) <br>Catatan: {{ $offlineSchedule->notes }} @endif
         </div>
@@ -260,7 +260,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
         @if($interviewSchedule)
           <strong>Jadwal Wawancara:</strong>
           {{ $interviewSchedule->interview_date?->translatedFormat('l, j F Y') }}
-          @if($interviewSchedule->interview_time) &middot; {{ substr($interviewSchedule->interview_time, 0, 5) }} WIB @endif
+          @if($interviewSchedule->interview_time) &middot; {{ substr($interviewSchedule->interview_time, 0, 5) }} WITA @endif
           @if($interviewSchedule->location) <br>Lokasi: {{ $interviewSchedule->location }} @endif
           @if($interviewSchedule->notes) <br>Catatan: {{ $interviewSchedule->notes }} @endif
         @else
@@ -278,7 +278,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
         @if($mcuSchedule)
           <strong>Jadwal Medical Check Up:</strong>
           {{ $mcuSchedule->mcu_date?->translatedFormat('l, j F Y') }}
-          @if($mcuSchedule->mcu_time) &middot; {{ substr($mcuSchedule->mcu_time, 0, 5) }} WIB @endif
+          @if($mcuSchedule->mcu_time) &middot; {{ substr($mcuSchedule->mcu_time, 0, 5) }} WITA @endif
           @if($mcuSchedule->location) <br>Lokasi: {{ $mcuSchedule->location }} @endif
           @if($mcuSchedule->notes) <br>Catatan: {{ $mcuSchedule->notes }} @endif
         @else
@@ -355,7 +355,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
         <div class="text-[12.5px] font-bold text-slate-700">Riwayat Negosiasi</div>
         @foreach($negos as $n)
         <div class="rounded-xl px-3 py-2 text-[12.5px] {{ $n->sender === 'applicant' ? 'bg-slate-100 text-slate-700' : 'bg-navy/5 text-navy' }}">
-          <div class="font-semibold">{{ $n->sender === 'applicant' ? 'Kamu' : 'Tim Rekrutmen' }} &middot; <span class="font-normal text-slate-400">{{ $n->created_at->translatedFormat('j M Y, H:i') }}</span></div>
+          <div class="font-semibold">{{ $n->sender === 'applicant' ? 'Kamu' : 'Tim Rekrutmen' }} &middot; <span class="font-normal text-slate-400">{{ $n->created_at->translatedFormat('j M Y, H:i') }} WITA</span></div>
           <div class="mt-0.5 whitespace-pre-line">{{ $n->message }}</div>
         </div>
         @endforeach
@@ -366,12 +366,12 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
         @if($activeApp->offering_signed_reviewed_at)
         <div class="mt-3 rounded-[10px] px-3 py-2.5 text-[12.5px] bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-start gap-2">
           <i class="fa-solid fa-circle-check text-xs mt-[3px]"></i>
-          <span>Surat bertanda tangan sudah diterima tim rekrutmen pada {{ $activeApp->offering_signed_reviewed_at->translatedFormat('j F Y, H:i') }}. Proses lamaranmu berlanjut ke tahap berikutnya.</span>
+          <span>Surat bertanda tangan sudah diterima tim rekrutmen pada {{ $activeApp->offering_signed_reviewed_at->translatedFormat('j F Y, H:i') }} WITA. Proses lamaranmu berlanjut ke tahap berikutnya.</span>
         </div>
         @else
         <div class="mt-3 rounded-[10px] px-3 py-2.5 text-[12.5px] bg-slate-50 text-slate-600 border border-slate-200 flex items-start gap-2">
           <i class="fa-solid fa-clock text-xs mt-[3px]"></i>
-          <span>Surat bertanda tangan sudah diunggah {{ $activeApp->offering_letter_signed_at->translatedFormat('j F Y, H:i') }}. Sedang dikonfirmasi tim rekrutmen pada jam kerja — kamu akan dikabari lewat email begitu ada hasilnya.</span>
+          <span>Surat bertanda tangan sudah diunggah {{ $activeApp->offering_letter_signed_at->translatedFormat('j F Y, H:i') }} WITA. Sedang dikonfirmasi tim rekrutmen pada jam kerja — kamu akan dikabari lewat email begitu ada hasilnya.</span>
         </div>
         @endif
       @else

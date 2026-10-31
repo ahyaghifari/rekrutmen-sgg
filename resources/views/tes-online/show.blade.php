@@ -38,7 +38,7 @@
     @elseif($attempt->status === 'submitted')
       <div class="rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800/40 p-5 text-center">
         <div class="text-[13px] font-bold text-slate-500 uppercase tracking-wide mb-1">Tes Sudah Dikumpulkan</div>
-        <div class="text-[12.5px] text-slate-500 mt-1">Dikumpulkan {{ $attempt->submitted_at->translatedFormat('d F Y, H:i') }}</div>
+        <div class="text-[12.5px] text-slate-500 mt-1">Dikumpulkan {{ $attempt->submitted_at->translatedFormat('d F Y, H:i') }} WITA</div>
       </div>
       <p class="mt-4 text-[13px] text-slate-500">Hasil tes sudah kami terima. Tim rekrutmen akan menghubungimu untuk tahap selanjutnya.</p>
     @elseif($attempt->status === 'expired')

@@ -204,7 +204,7 @@
       <div class="relative z-[1]">
         <div class="text-[11.5px] font-bold tracking-[0.1em] uppercase text-white/70 mb-[10px]">Hubungi Tim Rekrutmen</div>
         <h2 id="help-heading" class="m-0 mb-[10px] text-[26px] font-extrabold tracking-[-0.6px]">Butuh bantuan?</h2>
-        <p class="m-0 text-[15px] leading-[1.6] text-white/[0.82] max-w-[480px]">Tim rekrutmen kami siap menjawab pertanyaan seputar lowongan dan status lamaran pada hari kerja, 08.00–16.00 WIB.</p>
+        <p class="m-0 text-[15px] leading-[1.6] text-white/[0.82] max-w-[480px]">Tim rekrutmen kami siap menjawab pertanyaan seputar lowongan dan status lamaran pada hari kerja, 08.00–16.00 WITA.</p>
       </div>
       <div class="relative z-[1] flex flex-col gap-3">
         @forelse($contacts as $contact)

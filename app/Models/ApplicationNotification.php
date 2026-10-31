@@ -110,7 +110,7 @@ class ApplicationNotification extends Model
             $applicantName,
             $jobTitle,
             $extra['interview_date'] ?? '-',
-            $extra['interview_time'] ?? '-',
+            isset($extra['interview_time']) ? $extra['interview_time'] . ' WITA' : '-',
             $extra['location']       ?? '-',
             $extra['notes']          ?? '',
             $extra['tahap']          ?? '-',
@@ -166,7 +166,7 @@ class ApplicationNotification extends Model
             // ?? di tiap kunci: HRIS tidak selalu mengirim waktu/lokasi/catatan, dan tanpa ini tiap
             // undangan menyemburkan "Undefined array key" ke log.
             $date     = $extra['interview_date'] ?? '-';
-            $time     = ($extra['interview_time'] ?? null) ? " pukul {$extra['interview_time']}" : '';
+            $time     = ($extra['interview_time'] ?? null) ? " pukul {$extra['interview_time']} WITA" : '';
             $location = ($extra['location'] ?? null) ? "\nLokasi/Link: {$extra['location']}" : '';
             $notes    = ($extra['notes'] ?? null) ? "\n\nCatatan: {$extra['notes']}" : '';
             // Nama sesi ("Wawancara HR") disebut kalau ada, supaya undangan sesi kedua tidak terbaca
@@ -205,7 +205,7 @@ class ApplicationNotification extends Model
 
         if ($event === CompanyMessageTemplate::EVENT_MCU_SCHEDULED) {
             $date     = $extra['interview_date'] ?? '-';
-            $time     = $extra['interview_time'] ? " pukul {$extra['interview_time']}" : '';
+            $time     = $extra['interview_time'] ? " pukul {$extra['interview_time']} WITA" : '';
             $location = $extra['location'] ? "\nLokasi: {$extra['location']}" : '';
             $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
             return "Halo {$name},\n\nSurat penawaran kerja (offering letter) kamu untuk posisi {$jobTitle} sudah kami terima. Proses dilanjutkan ke tahap Medical Check Up (MCU).\n\nMCU dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
@@ -213,7 +213,7 @@ class ApplicationNotification extends Model
 
         if ($event === CompanyMessageTemplate::EVENT_OFFLINE_TEST_SCHEDULED) {
             $date     = $extra['interview_date'] ?? '-';
-            $time     = $extra['interview_time'] ? " pukul {$extra['interview_time']}" : '';
+            $time     = $extra['interview_time'] ? " pukul {$extra['interview_time']} WITA" : '';
             $location = $extra['location'] ? "\nLokasi: {$extra['location']}" : '';
             $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
             return "Halo {$name},\n\nKamu diundang mengikuti tes offline untuk posisi {$jobTitle}.\n\nTes dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
