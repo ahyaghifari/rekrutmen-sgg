@@ -99,4 +99,23 @@ class User extends Authenticatable implements MustVerifyEmailContract
     {
         return $this->hasOne(Candidate::class);
     }
+
+    private bool $biodataLoaded = false;
+    private ?JobApplication $biodataApp = null;
+
+    /** Lamaran terbaru yang biodatanya terbuka (lihat JobApplication::biodataOpen()), null kalau belum ada. */
+    public function biodataApplication(): ?JobApplication
+    {
+        if (! $this->biodataLoaded) {
+            $this->biodataApp = $this->jobApplications()->latest()->get()->first(fn ($a) => $a->biodataOpen());
+            $this->biodataLoaded = true;
+        }
+
+        return $this->biodataApp;
+    }
+
+    public function hasBiodataAccess(): bool
+    {
+        return $this->biodataApplication() !== null;
+    }
 }

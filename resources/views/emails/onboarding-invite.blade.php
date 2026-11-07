@@ -16,7 +16,7 @@
 </style>
 </head>
 <body style="margin:0;padding:0;background-color:#eef2f7;">
-<span style="display:none;font-size:1px;color:#eef2f7;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Selamat! Kamu lolos seluruh tahap seleksi — lanjut ke TTD kontrak & onboarding.</span>
+<span style="display:none;font-size:1px;color:#eef2f7;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Selamat! Anda lolos seluruh tahap seleksi — lanjut ke TTD kontrak & onboarding.</span>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#eef2f7;">
   <tr>
     <td align="center" style="padding:28px 12px;">
@@ -36,8 +36,8 @@
               </tr>
             </table>
             <h1 class="sg-h1" style="margin:0 0 18px 0;font-family:Arial,Helvetica,sans-serif;font-size:21px;font-weight:bold;color:#042c6c;mso-line-height-rule:exactly;line-height:28px;">Halo, {{ $name }}</h1>
-            <p style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#374151;mso-line-height-rule:exactly;line-height:24px;">Selamat! Kamu dinyatakan lolos seluruh tahap seleksi untuk posisi <strong style="color:#1e293b;">{{ $position }}</strong> di <strong style="color:#1e293b;">{{ $company }}</strong>.</p>
-            <p style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#374151;mso-line-height-rule:exactly;line-height:24px;">Langkah terakhir: penandatanganan kontrak dan onboarding. Tim rekrutmen kami akan segera menghubungimu untuk jadwal dan detail lebih lanjut.</p>
+            <p style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#374151;mso-line-height-rule:exactly;line-height:24px;">Selamat! Anda dinyatakan lolos seluruh tahap seleksi untuk posisi <strong style="color:#1e293b;">{{ $position }}</strong> di <strong style="color:#1e293b;">{{ $company }}</strong>.</p>
+            <p style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#374151;mso-line-height-rule:exactly;line-height:24px;">Langkah terakhir: penandatanganan kontrak dan onboarding. Tim rekrutmen kami akan segera menghubungi Anda untuk jadwal dan detail lebih lanjut.</p>
           </td>
         </tr>
         <tr>

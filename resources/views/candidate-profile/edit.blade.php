@@ -1,15 +1,19 @@
 <x-app-layout>
-<x-slot name="title">Data Diri Kandidat — Syifa Global Group</x-slot>
+<x-slot name="title">{{ $onboarding ? 'Data Diri Kandidat' : 'Biodata Pelamar' }} — Syifa Global Group</x-slot>
 
 @php
 // ponytail: @json() Blade directive does a naive explode(',', ...) on its argument,
 // so an inline array literal with 4+ items gets silently truncated. Precompute into
 // plain variables here so each @json() call below has zero top-level commas.
-$familyMembersData  = $candidate->familyMembers->map->only(['relation','gender','name','birth_date','education','job','phone']);
+// Tanggal dikirim 'Y-m-d': serialisasi bawaan model berupa ISO datetime, yang tidak bisa dibaca <input type="date">
+// (kolom tampil kosong dan tersimpan kosong saat form disimpan ulang).
+$ymd = fn ($d) => $d?->format('Y-m-d');
+$money = fn ($v) => $v === null ? null : rtrim(rtrim((string) $v, '0'), '.'); // 3000000.00 -> 3000000 (input number tidak terpotong)
+$familyMembersData  = $candidate->familyMembers->map(fn ($m) => array_merge($m->only(['relation','gender','name','education','job','phone']), ['birth_date' => $ymd($m->birth_date)]));
 $educationsData     = $candidate->educations->map->only(['level','school_name','major','gpa','start_year','end_year']);
 $trainingsData      = $candidate->trainings->map->only(['type','institution','material','duration','location']);
 $organizationsData  = $candidate->organizations->map->only(['organization_name','field','position','duration','location']);
-$workExperiencesData = $candidate->workExperiences->map->only(['company_name','business_type','company_address','position','start_date','end_date','salary','resign_reason','is_current']);
+$workExperiencesData = $candidate->workExperiences->map(fn ($w) => array_merge($w->only(['company_name','business_type','company_address','position','start_date','end_date','salary_start','salary','resign_reason','is_current','job_description','org_position_description']), ['start_date' => $ymd($w->start_date), 'end_date' => $ymd($w->end_date), 'salary_start' => $money($w->salary_start), 'salary' => $money($w->salary)]));
 $referencesData     = $candidate->references->map->only(['name','address','job','phone','relation']);
 @endphp
 
@@ -21,15 +25,28 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
 
   @if($errors->any())
   <div class="mb-4 rounded-xl px-4 py-3 border border-red-200 bg-red-600/[0.06]">
-    <div class="text-sm font-bold text-red-700 mb-1">Periksa kembali isian kamu:</div>
+    <div class="text-sm font-bold text-red-700 mb-1">Periksa kembali isian Anda:</div>
     <ul class="text-[12.5px] text-red-600 list-disc pl-4">
       @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
     </ul>
   </div>
   @endif
 
-  <h1 class="m-0 mb-1 text-[22px] font-extrabold text-slate-800">Data Diri Kandidat</h1>
-  <p class="m-0 mb-5 text-[13.5px] text-slate-500">Lengkapi data ini untuk meneyelesaikan proses rekrutmen — identitas resmi, keluarga, pendidikan, dan dokumen pendukung.</p>
+  <h1 class="m-0 mb-1 text-[22px] font-extrabold text-slate-800">{{ $onboarding ? 'Data Diri Kandidat' : 'Biodata Pelamar' }}</h1>
+  <p class="m-0 mb-5 text-[13.5px] text-slate-500">
+    @if($onboarding)
+      Lengkapi data ini untuk menyelesaikan proses rekrutmen — identitas resmi, keluarga, pendidikan, BPJS, rekening, dan dokumen pendukung.
+    @else
+      Anda sudah dijadwalkan wawancara. Lengkapi biodata ini sebelum wawancara — identitas, alamat, keluarga, pendidikan, dan pengalaman.
+    @endif
+  </p>
+  <div class="mb-5 flex flex-wrap gap-2">
+    <a href="{{ route('data-diri.biodata') }}" target="_blank" rel="noopener" class="px-4 py-2 rounded-[10px] border border-slate-200 bg-white text-[13px] font-bold text-slate-700 no-underline hover:border-navy"><i class="fa-solid fa-file-pdf mr-1.5 text-xs"></i>Pratinjau PDF</a>
+    <a href="{{ route('data-diri.biodata.unduh') }}" class="px-4 py-2 rounded-[10px] border border-slate-200 bg-white text-[13px] font-bold text-slate-700 no-underline hover:border-navy"><i class="fa-solid fa-download mr-1.5 text-xs"></i>Unduh PDF</a>
+  </div>
+  @unless($locked || $frozen)
+  <div class="mb-5 rounded-[12px] border border-slate-200 bg-white px-4 py-3">@include('candidate-profile.partials.signed-upload')</div>
+  @endunless
 
   @php
     $tabs = [
@@ -38,6 +55,14 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
       8 => 'Pengalaman Kerja', 9 => 'Referensi', 10 => 'Informasi Tambahan',
       11 => 'Penilaian Diri', 12 => 'Dokumen',
     ];
+    // Tahap biodata (sejak wawancara pertama): tanpa tab 3 (BPJS & Rekening) dan 12 (Dokumen).
+    if (! $onboarding) { unset($tabs[3], $tabs[12]); }
+    // Onboarding: BPJS & Rekening dan Dokumen (bisa diisi) di depan; tab biodata (hanya baca) di bawahnya.
+    // Tab Dokumen (12) tidak dipakai: KTP/KK diunggah nanti di HRIS.
+    unset($tabs[12]);
+    if ($frozen) { $tabs = array_replace([3 => $tabs[3]], $tabs); } // hanya kalau biodata dibekukan
+    $tabOrder = array_keys($tabs);
+    $num = fn (int $n) => array_search($n, $tabOrder, true) + 1; // nomor tampil berurutan walau tab disembunyikan
     // Warna tab disamakan dengan warna border-top kartu section masing-masing.
     $tabColors = [
       1 => '#042c6c', 2 => '#0284c7', 3 => '#b45309', 4 => '#047C54',
@@ -46,13 +71,26 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
     ];
   @endphp
 
-  <form method="POST" action="{{ route('data-diri.update') }}" enctype="multipart/form-data" class="flex flex-col gap-4" x-data="{ tab: 1 }">
+  <form method="POST" action="{{ route('data-diri.update') }}" enctype="multipart/form-data" class="flex flex-col gap-4" x-data="{ tab: @js($tabOrder[0]), order: @js($tabOrder),
+      step(d) { this.tab = this.order[Math.min(Math.max(this.order.indexOf(this.tab) + d, 0), this.order.length - 1)]; } }">
     @csrf
     @method('PATCH')
 
+    @if($frozen)
+    <div class="rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-[13px] font-semibold px-4 py-3">
+      <i class="fa-solid fa-lock mr-1.5"></i>Biodata sudah final dan tidak bisa diubah (ada di bagian bawah, hanya untuk dilihat). Anda hanya perlu melengkapi BPJS dan No. Rekening.
+    </div>
+    @endif
+    @if($locked)
+    <div class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[13px] font-semibold px-4 py-3">
+      <i class="fa-solid fa-lock mr-1.5"></i>Biodata sudah dikunci karena lamaran Anda masuk tahap offering. Anda masih bisa melihat dan mencetak PDF-nya.
+    </div>
+    @endif
+
     {{-- Indikator kelengkapan data wajib --}}
     @php
-      $reqChecklist = $candidate->requiredDataChecklist();
+      // Onboarding: biodata dibekukan, jadi hanya item tahap onboarding (BPJS/rekening/dokumen) yang bisa dikejar.
+      $reqChecklist = $frozen ? array_filter($checklist, fn ($i) => $i['stage'] === 'onboarding') : $checklist;
       $reqFilled = collect($reqChecklist)->where('filled', true)->count();
       $reqTotal = count($reqChecklist);
       $reqDone = $reqFilled === $reqTotal;
@@ -89,94 +127,45 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
     {{-- Tab nav --}}
     <div class="flex flex-wrap gap-2">
       @foreach($tabs as $n => $label)
+      @if($frozen && $n === 1)
+      <div class="basis-full mt-1 text-[11.5px] font-bold uppercase tracking-wide text-slate-400">Biodata (hanya baca, tidak bisa diubah)</div>
+      @endif
       <button type="button" @click="tab = {{ $n }}"
         class="px-4 py-2 rounded-[10px] text-[13px] font-bold whitespace-nowrap transition-colors duration-150 border"
         :class="tab === {{ $n }} ? '' : 'border-slate-200 text-slate-500 bg-white'"
         :style="tab === {{ $n }} ? 'background:{{ $tabColors[$n] }};border-color:{{ $tabColors[$n] }};color:#fff;' : ''">
-        {{ $n }}. {{ $label }}
+        {{ $num($n) }}. {{ $label }}
       </button>
       @endforeach
     </div>
 
-    {{-- 1. Identitas --}}
+    {{-- 1. Identitas — isian dari katalog + master perusahaan (App\Support\BiodataFields) --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #042c6c;" x-show="tab === 1" x-cloak>
       <div class="flex gap-3 items-center mb-5">
-        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#042c6c;background:#042c6c1a;">1</div>
+        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#042c6c;background:#042c6c1a;">{{ $num(1) }}</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Identitas</h2>
       </div>
       <div class="sg-fields">
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Nama Lengkap *</label>
-          <input type="text" name="name" value="{{ old('name', $candidate->name) }}" required class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Nama Panggilan</label>
-          <input type="text" name="nickname" value="{{ old('nickname', $candidate->nickname) }}" class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">NIK</label>
-          <input type="text" name="nik" value="{{ old('nik', $candidate->nik) }}" maxlength="16" class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">No. Kartu Keluarga</label>
-          <input type="text" name="no_kk" value="{{ old('no_kk', $candidate->no_kk) }}" maxlength="16" class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Golongan Darah</label>
-          <input type="text" name="blood_type" value="{{ old('blood_type', $candidate->blood_type) }}" class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Tinggi/Berat Badan</label>
-          <input type="text" name="body_height_weight" placeholder="Contoh: 165cm / 55kg" value="{{ old('body_height_weight', $candidate->body_height_weight) }}" class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Agama</label>
-          <input type="text" name="religion" value="{{ old('religion', $candidate->religion) }}" class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Kewarganegaraan</label>
-          <input type="text" name="nationality" value="{{ old('nationality', $candidate->nationality ?? 'Indonesia') }}" class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Status Pernikahan</label>
-          <select name="status_marital" class="form-field">
-            <option value="">Pilih...</option>
-            <option value="Belum Menikah" @selected(old('status_marital', $candidate->status_marital) === 'Belum Menikah')>Belum Menikah</option>
-            <option value="Sudah Menikah" @selected(old('status_marital', $candidate->status_marital) === 'Sudah Menikah')>Sudah Menikah</option>
-          </select></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Tanggal Menikah</label>
-          <input type="date" name="marriage_date" value="{{ old('marriage_date', $candidate->marriage_date?->format('Y-m-d')) }}" class="form-field" /></div>
-        <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Nama Ibu Kandung</label>
-          <input type="text" name="mother_name" value="{{ old('mother_name', $candidate->mother_name) }}" class="form-field" /></div>
-        {{-- STR hanya untuk jabatan nakes (job_openings.is_nakes, diisi dari HRIS). --}}
-        @if($candidate->jobApplication?->jobOpening?->is_nakes)
-        <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">No. STR (Surat Tanda Registrasi) *</label>
-          <input type="text" name="no_str" value="{{ old('no_str', $candidate->no_str) }}" class="form-field" /></div>
-        <div class="col-span-full" x-data="{ lifetime: {{ old('str_seumur_hidup', $candidate->str_seumur_hidup) ? 'true' : 'false' }} }">
-          <label class="flex items-center gap-2 mb-3 text-[13px] font-bold text-slate-700 cursor-pointer">
-            <input type="checkbox" name="str_seumur_hidup" value="1" x-model="lifetime" class="rounded border-slate-300">
-            STR berlaku seumur hidup
-          </label>
-          <div x-show="!lifetime" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">STR Berlaku Mulai *</label>
-              <input type="date" name="str_berlaku_mulai" :disabled="lifetime" value="{{ old('str_berlaku_mulai', $candidate->str_berlaku_mulai?->format('Y-m-d')) }}" class="form-field" /></div>
-            <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">STR Berlaku Sampai *</label>
-              <input type="date" name="str_berlaku_sampai" :disabled="lifetime" value="{{ old('str_berlaku_sampai', $candidate->str_berlaku_sampai?->format('Y-m-d')) }}" class="form-field" /></div>
-          </div>
-        </div>
-        @endif
+        @foreach($sections['identitas'] as $f) @include('candidate-profile.partials.field', ['f' => $f]) @endforeach
       </div>
     </section>
 
     {{-- 2. Alamat --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #0284c7;" x-show="tab === 2" x-cloak>
       <div class="flex gap-3 items-center mb-5">
-        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#0284c7;background:#0284c71a;">2</div>
+        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#0284c7;background:#0284c71a;">{{ $num(2) }}</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Alamat Sesuai KTP</h2>
       </div>
       <div class="sg-fields">
-        <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Alamat</label>
-          <textarea name="ktp_address" rows="2" class="form-field resize-y">{{ old('ktp_address', $candidate->ktp_address) }}</textarea></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Kelurahan/Desa</label>
-          <input type="text" name="village" value="{{ old('village', $candidate->village) }}" class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Kecamatan</label>
-          <input type="text" name="district" value="{{ old('district', $candidate->district) }}" class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Kota/Kabupaten</label>
-          <input type="text" name="city" value="{{ old('city', $candidate->city) }}" class="form-field" /></div>
-        <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Provinsi</label>
-          <input type="text" name="province" value="{{ old('province', $candidate->province) }}" class="form-field" /></div>
-        <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Akun Media Sosial</label>
-          <input type="text" name="social_media_accounts" value="{{ old('social_media_accounts', $candidate->social_media_accounts) }}" class="form-field" /></div>
+        @foreach($sections['alamat'] as $f) @include('candidate-profile.partials.field', ['f' => $f]) @endforeach
       </div>
     </section>
 
-    {{-- 3. BPJS & Rekening --}}
+    {{-- 3. BPJS & Rekening (tahap onboarding) --}}
+    @if($onboarding)
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #b45309;" x-show="tab === 3" x-cloak>
       <div class="flex gap-3 items-center mb-5">
-        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#b45309;background:#b453091a;">3</div>
+        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#b45309;background:#b453091a;">{{ $num(3) }}</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">BPJS &amp; Rekening</h2>
       </div>
       <div class="sg-fields">
@@ -193,196 +182,132 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
       </div>
     </section>
 
+    @endif
+
     {{-- 4. Keluarga --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #047C54;"
-      x-data="repeater(@json($familyMembersData))" x-show="tab === 4" x-cloak>
+      x-data='repeater(@json($familyMembersData))' x-show="tab === 4" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
-          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#047C54;background:#047C541a;">4</div>
+          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#047C54;background:#047C541a;">{{ $num(4) }}</div>
           <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Data Keluarga</h2>
         </div>
-        <button type="button" @click="add({relation:'',gender:'',name:'',birth_date:'',education:'',job:'',phone:''})" class="text-[12.5px] font-bold text-navy">+ Tambah</button>
       </div>
+      {{-- Desktop (md+): tabel. HP: daftar kartu dengan isian 2 kolom. Satu DOM saja (tidak ada isian ganda yang terkirim). --}}
+      <div class="hidden md:grid md:grid-cols-[1.1fr_1.5fr_1.15fr_1.35fr_1fr_1fr_1.2fr_3.5rem] gap-2 px-1 pb-2 text-[12px] font-bold text-slate-500 border-b border-slate-200" x-show="rows.length > 0">
+        <div>Hubungan</div><div>Nama</div><div>L/P</div><div>Tanggal Lahir</div><div>Pendidikan</div><div>Pekerjaan</div><div>No. HP</div><div></div>
+      </div>
+      <datalist id="relation-options"><option value="Ayah"><option value="Ibu"><option value="Saudara"><option value="Pasangan"><option value="Anak"></datalist>
       <template x-for="(row, i) in rows" :key="i">
-        <div class="sg-fields sg-dd-border mb-4 pb-4" style="border-bottom-width:1px;border-bottom-style:solid;">
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Hubungan</label>
-            <input type="text" :name="'family['+i+'][relation]'" x-model="row.relation" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Nama</label>
-            <input type="text" :name="'family['+i+'][name]'" x-model="row.name" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Jenis Kelamin</label>
-            <input type="text" :name="'family['+i+'][gender]'" x-model="row.gender" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Tanggal Lahir</label>
-            <input type="date" :name="'family['+i+'][birth_date]'" x-model="row.birth_date" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Pendidikan</label>
-            <input type="text" :name="'family['+i+'][education]'" x-model="row.education" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Pekerjaan</label>
-            <input type="text" :name="'family['+i+'][job]'" x-model="row.job" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">No. HP</label>
-            <input type="text" :name="'family['+i+'][phone]'" x-model="row.phone" class="form-field" /></div>
-          <div class="flex items-end"><button type="button" @click="remove(i)" class="text-[12.5px] font-bold text-red-600">Hapus</button></div>
+        <div x-init="row.gender = famGender(row.relation) ?? row.gender" class="relative grid grid-cols-2 gap-x-3 gap-y-3 rounded-xl border border-slate-200 p-3 pt-10 mb-3
+                    md:grid-cols-[1.1fr_1.5fr_1.15fr_1.35fr_1fr_1fr_1.2fr_3.5rem] md:gap-2 md:items-center md:rounded-none md:border-0 md:border-b md:p-1 md:px-1 md:pt-1 md:mb-0">
+          <div><label class="md:hidden block mb-1 text-[12px] font-bold text-slate-600">Hubungan</label>
+            <input type="text" list="relation-options" :name="'family['+i+'][relation]'" x-model="row.relation" @input="row.gender = famGender(row.relation) ?? row.gender" class="form-field fam-field" /></div>
+          <div class="md:order-3"><label class="md:hidden block mb-1 text-[12px] font-bold text-slate-600">L/P</label>
+            <select :name="'family['+i+'][gender]'" x-model="row.gender" class="form-field fam-field"
+              :class="famGender(row.relation) ? 'pointer-events-none opacity-70' : ''" :tabindex="famGender(row.relation) ? -1 : 0">
+              <option value="">Pilih...</option>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+              <option :value="row.gender" x-show="row.gender && !['Laki-laki','Perempuan'].includes(row.gender)" x-text="row.gender"></option>
+            </select></div>
+          <div class="col-span-2 md:col-span-1 md:order-2"><label class="md:hidden block mb-1 text-[12px] font-bold text-slate-600">Nama</label>
+            <input type="text" :name="'family['+i+'][name]'" x-model="row.name" class="form-field fam-field" /></div>
+          <div class="md:order-4"><label class="md:hidden block mb-1 text-[12px] font-bold text-slate-600">Tanggal Lahir</label>
+            <input type="date" :name="'family['+i+'][birth_date]'" x-model="row.birth_date" class="form-field fam-field" /></div>
+          <div class="md:order-5"><label class="md:hidden block mb-1 text-[12px] font-bold text-slate-600">Pendidikan</label>
+            <input type="text" :name="'family['+i+'][education]'" x-model="row.education" class="form-field fam-field" /></div>
+          <div class="md:order-6"><label class="md:hidden block mb-1 text-[12px] font-bold text-slate-600">Pekerjaan</label>
+            <input type="text" :name="'family['+i+'][job]'" x-model="row.job" class="form-field fam-field" /></div>
+          <div class="md:order-7"><label class="md:hidden block mb-1 text-[12px] font-bold text-slate-600">No. HP</label>
+            <input type="text" :name="'family['+i+'][phone]'" x-model="row.phone" class="form-field fam-field" /></div>
+          <button type="button" @click="remove(i)" title="Hapus" aria-label="Hapus" class="absolute top-2 right-2 md:static md:order-8 md:justify-self-center grid place-items-center w-8 h-8 rounded-lg border-0 bg-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"><i class="fa-solid fa-trash-can text-[13px]" aria-hidden="true"></i></button>
         </div>
       </template>
       <p x-show="rows.length === 0" class="text-[13px] text-slate-400">Belum ada data. Klik "+ Tambah" untuk menambahkan.</p>
+      <button type="button" @click="add({relation:'',gender:'',name:'',birth_date:'',education:'',job:'',phone:''})" class="mt-3 flex w-full items-center justify-center gap-1.5 px-4 py-2.5 rounded-[10px] border border-dashed border-slate-300 text-[13px] font-bold text-navy hover:border-navy cursor-pointer bg-transparent">+ Tambah</button>
     </section>
 
     {{-- 5. Pendidikan --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #B9308C;"
-      x-data="repeater(@json($educationsData))" x-show="tab === 5" x-cloak>
+      x-data='repeater(@json($educationsData))' x-show="tab === 5" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
-          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#B9308C;background:#B9308C1a;">5</div>
+          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#B9308C;background:#B9308C1a;">{{ $num(5) }}</div>
           <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Riwayat Pendidikan</h2>
         </div>
-        <button type="button" @click="add({level:'',school_name:'',major:'',gpa:'',start_year:'',end_year:''})" class="text-[12.5px] font-bold text-navy">+ Tambah</button>
       </div>
-      <template x-for="(row, i) in rows" :key="i">
-        <div class="sg-fields sg-dd-border mb-4 pb-4" style="border-bottom-width:1px;border-bottom-style:solid;">
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Jenjang</label>
-            <input type="text" :name="'education['+i+'][level]'" x-model="row.level" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Nama Sekolah/Universitas</label>
-            <input type="text" :name="'education['+i+'][school_name]'" x-model="row.school_name" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Jurusan</label>
-            <input type="text" :name="'education['+i+'][major]'" x-model="row.major" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">IPK</label>
-            <input type="number" step="0.01" :name="'education['+i+'][gpa]'" x-model="row.gpa" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Tahun Masuk</label>
-            <input type="number" :name="'education['+i+'][start_year]'" x-model="row.start_year" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Tahun Lulus</label>
-            <input type="number" :name="'education['+i+'][end_year]'" x-model="row.end_year" class="form-field" /></div>
-          <div class="flex items-end"><button type="button" @click="remove(i)" class="text-[12.5px] font-bold text-red-600">Hapus</button></div>
-        </div>
-      </template>
+      @include('candidate-profile.partials.repeater-rows', ['prefix' => 'education', 'grid' => 'md:grid-cols-[1fr_2fr_1.5fr_.7fr_.8fr_.8fr_3.5rem]', 'fields' => [['key' => 'level', 'label' => 'Jenjang', 'm' => 1], ['key' => 'school_name', 'label' => 'Nama Sekolah/Universitas', 'span' => 'full', 'm' => 3, 'head' => 'Nama Sekolah/Universitas'], ['key' => 'major', 'label' => 'Jurusan', 'span' => 'full', 'm' => 4], ['key' => 'gpa', 'label' => 'IPK', 'type' => 'number', 'attrs' => 'step="0.01"', 'm' => 2], ['key' => 'start_year', 'label' => 'Tahun Masuk', 'type' => 'number', 'm' => 5], ['key' => 'end_year', 'label' => 'Tahun Lulus', 'type' => 'number', 'm' => 6]]])
       <p x-show="rows.length === 0" class="text-[13px] text-slate-400">Belum ada data.</p>
+      <button type="button" @click="add({level:'',school_name:'',major:'',gpa:'',start_year:'',end_year:''})" class="mt-3 flex w-full items-center justify-center gap-1.5 px-4 py-2.5 rounded-[10px] border border-dashed border-slate-300 text-[13px] font-bold text-navy hover:border-navy cursor-pointer bg-transparent">+ Tambah</button>
     </section>
 
     {{-- 6. Pelatihan --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #7c3aed;"
-      x-data="repeater(@json($trainingsData))" x-show="tab === 6" x-cloak>
+      x-data='repeater(@json($trainingsData))' x-show="tab === 6" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
-          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#7c3aed;background:#7c3aed1a;">6</div>
+          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#7c3aed;background:#7c3aed1a;">{{ $num(6) }}</div>
           <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Riwayat Pelatihan</h2>
         </div>
-        <button type="button" @click="add({type:'',institution:'',material:'',duration:'',location:''})" class="text-[12.5px] font-bold text-navy">+ Tambah</button>
       </div>
-      <template x-for="(row, i) in rows" :key="i">
-        <div class="sg-fields sg-dd-border mb-4 pb-4" style="border-bottom-width:1px;border-bottom-style:solid;">
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Jenis Pelatihan</label>
-            <input type="text" :name="'training['+i+'][type]'" x-model="row.type" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Penyelenggara</label>
-            <input type="text" :name="'training['+i+'][institution]'" x-model="row.institution" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Materi</label>
-            <input type="text" :name="'training['+i+'][material]'" x-model="row.material" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Durasi</label>
-            <input type="text" :name="'training['+i+'][duration]'" x-model="row.duration" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Lokasi</label>
-            <input type="text" :name="'training['+i+'][location]'" x-model="row.location" class="form-field" /></div>
-          <div class="flex items-end"><button type="button" @click="remove(i)" class="text-[12.5px] font-bold text-red-600">Hapus</button></div>
-        </div>
-      </template>
+      @include('candidate-profile.partials.repeater-rows', ['prefix' => 'training', 'grid' => 'md:grid-cols-[1fr_1.6fr_1.3fr_.9fr_1.2fr_3.5rem]', 'fields' => [['key' => 'type', 'label' => 'Jenis Pelatihan', 'm' => 1], ['key' => 'institution', 'label' => 'Penyelenggara', 'span' => 'full', 'm' => 3], ['key' => 'material', 'label' => 'Materi', 'span' => 'full', 'm' => 4], ['key' => 'duration', 'label' => 'Durasi', 'm' => 2], ['key' => 'location', 'label' => 'Lokasi', 'span' => 'full', 'm' => 5]]])
       <p x-show="rows.length === 0" class="text-[13px] text-slate-400">Belum ada data.</p>
+      <button type="button" x-show="rows.length < 5" @click="rows.length < 5 && add({type:'',institution:'',material:'',duration:'',location:''})" class="mt-3 flex w-full items-center justify-center gap-1.5 px-4 py-2.5 rounded-[10px] border border-dashed border-slate-300 text-[13px] font-bold text-navy hover:border-navy cursor-pointer bg-transparent">+ Tambah</button>
+      <p x-show="rows.length >= 5" class="mt-3 mb-0 text-[12.5px] text-slate-500">Maksimal 5 pelatihan (sesuai form biodata). Hapus salah satu untuk menambah yang lain.</p>
     </section>
 
     {{-- 7. Organisasi --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #0f6e3d;"
-      x-data="repeater(@json($organizationsData))" x-show="tab === 7" x-cloak>
+      x-data='repeater(@json($organizationsData))' x-show="tab === 7" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
-          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#0f6e3d;background:#0f6e3d1a;">7</div>
+          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#0f6e3d;background:#0f6e3d1a;">{{ $num(7) }}</div>
           <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Pengalaman Organisasi</h2>
         </div>
-        <button type="button" @click="add({organization_name:'',field:'',position:'',duration:'',location:''})" class="text-[12.5px] font-bold text-navy">+ Tambah</button>
       </div>
-      <template x-for="(row, i) in rows" :key="i">
-        <div class="sg-fields sg-dd-border mb-4 pb-4" style="border-bottom-width:1px;border-bottom-style:solid;">
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Nama Organisasi</label>
-            <input type="text" :name="'organization['+i+'][organization_name]'" x-model="row.organization_name" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Bidang</label>
-            <input type="text" :name="'organization['+i+'][field]'" x-model="row.field" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Jabatan</label>
-            <input type="text" :name="'organization['+i+'][position]'" x-model="row.position" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Periode</label>
-            <input type="text" :name="'organization['+i+'][duration]'" x-model="row.duration" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Lokasi</label>
-            <input type="text" :name="'organization['+i+'][location]'" x-model="row.location" class="form-field" /></div>
-          <div class="flex items-end"><button type="button" @click="remove(i)" class="text-[12.5px] font-bold text-red-600">Hapus</button></div>
-        </div>
-      </template>
+      @include('candidate-profile.partials.repeater-rows', ['prefix' => 'organization', 'grid' => 'md:grid-cols-[1.6fr_1.1fr_1.1fr_1fr_1.1fr_3.5rem]', 'fields' => [['key' => 'organization_name', 'label' => 'Nama Organisasi', 'span' => 'full', 'm' => 1], ['key' => 'field', 'label' => 'Bidang', 'm' => 2], ['key' => 'position', 'label' => 'Jabatan', 'm' => 3], ['key' => 'duration', 'label' => 'Periode', 'm' => 4], ['key' => 'location', 'label' => 'Lokasi', 'm' => 5]]])
       <p x-show="rows.length === 0" class="text-[13px] text-slate-400">Belum ada data.</p>
+      <button type="button" x-show="rows.length < 5" @click="rows.length < 5 && add({organization_name:'',field:'',position:'',duration:'',location:''})" class="mt-3 flex w-full items-center justify-center gap-1.5 px-4 py-2.5 rounded-[10px] border border-dashed border-slate-300 text-[13px] font-bold text-navy hover:border-navy cursor-pointer bg-transparent">+ Tambah</button>
+      <p x-show="rows.length >= 5" class="mt-3 mb-0 text-[12.5px] text-slate-500">Maksimal 5 organisasi (sesuai form biodata). Hapus salah satu untuk menambah yang lain.</p>
     </section>
 
     {{-- 8. Pengalaman Kerja --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #042c6c;"
-      x-data="repeater(@json($workExperiencesData))" x-show="tab === 8" x-cloak>
+      x-data='repeater(@json($workExperiencesData))' x-show="tab === 8" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
-          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#042c6c;background:#042c6c1a;">8</div>
+          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#042c6c;background:#042c6c1a;">{{ $num(8) }}</div>
           <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Pengalaman Kerja</h2>
         </div>
-        <button type="button" @click="add({company_name:'',business_type:'',company_address:'',position:'',start_date:'',end_date:'',salary:'',resign_reason:'',is_current:false})" class="text-[12.5px] font-bold text-navy">+ Tambah</button>
       </div>
-      <template x-for="(row, i) in rows" :key="i">
-        <div class="sg-fields sg-dd-border mb-4 pb-4" style="border-bottom-width:1px;border-bottom-style:solid;">
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Nama Perusahaan</label>
-            <input type="text" :name="'work['+i+'][company_name]'" x-model="row.company_name" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Bidang Usaha</label>
-            <input type="text" :name="'work['+i+'][business_type]'" x-model="row.business_type" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Jabatan</label>
-            <input type="text" :name="'work['+i+'][position]'" x-model="row.position" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Gaji Terakhir</label>
-            <input type="number" :name="'work['+i+'][salary]'" x-model="row.salary" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Mulai</label>
-            <input type="date" :name="'work['+i+'][start_date]'" x-model="row.start_date" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Selesai</label>
-            <input type="date" :name="'work['+i+'][end_date]'" x-model="row.end_date" :disabled="row.is_current" class="form-field" /></div>
-          <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Alamat Perusahaan</label>
-            <input type="text" :name="'work['+i+'][company_address]'" x-model="row.company_address" class="form-field" /></div>
-          <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Alasan Resign</label>
-            <input type="text" :name="'work['+i+'][resign_reason]'" x-model="row.resign_reason" class="form-field" /></div>
-          <div class="flex items-center gap-2">
-            <input type="hidden" :name="'work['+i+'][is_current]'" :value="row.is_current ? 1 : 0" />
-            <input type="checkbox" x-model="row.is_current" :id="'cur'+i" />
-            <label :for="'cur'+i" class="text-[13px] text-slate-600">Masih bekerja di sini</label>
-          </div>
-          <div class="flex items-end"><button type="button" @click="remove(i)" class="text-[12.5px] font-bold text-red-600">Hapus</button></div>
-        </div>
-      </template>
+      @include('candidate-profile.partials.repeater-rows', ['prefix' => 'work', 'grid' => 'md:grid-cols-[1.4fr_1fr_1fr_1.25fr_1.25fr_1.2fr_1.2fr_3.5rem]', 'fields' => [['key' => 'company_name', 'label' => 'Nama Perusahaan', 'span' => 'full', 'm' => 1], ['key' => 'business_type', 'label' => 'Bidang Usaha', 'm' => 2], ['key' => 'position', 'label' => 'Jabatan', 'm' => 3], ['key' => 'salary_start', 'label' => 'Gaji Awal', 'type' => 'number', 'm' => 4], ['key' => 'salary', 'label' => 'Gaji Akhir (Terakhir)', 'type' => 'number', 'm' => 5, 'head' => 'Gaji Akhir'], ['key' => 'start_date', 'label' => 'Mulai', 'type' => 'date', 'm' => 6], ['key' => 'end_date', 'label' => 'Selesai', 'type' => 'date', 'm' => 7, 'attrs' => ':disabled="row.is_current"'], ['key' => 'company_address', 'label' => 'Alamat Perusahaan', 'extra' => true], ['key' => 'resign_reason', 'label' => 'Alasan Resign', 'extra' => true], ['key' => 'job_description', 'label' => 'Tugas & Tanggung Jawab (pekerjaan sekarang/terakhir)', 'extra' => true, 'hospital' => true, 'type' => 'textarea', 'show' => 'row.is_current'], ['key' => 'org_position_description', 'label' => 'Posisi Anda di Struktur Organisasi (pekerjaan sekarang/terakhir)', 'extra' => true, 'hospital' => true, 'type' => 'textarea', 'show' => 'row.is_current']]])
       <p x-show="rows.length === 0" class="text-[13px] text-slate-400">Belum ada data.</p>
+      <button type="button" x-show="rows.length < 3" @click="rows.length < 3 && add({company_name:'',business_type:'',company_address:'',position:'',start_date:'',end_date:'',salary_start:'',salary:'',resign_reason:'',is_current:false,job_description:'',org_position_description:''})" class="mt-3 flex w-full items-center justify-center gap-1.5 px-4 py-2.5 rounded-[10px] border border-dashed border-slate-300 text-[13px] font-bold text-navy hover:border-navy cursor-pointer bg-transparent">+ Tambah</button>
+      <p x-show="rows.length >= 3" class="mt-3 mb-0 text-[12.5px] text-slate-500">Maksimal 3 pekerjaan (sesuai form biodata). Hapus salah satu untuk menambah yang lain.</p>
     </section>
 
     {{-- 9. Referensi --}}
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #0284c7;"
-      x-data="repeater(@json($referencesData))" x-show="tab === 9" x-cloak>
+      x-data='repeater(@json($referencesData))' x-show="tab === 9" x-cloak>
       <div class="flex gap-3 items-center mb-5 justify-between">
         <div class="flex gap-3 items-center">
-          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#0284c7;background:#0284c71a;">9</div>
+          <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#0284c7;background:#0284c71a;">{{ $num(9) }}</div>
           <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Referensi</h2>
         </div>
-        <button type="button" @click="add({name:'',address:'',job:'',phone:'',relation:''})" class="text-[12.5px] font-bold text-navy">+ Tambah</button>
       </div>
-      <template x-for="(row, i) in rows" :key="i">
-        <div class="sg-fields sg-dd-border mb-4 pb-4" style="border-bottom-width:1px;border-bottom-style:solid;">
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Nama</label>
-            <input type="text" :name="'reference['+i+'][name]'" x-model="row.name" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Hubungan</label>
-            <input type="text" :name="'reference['+i+'][relation]'" x-model="row.relation" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Pekerjaan</label>
-            <input type="text" :name="'reference['+i+'][job]'" x-model="row.job" class="form-field" /></div>
-          <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">No. HP</label>
-            <input type="text" :name="'reference['+i+'][phone]'" x-model="row.phone" class="form-field" /></div>
-          <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Alamat</label>
-            <input type="text" :name="'reference['+i+'][address]'" x-model="row.address" class="form-field" /></div>
-          <div class="flex items-end"><button type="button" @click="remove(i)" class="text-[12.5px] font-bold text-red-600">Hapus</button></div>
-        </div>
-      </template>
+      <p class="-mt-3 mb-4 text-[12px] font-semibold uppercase tracking-wide text-slate-500">Lampirkan no HRD/atasan tempat Anda bekerja sebelumnya</p>
+      @include('candidate-profile.partials.repeater-rows', ['prefix' => 'reference', 'grid' => 'md:grid-cols-[1.4fr_1fr_1.1fr_1.1fr_2fr_3.5rem]', 'fields' => [['key' => 'name', 'label' => 'Nama', 'span' => 'full', 'm' => 1], ['key' => 'relation', 'label' => 'Hubungan', 'm' => 2], ['key' => 'job', 'label' => 'Pekerjaan', 'm' => 3], ['key' => 'phone', 'label' => 'No. HP', 'm' => 4], ['key' => 'address', 'label' => 'Alamat', 'span' => 'full', 'm' => 5]]])
       <p x-show="rows.length === 0" class="text-[13px] text-slate-400">Belum ada data.</p>
+      <button type="button" x-show="rows.length < 3" @click="rows.length < 3 && add({name:'',address:'',job:'',phone:'',relation:''})" class="mt-3 flex w-full items-center justify-center gap-1.5 px-4 py-2.5 rounded-[10px] border border-dashed border-slate-300 text-[13px] font-bold text-navy hover:border-navy cursor-pointer bg-transparent">+ Tambah</button>
+      <p x-show="rows.length >= 3" class="mt-3 mb-0 text-[12.5px] text-slate-500">Maksimal 3 referensi (sesuai form biodata). Hapus salah satu untuk menambah yang lain.</p>
     </section>
 
     {{-- 10. Info Tambahan --}}
     @php $addInfo = $candidate->additionalInfo; @endphp
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #b45309;" x-show="tab === 10" x-cloak>
       <div class="flex gap-3 items-center mb-5">
-        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#b45309;background:#b453091a;">10</div>
+        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#b45309;background:#b453091a;">{{ $num(10) }}</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Informasi Tambahan</h2>
       </div>
       <div class="sg-fields">
@@ -404,7 +329,7 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
               <i class="fa-solid fa-check text-[12px] text-white opacity-0 transition-opacity duration-150 pointer-events-none"></i>
             </span>
           </div>
-          <span class="text-[13px] text-slate-600">Memiliki riwayat penyakit</span>
+          <span class="text-[13px] text-slate-600">Memiliki catatan tentang penyakit yang pernah diderita atau sedang dirawat karena suatu penyakit (termasuk: ayan, hepatitis, tuli, vertigo, covid-19 dan lainnya)</span>
         </label>
         <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Catatan Penyakit (jika ada)</label>
           <textarea name="additional_info[disease_notes]" rows="2" class="form-field resize-y">{{ old('additional_info.disease_notes', $addInfo?->disease_notes) }}</textarea></div>
@@ -418,6 +343,7 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
           <input type="text" name="additional_info[expected_salary_facilities]" value="{{ old('additional_info.expected_salary_facilities', $addInfo?->expected_salary_facilities) }}" class="form-field" /></div>
         <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Tersedia Mulai Bekerja</label>
           <input type="date" name="additional_info[available_start_date]" value="{{ old('additional_info.available_start_date', $addInfo?->available_start_date?->format('Y-m-d')) }}" class="form-field" /></div>
+        @foreach($sections['informasi_tambahan'] as $f) @include('candidate-profile.partials.field', ['f' => $f]) @endforeach
       </div>
     </section>
 
@@ -425,7 +351,7 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
     @php $selfAssess = $candidate->selfAssessment; @endphp
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #047C54;" x-show="tab === 11" x-cloak>
       <div class="flex gap-3 items-center mb-5">
-        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#047C54;background:#047C541a;">11</div>
+        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#047C54;background:#047C541a;">{{ $num(11) }}</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Penilaian Diri</h2>
       </div>
       <div class="sg-fields">
@@ -443,13 +369,15 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
         </div>
         <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Alasan</label>
           <textarea name="self_assessment[reason]" rows="2" class="form-field resize-y">{{ old('self_assessment.reason', $selfAssess?->reason) }}</textarea></div>
+        @foreach($sections['penilaian_diri'] as $f) @include('candidate-profile.partials.field', ['f' => $f]) @endforeach
       </div>
     </section>
 
-    {{-- 12. Dokumen --}}
+    {{-- 12. Dokumen (tahap onboarding) --}}
+    @if($onboarding)
     <section class="sg-card rounded-[20px] py-[26px] px-7" style="border-top:3px solid #7c3aed;" x-show="tab === 12" x-cloak>
       <div class="flex gap-3 items-center mb-5">
-        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#7c3aed;background:#7c3aed1a;">12</div>
+        <div class="w-7 h-7 shrink-0 rounded-[9px] grid place-items-center text-[12.5px] font-extrabold" style="color:#7c3aed;background:#7c3aed1a;">{{ $num(12) }}</div>
         <h2 class="m-0 text-[17px] font-extrabold text-slate-800">Dokumen</h2>
       </div>
 
@@ -464,42 +392,62 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
       @endif
 
       <div x-data="repeater([])">
-        <button type="button" @click="add({doc_type:'',label:''})" class="mb-3 text-[12.5px] font-bold text-navy">+ Tambah Dokumen</button>
         <template x-for="(row, i) in rows" :key="i">
-          <div class="sg-fields sg-dd-border mb-4 pb-4" style="border-bottom-width:1px;border-bottom-style:solid;">
+          <div class="relative pt-9 sg-fields sg-dd-border mb-4 pb-4" style="border-bottom-width:1px;border-bottom-style:solid;">
+          <button type="button" @click="remove(i)" title="Hapus" aria-label="Hapus" class="absolute top-0 right-0 grid place-items-center w-8 h-8 rounded-lg border-0 bg-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"><i class="fa-solid fa-trash-can text-[13px]" aria-hidden="true"></i></button>
             <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Jenis Dokumen</label>
               <input type="text" :name="'documents['+i+'][doc_type]'" x-model="row.doc_type" placeholder="ktp, kk, ijazah, bpjstk, dll" class="form-field" /></div>
             <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">Label</label>
               <input type="text" :name="'documents['+i+'][label]'" x-model="row.label" class="form-field" /></div>
             <div><label class="block mb-[7px] text-[13px] font-bold text-slate-700">File</label>
               <input type="file" :name="'documents['+i+'][file]'" class="form-field" /></div>
-            <div class="flex items-end"><button type="button" @click="remove(i)" class="text-[12.5px] font-bold text-red-600">Hapus</button></div>
           </div>
         </template>
+        <button type="button" @click="add({doc_type:'',label:''})" class="mt-3 flex w-full items-center justify-center gap-1.5 px-4 py-2.5 rounded-[10px] border border-dashed border-slate-300 text-[13px] font-bold text-navy hover:border-navy cursor-pointer bg-transparent">+ Tambah Dokumen</button>
       </div>
     </section>
 
+    @endif
+
+    {{-- Pernyataan: di luar kartu tab, di atas tombol navigasi, supaya terlihat di semua tab. --}}
+    <label class="flex items-start gap-3 cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-3">
+      <input type="checkbox" name="biodata_confirmed" value="1" class="mt-0.5 rounded border-slate-300" {{ old('biodata_confirmed', $candidate->biodata_confirmed_at) ? 'checked' : '' }}>
+      <span class="text-[13px] text-slate-600">Dengan ini saya menyatakan bahwa informasi yang saya isikan di atas adalah benar. Apabila ditemukan bahwa informasi tidak benar, perusahaan berhak membatalkan proses rekrutmen atau melakukan pemutusan hubungan kerja.</span>
+    </label>
+
     <div class="flex justify-between items-center flex-wrap gap-3">
       <div class="flex gap-2">
-        <button type="button" @click="tab = Math.max(tab - 1, 1)" :disabled="tab === 1"
+        <button type="button" @click="step(-1)" :disabled="tab === order[0]"
           class="px-4 py-[10px] rounded-xl border border-slate-200 text-slate-600 text-[13px] font-bold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer bg-white">
           ← Sebelumnya
         </button>
-        <button type="button" @click="tab = Math.min(tab + 1, {{ count($tabs) }})" :disabled="tab === {{ count($tabs) }}"
+        <button type="button" @click="step(1)" :disabled="tab === order[order.length - 1]"
           class="px-4 py-[10px] rounded-xl border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
           Selanjutnya →
         </button>
       </div>
+      @unless($locked)
       <button type="submit" class="px-[26px] py-3 rounded-xl border-0 bg-sgg-green hover:bg-sgg-green-hover text-white text-[13.5px] font-bold cursor-pointer">
         <i class="fa-solid fa-floppy-disk mr-2 text-xs"></i>Simpan Data Diri
       </button>
+      @endunless
     </div>
 
   </form>
+  @if($locked || $frozen)
+  {{-- Read-only: isian tab tidak bisa difokus/diklik (tombol tab dan Sebelumnya/Selanjutnya tetap jalan). Saat onboarding
+       tab BPJS & Rekening (3) tetap bisa diisi. --}}
+  <script>document.querySelectorAll('section[x-show]').forEach(function (s) {
+    if (@json((bool) $frozen) && /tab === 3\b/.test(s.getAttribute('x-show'))) return;
+    s.inert = true; s.style.opacity = '.85';
+  });</script>
+  @endif
 
 </div>
 
 <script>
+// Ayah selalu Laki-laki, Ibu selalu Perempuan; hubungan lain bebas (null).
+window.famGender = (relation) => ({ ayah: 'Laki-laki', bapak: 'Laki-laki', ibu: 'Perempuan' })[(relation || '').trim().toLowerCase()] ?? null;
 document.addEventListener('alpine:init', () => {
   Alpine.data('repeater', (initial = []) => ({
     rows: initial.length ? initial : [],

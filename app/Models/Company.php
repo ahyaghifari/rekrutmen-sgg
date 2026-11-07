@@ -44,6 +44,21 @@ class Company extends Model
         return $this->hasMany(FormSection::class)->orderBy('sort_order');
     }
 
+    /** Latar kop surat (dipakai surat penawaran dan cetak biodata): milik perusahaan, atau bawaan. Path dengan slash biasa untuk dompdf. */
+    public function offeringBackgroundFile(): string
+    {
+        $path = $this->offering_letter_background_path
+            ? \Illuminate\Support\Facades\Storage::disk('local')->path($this->offering_letter_background_path)
+            : self::defaultOfferingBackgroundFile();
+
+        return str_replace('\\', '/', $path);
+    }
+
+    public static function defaultOfferingBackgroundFile(): string
+    {
+        return str_replace('\\', '/', storage_path('app/private/offering-letter-bg/default.jpg'));
+    }
+
     public function agreements(): HasMany
     {
         return $this->hasMany(CompanyAgreement::class)->orderBy('sort_order');

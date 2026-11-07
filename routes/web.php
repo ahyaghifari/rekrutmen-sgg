@@ -59,6 +59,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/data-diri-kandidat', [CandidateProfileController::class, 'edit'])->name('data-diri.edit');
     Route::patch('/data-diri-kandidat', [CandidateProfileController::class, 'update'])->name('data-diri.update');
+    Route::get('/data-diri-kandidat/biodata.pdf', [CandidateProfileController::class, 'previewBiodata'])->name('data-diri.biodata');
+    Route::get('/data-diri-kandidat/biodata-unduh.pdf', [CandidateProfileController::class, 'downloadBiodata'])->name('data-diri.biodata.unduh');
+    Route::post('/data-diri-kandidat/biodata-ttd', [CandidateProfileController::class, 'uploadSignedBiodata'])->middleware('throttle:10,1')->name('data-diri.biodata.upload-signed');
+    Route::get('/data-diri-kandidat/biodata-ttd', [CandidateProfileController::class, 'downloadSignedBiodata'])->name('data-diri.biodata.signed');
     Route::get('/data-diri-kandidat/dokumen/{document}', [CandidateProfileController::class, 'downloadDocument'])->name('data-diri.dokumen');
 
     Route::get('/persetujuan', [CandidateProfileController::class, 'agreements'])->name('persetujuan.edit');
@@ -93,6 +97,10 @@ Route::get('/kelola-rekrutmen/export-pelamar', function () {
     $filename = 'pelamar-' . \Illuminate\Support\Str::slug($opening->title) . $suffix . '-' . now()->format('Ymd') . '.xlsx';
     return Excel::download(new ApplicationsExport($id, $status), $filename);
 })->middleware('throttle:10,1')->name('admin.export.applications');
+
+// Admin: biodata bertanda tangan yang diunggah kandidat (hak akses sama dengan surat penawaran).
+Route::get('/kelola-rekrutmen/biodata-signed/{application}', [CandidateProfileController::class, 'adminSignedBiodata'])
+    ->middleware(['auth'])->name('admin.biodata-signed.download');
 
 Route::get('/kelola-rekrutmen/offering-letter/{application}/{type}', [OfferingLetterController::class, 'download'])
     ->middleware(['auth'])

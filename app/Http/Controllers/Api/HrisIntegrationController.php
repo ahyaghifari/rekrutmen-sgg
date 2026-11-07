@@ -184,4 +184,15 @@ class HrisIntegrationController extends Controller
 
         return response()->json(['queued' => $queued]);
     }
+
+    /** HRIS: pratinjau biodata pelamar sebagai PDF (HRIS memproksi, token sama dengan endpoint lain). */
+    public function biodataPdf(string $application)
+    {
+        $app = JobApplication::findOrFail($application);
+        $candidate = \App\Models\Candidate::where('user_id', $app->user_id)->first();
+        abort_unless($candidate, 404, 'Pelamar belum membuka biodata.');
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('candidate-profile.biodata-pdf', ['d' => \App\Support\BiodataData::for($candidate)])
+            ->setPaper('a4')->stream('biodata.pdf');
+    }
 }

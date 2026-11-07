@@ -24,3 +24,8 @@ yarn-error.log
 /.claude
 /.playwright-mcp
 /planning/jotform
+# Font Microsoft (Calibri, Verdana) untuk PDF biodata: disalin manual, lisensi tidak boleh di-commit
+/storage/fonts/*.ttf
+/storage/fonts/*.ufm
+/storage/fonts/installed-fonts.json
+/storage/fonts/*.json

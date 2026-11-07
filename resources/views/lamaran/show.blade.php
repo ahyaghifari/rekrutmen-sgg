@@ -135,7 +135,7 @@ $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#
         @if($interviewSchedule->notes)<div class="mt-1 text-slate-500">Catatan: {{ $interviewSchedule->notes }}</div>@endif
       @else
         <div class="font-extrabold text-slate-800 mb-1">Jadwal Wawancara</div>
-        <div class="text-slate-500">Belum diinformasikan — tim rekrutmen akan menghubungimu untuk jadwal wawancara.</div>
+        <div class="text-slate-500">Belum diinformasikan — tim rekrutmen akan menghubungi Anda untuk jadwal wawancara.</div>
       @endif
     </div>
   </div>
@@ -157,7 +157,7 @@ $sectionColors = ['#042c6c','#0284c7','#b45309','#047C54','#B9308C','#7c3aed','#
         @if($mcuSchedule->notes)<div class="mt-1 text-slate-500">Catatan: {{ $mcuSchedule->notes }}</div>@endif
       @else
         <div class="font-extrabold text-slate-800 mb-1">Jadwal Medical Check Up</div>
-        <div class="text-slate-500">Belum diinformasikan — tim rekrutmen akan menghubungimu untuk jadwal MCU.</div>
+        <div class="text-slate-500">Belum diinformasikan — tim rekrutmen akan menghubungi Anda untuk jadwal MCU.</div>
       @endif
     </div>
   </div>

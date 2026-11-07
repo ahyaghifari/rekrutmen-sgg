@@ -95,26 +95,8 @@ class JobApplication extends Model
             $app->logStatusChange($app->getOriginal('status'), $app->status);
 
             if (in_array($app->status, [self::STATUS_ONBOARDING, self::STATUS_PASSED])) {
-                // Alamat sudah diisi kandidat sendiri di form offering letter (offering_village
-                // dkk) — tuang langsung ke Candidate saat dibuat, supaya tidak diminta isi ulang
-                // di form data diri. Cuma efektif saat CREATE (candidate baru); Candidate lama
-                // (rehire) tidak ditimpa di sini.
-                $candidate = Candidate::firstOrCreate(
-                    ['user_id' => $app->user_id],
-                    [
-                        'job_application_id' => $app->id,
-                        'name' => $app->answersMap()['full_name'] ?? $app->user->name,
-                        'ktp_address' => $app->offering_domicile_address,
-                        'village' => $app->offering_village,
-                        'district' => $app->offering_district,
-                        'city' => $app->offering_city,
-                        'province' => $app->offering_province,
-                    ]
-                );
-
-                if ($candidate->job_application_id !== $app->id) {
-                    $candidate->update(['job_application_id' => $app->id]);
-                }
+                // Satu pintu pembuatan Candidate (+ prefill dari lamaran/offering): Candidate::ensureFor().
+                Candidate::ensureFor($app);
             }
 
             if ($app->status === self::STATUS_PASSED) {
@@ -206,6 +188,48 @@ class JobApplication extends Model
     public function interviewInvitee(): HasOne
     {
         return $this->hasOne(InterviewInvitee::class);
+    }
+
+    public function interviewInvitees(): HasMany
+    {
+        return $this->hasMany(InterviewInvitee::class);
+    }
+
+    /** Sudah punya jadwal wawancara yang terbit (draf belum dihitung). */
+    public function hasInterviewScheduled(): bool
+    {
+        return $this->interviewInvitees()->whereHas('schedule', fn ($q) => $q->where('status', 'published'))->exists();
+    }
+
+    /**
+     * Biodata (data diri kandidat) terbuka: jadwal wawancara pertama sudah terbit, atau lamaran sudah melewati
+     * wawancara (offering dst. — jaring pengaman untuk pelamar lama tanpa baris jadwal). Lamaran ditolak tidak.
+     */
+    public function biodataOpen(): bool
+    {
+        if ($this->status === self::STATUS_REJECTED) return false;
+
+        return in_array($this->status, [self::STATUS_OFFERING, self::STATUS_MCU, self::STATUS_ONBOARDING, self::STATUS_PASSED], true)
+            || $this->hasInterviewScheduled();
+    }
+
+    /**
+     * Tahap offering/MCU DAN biodata sudah lengkap: biodata final, tidak bisa diubah lagi (masih bisa dilihat dan
+     * dicetak PDF). Kalau belum lengkap (tidak diisi saat wawancara) tetap terbuka supaya bisa dilengkapi.
+     */
+    public function biodataLocked(): bool
+    {
+        if (! in_array($this->status, [self::STATUS_OFFERING, self::STATUS_MCU], true)) return false;
+
+        $c = Candidate::where('user_id', $this->user_id)->first();
+
+        return $c ? $c->biodataComplete() : false;
+    }
+
+    /** Tahap onboarding: form data diri menampilkan semua tab (BPJS, rekening, dokumen) + gerbang persetujuan. */
+    public function onboardingStage(): bool
+    {
+        return in_array($this->status, [self::STATUS_ONBOARDING, self::STATUS_PASSED], true);
     }
 
     public function quizAttempts(): HasMany

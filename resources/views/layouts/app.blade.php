@@ -50,9 +50,9 @@
           <i class="fa-solid fa-computer w-4 text-center text-xs"></i>Tes
         </a>
         @endif
-        @if(auth()->user()->candidate)
+        @if(auth()->user()->hasBiodataAccess())
         {{-- Perusahaan tanpa persetujuan onboarding (companies.requires_agreement = false): menu disembunyikan. --}}
-        @if(auth()->user()->candidate->jobApplication?->jobOpening?->company?->requires_agreement ?? false)
+        @if(auth()->user()->biodataApplication()?->onboardingStage() && (auth()->user()->biodataApplication()->jobOpening?->company?->requires_agreement ?? false))
         <a href="{{ route('persetujuan.edit') }}" @click="sidebarOpen = false"
            class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('persetujuan.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
           <i class="fa-solid fa-file-signature w-4 text-center text-xs"></i>Persetujuan
@@ -60,7 +60,7 @@
         @endif
         <a href="{{ route('data-diri.edit') }}" @click="sidebarOpen = false"
            class="px-4 py-[11px] rounded-[10px] text-[14px] font-semibold no-underline flex items-center gap-3 {{ request()->routeIs('data-diri.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
-          <i class="fa-solid fa-id-card w-4 text-center text-xs"></i>Data Diri Kandidat
+          <i class="fa-solid fa-id-card w-4 text-center text-xs"></i>{{ auth()->user()->biodataApplication()?->onboardingStage() ? 'Data Diri Kandidat' : 'Biodata' }}
         </a>
         @endif
       </nav>
@@ -106,8 +106,8 @@
           <i class="fa-solid fa-computer mr-1.5 text-xs"></i>Tes
         </a>
         @endif
-        @if(auth()->user()->candidate)
-        @if(auth()->user()->candidate->jobApplication?->jobOpening?->company?->requires_agreement ?? false)
+        @if(auth()->user()->hasBiodataAccess())
+        @if(auth()->user()->biodataApplication()?->onboardingStage() && (auth()->user()->biodataApplication()->jobOpening?->company?->requires_agreement ?? false))
         <a href="{{ route('persetujuan.edit') }}"
            class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('persetujuan.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
           <i class="fa-solid fa-file-signature mr-1.5 text-xs"></i>Persetujuan
@@ -115,7 +115,7 @@
         @endif
         <a href="{{ route('data-diri.edit') }}"
            class="px-[13px] py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-colors duration-150 no-underline {{ request()->routeIs('data-diri.*') ? 'sg-nav-active' : 'sg-nav-inactive' }}">
-          <i class="fa-solid fa-id-card mr-1.5 text-xs"></i>Data Diri Kandidat
+          <i class="fa-solid fa-id-card mr-1.5 text-xs"></i>{{ auth()->user()->biodataApplication()?->onboardingStage() ? 'Data Diri Kandidat' : 'Biodata' }}
         </a>
         @endif
       </nav>

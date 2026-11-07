@@ -28,7 +28,7 @@
     </div>
 
     @if(! $attempt)
-      <p class="text-[13.5px] text-slate-600 mb-4">Kerjakan kapan saja sebelum batas waktu lamaran. Begitu kamu menekan "Mulai Tes", pengerjaan harus diselesaikan dalam durasi di atas.</p>
+      <p class="text-[13.5px] text-slate-600 mb-4">Kerjakan kapan saja sebelum batas waktu lamaran. Begitu Anda menekan "Mulai Tes", pengerjaan harus diselesaikan dalam durasi di atas.</p>
       <form method="POST" action="{{ route('tes-online.mulai', $quiz) }}">
         @csrf
         <button type="submit" class="w-full py-[13px] rounded-xl border-0 bg-navy hover:bg-navy-dark text-white text-[14.5px] font-bold cursor-pointer">Mulai Tes</button>
@@ -40,7 +40,7 @@
         <div class="text-[13px] font-bold text-slate-500 uppercase tracking-wide mb-1">Tes Sudah Dikumpulkan</div>
         <div class="text-[12.5px] text-slate-500 mt-1">Dikumpulkan {{ $attempt->submitted_at->translatedFormat('d F Y, H:i') }} WITA</div>
       </div>
-      <p class="mt-4 text-[13px] text-slate-500">Hasil tes sudah kami terima. Tim rekrutmen akan menghubungimu untuk tahap selanjutnya.</p>
+      <p class="mt-4 text-[13px] text-slate-500">Hasil tes sudah kami terima. Tim rekrutmen akan menghubungi Anda untuk tahap selanjutnya.</p>
     @elseif($attempt->status === 'expired')
       <div class="rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/20 p-5 text-center text-red-700 dark:text-red-400 text-[13.5px] font-semibold">
         Waktu pengerjaan sudah habis sebelum tes dikumpulkan. Hubungi tim rekrutmen kalau ini terjadi karena kendala teknis.

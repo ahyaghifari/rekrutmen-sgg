@@ -9,4 +9,5 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(HrisApiAuth::class)->group(function () {
     Route::post('/integrations/hris/notifications', [HrisIntegrationController::class, 'sendNotification']);
     Route::post('/integrations/hris/notifications/flush', [HrisIntegrationController::class, 'flushNotifications']);
+    Route::get('/integrations/hris/applications/{application}/biodata.pdf', [HrisIntegrationController::class, 'biodataPdf']);
 });

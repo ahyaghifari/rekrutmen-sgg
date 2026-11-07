@@ -96,10 +96,36 @@ dienforce di level aplikasi lewat `JobApplication::scopeActive()` — **catatan:
 status `applied`, `screening`, `interview`, belum lengkap sampai ke `shortlisted`/`offering`/`mcu`/`onboarding`,
 ini gap lama yang belum dibereskan, bukan sesuatu yang baru**).
 
-Begitu status jadi `onboarding` **atau** `passed`, row `candidates` otomatis dibuat
-(`JobApplication::booted()`, method `updated`) — **bukan** saat `shortlisted` seperti draft desain awal di
-`PRD.md`. Ini keputusan yang sudah dikonfirmasi: data diri lengkap kandidat baru relevan diisi menjelang
-tahap akhir.
+**Biodata sejak wawancara pertama (perubahan 2026-11-05).** Baris `candidates` sekarang dibuat lebih awal, lewat satu pintu
+`Candidate::ensureFor(JobApplication)`:
+
+- **Pemicu biodata** (`JobApplication::biodataOpen()`): lamaran punya `interview_invitees` yang jadwalnya
+  (`interview_schedules.status`) = `published` — yaitu jadwal wawancara pertama sudah diterapkan — **atau** status
+  `offering`/`mcu`/`onboarding`/`passed`. Lamaran `rejected` tidak. Draf jadwal tidak memicu.
+- `ensureFor()` dipanggil dari (a) `booted()` saat status jadi `onboarding`/`passed` (seperti dulu), dan (b) **lazy-create** saat
+  kandidat membuka halaman data diri/dashboard/unduh biodata. Jadi HRIS **tidak perlu** menembak event model: cukup menulis
+  `interview_schedules`/`interview_invitees` (status `published`) dan baris `candidates` muncul saat kandidat membukanya.
+  `php artisan biodata:backfill` membuatnya sekaligus untuk semua lamaran yang biodatanya sudah terbuka (aman diulang).
+- **Nama dan NIK selalu dari akun** (`users.name`, `users.nik`): di form biodata kedua isian terkunci (tidak bisa diubah), dan `ensureFor()` menyalin nilainya ke `candidates.name`/`candidates.nik` setiap kali dipanggil. Jawaban form lamaran tidak dipakai lagi untuk keduanya. `No. KK` tetap diisi kandidat.
+- `ensureFor()` juga mengisi kolom yang **masih kosong** dari jawaban form lamaran (`full_name`, `nik`, `gender`, `birth_place`,
+  `birth_date`, `domicile_address`) dan dari `job_applications.offering_*`. Tidak pernah menimpa isian kandidat.
+- Form `/data-diri-kandidat` satu halaman, tab dibuka per tahap: sebelum `onboarding` hanya tab biodata (tanpa BPJS & Rekening
+  dan Dokumen, tanpa gerbang persetujuan); `onboarding`/`passed`: semua tab seperti sebelumnya.
+- `Candidate::requiredDataComplete()` / flag `data_diri_belum_lengkap` **tidak berubah artinya** (hanya isian lama). Isian baru
+  biodata (gender, tempat/tanggal lahir, kontak darurat) hanya masuk `biodataChecklist()`.
+
+### 2.4a Isian biodata yang berbeda per perusahaan
+
+**Tidak ada master di database/HRIS.** Perbedaan antar perusahaan hanya mengikuti `companies.is_hospital` (di database lokal: RSU Syifa Medika Banjarbaru dan Barabai):
+
+| Hal | Rumah sakit | Perusahaan lain |
+|---|---|---|
+| STR (No. STR, masa berlaku) di form dan PDF | Ya (wajib jika jabatan `is_nakes`) | Tidak |
+| Akun Media Sosial (`candidates.social_media_accounts`), di Data Pribadi di bawah Email dan No HP | Tidak | Ya |
+| Kotak "Jelaskan secara singkat tugas…/Gambarkan posisi Anda…" di PDF dan isian `job_description`/`org_position_description` di form | Ya | Tidak |
+| Pertanyaan "Kapan Anda dapat mulai bekerja …" di PDF | "…di <nama RS>?" | "…bersama kami?" |
+
+Katalog isian dan aturannya ada di `config/biodata.php` (`hospital_only` / `non_hospital_only`), dibaca lewat `App\Support\BiodataFields`. Data pada isian yang tidak berlaku tidak dihapus, hanya tidak ditampilkan dan tidak disimpan.
 
 ### 2.4 `candidates` + 8 tabel anak — data diri lengkap kandidat
 
@@ -108,12 +134,12 @@ Diisi sendiri oleh kandidat lewat halaman **Data Diri Kandidat** (`/data-diri-ka
 
 | Tabel | Isi |
 |---|---|
-| `candidates` | Identitas inti: NIK, KK, alamat KTP, BPJS, rekening, dll. Kolom `overall_status` **ada di skema tapi tidak pernah diisi/dipakai di kode manapun — abaikan, dead column.** |
+| `candidates` | Identitas inti: NIK, KK, alamat KTP, BPJS, rekening, dll. Sejak biodata: `gender`, `birth_place`, `birth_date`, `emergency_contact_name/phone`, `biodata_confirmed_at` (centang pernyataan benar). Kolom `overall_status` **ada di skema tapi tidak pernah diisi/dipakai di kode manapun — abaikan, dead column.** |
 | `candidate_family_members` | Data keluarga (hasMany) |
 | `candidate_educations` | Riwayat pendidikan (hasMany) |
 | `candidate_trainings` | Riwayat pelatihan (hasMany) |
 | `candidate_organizations` | Pengalaman organisasi (hasMany) |
-| `candidate_work_experiences` | Pengalaman kerja (hasMany) |
+| `candidate_work_experiences` | Pengalaman kerja (hasMany). Kolom `salary` = gaji **terakhir** (tetap), `salary_start` = gaji awal; `job_description`, `org_position_description` hanya diisi pada baris `is_current` |
 | `candidate_references` | Referensi (hasMany) |
 | `candidate_additional_infos` | Info tambahan: hobi, bahasa, ekspektasi gaji, dll (hasOne) |
 | `candidate_self_assessments` | Penilaian diri (hasOne) |
@@ -329,7 +355,8 @@ tidak perlu bikin struktur data baru.
 | `GET` | `/lamaran/{application}` | Detail satu lamaran (timeline, jadwal wawancara/MCU, dst) |
 | `GET` | `/lamar/{jobOpening}` | Form lamar |
 | `POST` | `/lamar/{jobOpening}` | Submit lamaran |
-| `GET`/`PATCH` | `/data-diri-kandidat` | Form data diri kandidat lengkap |
+| `GET`/`PATCH` | `/data-diri-kandidat` | Form biodata/data diri kandidat (tab bergantung tahap) |
+| `GET` | `/data-diri-kandidat/biodata.pdf` | Pratinjau biodata sebagai PDF inline di tab baru (dirender langsung dari isian; unduh lewat penampil PDF browser; tidak ada versi Word) |
 | `GET` | `/offering-letter/unduh` | Unduh surat penawaran dari rekruter |
 | `POST` | `/offering-letter/upload-signed` | Upload surat yang sudah ditandatangani |
 | `GET` | `/tes-online`, `/tes-online/{quiz}`, dst | Alur pengerjaan kuis |

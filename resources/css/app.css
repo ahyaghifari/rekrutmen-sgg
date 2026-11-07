@@ -80,6 +80,8 @@ input::placeholder, textarea::placeholder { color: #94a3b8; }
   transition: border-color .15s;
 }
 .form-field:focus { border-color: #042c6c; }
+/* Isian ringkas di dalam baris tabel (data keluarga di desktop, daftar 2 kolom di HP). */
+.form-field.fam-field { padding: 8px 10px; font-size: 13px; border-radius: 10px; }
 
 .btn-primary {
   display: inline-flex;

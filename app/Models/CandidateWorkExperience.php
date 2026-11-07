@@ -12,13 +12,15 @@ class CandidateWorkExperience extends Model
 
     protected $fillable = [
         'candidate_id', 'company_name', 'business_type', 'company_address',
-        'position', 'start_date', 'end_date', 'salary', 'resign_reason', 'is_current',
+        'position', 'start_date', 'end_date', 'salary', 'salary_start', 'resign_reason', 'is_current',
+        'job_description', 'org_position_description',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'salary' => 'decimal:2',
+        'salary_start' => 'decimal:2',
         'is_current' => 'boolean',
     ];
 

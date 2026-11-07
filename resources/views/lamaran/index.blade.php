@@ -25,7 +25,7 @@ $needsQuiz = $applications->first(function ($a) {
   {{-- Header --}}
   <div style="margin-bottom:16px;">
     <h1 class="text-slate-800" style="font-size:20px;font-weight:800;margin:0 0 2px;">Lamaran Saya</h1>
-    <p class="text-slate-500" style="font-size:13px;margin:0;">Seluruh riwayat lamaran yang pernah kamu kirimkan.</p>
+    <p class="text-slate-500" style="font-size:13px;margin:0;">Seluruh riwayat lamaran yang pernah Anda kirimkan.</p>
   </div>
 
   @if($needsQuiz)
@@ -48,7 +48,7 @@ $needsQuiz = $applications->first(function ($a) {
         <i class="fa-solid fa-file-circle-question" style="font-size:20px;color:#042c6c;"></i>
       </div>
       <div class="text-slate-800" style="font-size:14px;font-weight:700;margin-bottom:4px;">Belum ada lamaran</div>
-      <p class="text-slate-400" style="font-size:12.5px;margin:0 0 18px;">Kamu belum pernah melamar posisi apapun.</p>
+      <p class="text-slate-400" style="font-size:12.5px;margin:0 0 18px;">Anda belum pernah melamar posisi apapun.</p>
       <a href="{{ route('dashboard') }}#lowongan" style="display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:#042c6c;color:#fff;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;">
         <i class="fa-solid fa-briefcase"></i> Lihat Lowongan
       </a>

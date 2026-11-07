@@ -23,7 +23,7 @@
 
   @if($errors->any())
   <div class="mb-4 rounded-2xl px-4 py-3 bg-red-600/[0.07]">
-    <div class="text-[13px] font-bold text-red-700 mb-1">Periksa kembali isian kamu:</div>
+    <div class="text-[13px] font-bold text-red-700 mb-1">Periksa kembali isian Anda:</div>
     <ul class="text-[12.5px] text-red-600 list-disc pl-4">
       @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
     </ul>
@@ -33,7 +33,7 @@
   <h1 class="m-0 mb-1 text-[19px] font-extrabold text-slate-800 tracking-[-0.3px]">Persetujuan</h1>
   <p class="m-0 text-[12px] leading-[1.55] text-slate-500">
     @if($locked)
-      Kamu sudah menyetujui semua naskah di bawah. Halaman ini hanya untuk dibaca kembali.
+      Anda sudah menyetujui semua naskah di bawah. Halaman ini hanya untuk dibaca kembali.
     @endif
   </p>
 
@@ -42,8 +42,8 @@
     <i class="fa-solid fa-circle-exclamation text-red-600 text-[14px] mt-[2px] shrink-0"></i>
     <div class="text-[12px] leading-[1.6] text-red-700">
       <span class="font-extrabold">Penting.</span>
-      Dengan menyetujui seluruh persetujuan di bawah ini, kamu dinyatakan <strong>siap untuk memulai onboarding dan mulai bekerja</strong>.
-      Pastikan kamu sudah membaca dan memahami setiap naskah sebelum menandainya.
+      Dengan menyetujui seluruh persetujuan di bawah ini, Anda dinyatakan <strong>siap untuk memulai onboarding dan mulai bekerja</strong>.
+      Pastikan Anda sudah membaca dan memahami setiap naskah sebelum menandainya.
     </div>
   </div>
   @endunless

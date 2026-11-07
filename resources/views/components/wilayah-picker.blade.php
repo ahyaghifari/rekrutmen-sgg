@@ -1,4 +1,4 @@
-@props(['prefix', 'values' => [], 'count' => 4, 'accent' => 'navy', 'big' => false])
+@props(['prefix', 'values' => [], 'count' => 4, 'accent' => 'navy', 'big' => false, 'required' => true])
 @php
     $all   = [['province', 'Provinsi'], ['city', 'Kota/Kabupaten'], ['district', 'Kecamatan'], ['village', 'Kelurahan/Desa']];
     $inp   = $big ? 'rounded-xl border-2 py-3.5 pl-4 pr-9 text-base' : 'rounded-[10px] border py-2 pl-3 pr-8 text-[13px]';
@@ -13,7 +13,7 @@
   <div class="relative" @click.outside="if (openKey === '{{ $key }}') { openKey = null; pick({{ $i }}) }">
     <label class="block {{ $lab }} text-slate-700">{{ $label }}</label>
     <div class="relative">
-      <input type="text" name="{{ $prefix.$key }}" x-model="names['{{ $key }}']" required maxlength="100" autocomplete="off"
+      <input type="text" name="{{ $prefix.$key }}" x-model="names['{{ $key }}']" @required($required) maxlength="100" autocomplete="off"
              :disabled="!fallback && !opts['{{ $key }}'].length"
              :placeholder="fallback ? '' : (opts['{{ $key }}'].length ? 'Ketik untuk mencari...' : '{{ $i === 0 ? 'Memuat...' : 'Pilih ' . $all[$i - 1][1] . ' dulu' }}')"
              @focus="show('{{ $key }}')"

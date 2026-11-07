@@ -9,6 +9,9 @@ export default {
         './resources/views/**/*.blade.php',
     ],
 
+    // Urutan baris dibangun dinamis di partials/repeater-rows.blade.php (order-N / md:order-N), tidak terbaca scanner.
+    safelist: [{ pattern: /^order-(?:[1-9]|1[0-2])$/, variants: ['md'] }],
+
     theme: {
         extend: {
             fontFamily: {

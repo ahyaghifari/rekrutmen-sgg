@@ -137,29 +137,29 @@ class ApplicationNotification extends Model
     private static function defaultSubject(string $event, string $jobTitle): string
     {
         return match ($event) {
-            CompanyMessageTemplate::EVENT_SCREENING_PASSED    => "Selamat! Kamu Lolos Seleksi Berkas – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_SCREENING_PASSED    => "Selamat! Anda Lolos Seleksi Berkas – {$jobTitle}",
             CompanyMessageTemplate::EVENT_QUIZ_SENT           => "Tes Sudah Bisa Dikerjakan – {$jobTitle}",
-            CompanyMessageTemplate::EVENT_QUIZ_PASSED         => "Selamat! Kamu Lulus Tes – {$jobTitle}",
-            CompanyMessageTemplate::EVENT_QUIZ_REJECTED       => "Update Lamaran Kamu – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_QUIZ_PASSED         => "Selamat! Anda Lulus Tes – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_QUIZ_REJECTED       => "Update Lamaran Anda – {$jobTitle}",
             CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED => "Undangan Wawancara – {$jobTitle}",
-            CompanyMessageTemplate::EVENT_INTERVIEW_PASSED    => "Selamat! Kamu Lolos Wawancara – {$jobTitle}",
-            CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED  => "Update Lamaran Kamu – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_INTERVIEW_PASSED    => "Selamat! Anda Lolos Wawancara – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED  => "Update Lamaran Anda – {$jobTitle}",
             CompanyMessageTemplate::EVENT_MCU_SCHEDULED       => "Jadwal Medical Check Up – {$jobTitle}",
-            CompanyMessageTemplate::EVENT_MCU_PASSED          => "Selamat! Kamu Lulus MCU – {$jobTitle}",
-            CompanyMessageTemplate::EVENT_MCU_REJECTED        => "Update Lamaran Kamu – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_MCU_PASSED          => "Selamat! Anda Lulus MCU – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_MCU_REJECTED        => "Update Lamaran Anda – {$jobTitle}",
             CompanyMessageTemplate::EVENT_ONBOARDING_INVITE   => "Selamat Bergabung! Undangan TTD & Onboarding – {$jobTitle}",
             CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY => "Surat Penawaran Kerja Sudah Bisa Diunduh – {$jobTitle}",
             CompanyMessageTemplate::EVENT_OFFERING_SIGNED_RECEIVED => "Surat Penawaran Bertanda Tangan Diterima – {$jobTitle}",
-            CompanyMessageTemplate::EVENT_MANUAL_REJECTED     => "Update Lamaran Kamu – {$jobTitle}",
+            CompanyMessageTemplate::EVENT_MANUAL_REJECTED     => "Update Lamaran Anda – {$jobTitle}",
             CompanyMessageTemplate::EVENT_OFFLINE_TEST_SCHEDULED => "Jadwal Tes Offline – {$jobTitle}",
-            default                                           => "Update Lamaran Kamu – {$jobTitle}",
+            default                                           => "Update Lamaran Anda – {$jobTitle}",
         };
     }
 
     private static function defaultBody(string $event, string $name, string $jobTitle, array $extra = []): string
     {
         if ($event === CompanyMessageTemplate::EVENT_SCREENING_PASSED) {
-            return "Halo {$name},\n\nKami dengan senang hati menginformasikan bahwa berkas lamaran kamu untuk posisi {$jobTitle} telah berhasil lolos tahap seleksi berkas.\n\nTahap selanjutnya adalah tes online. Tim kami akan segera memberi tahu kamu begitu tesnya sudah bisa dikerjakan lewat dashboard akunmu.\n\nTetap semangat dan terima kasih atas ketertarikanmu bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nKami dengan senang hati menginformasikan bahwa berkas lamaran Anda untuk posisi {$jobTitle} telah berhasil lolos tahap seleksi berkas.\n\nTahap selanjutnya adalah tes online. Tim kami akan segera memberi tahu Anda begitu tesnya sudah bisa dikerjakan lewat dashboard akun Anda.\n\nTetap semangat dan terima kasih atas ketertarikan Anda bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_SCHEDULED) {
@@ -173,34 +173,34 @@ class ApplicationNotification extends Model
             // seolah-olah undangan wawancara pertama.
             $tahap    = ($extra['tahap'] ?? null) ? " ({$extra['tahap']})" : '';
 
-            return "Halo {$name},\n\nSelamat! Kamu terpilih untuk mengikuti tahap wawancara{$tahap} posisi {$jobTitle}.\n\nWawancara dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSelamat! Anda terpilih untuk mengikuti tahap wawancara{$tahap} posisi {$jobTitle}.\n\nWawancara dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiran Anda. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_QUIZ_SENT) {
-            return "Halo {$name},\n\nSelamat! Kamu lolos ke tahap Tes untuk posisi {$jobTitle}.\n\nTes bisa kamu kerjakan kapan saja lewat dashboard akunmu. Perlu diperhatikan: begitu kamu menekan tombol \"Mulai Tes\", pengerjaan harus diselesaikan dalam batas waktu yang ditentukan — jadi pastikan waktumu cukup sebelum memulai.\n\nSemangat mengerjakan!\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSelamat! Anda lolos ke tahap Tes untuk posisi {$jobTitle}.\n\nTes bisa Anda kerjakan kapan saja lewat dashboard akun Anda. Perlu diperhatikan: begitu Anda menekan tombol \"Mulai Tes\", pengerjaan harus diselesaikan dalam batas waktu yang ditentukan — jadi pastikan waktu Anda cukup sebelum memulai.\n\nSemangat mengerjakan!\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_QUIZ_PASSED) {
-            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lulus tes untuk posisi {$jobTitle}.\n\nTim rekrutmen kami akan segera menghubungimu untuk tahap wawancara.\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSelamat! Anda dinyatakan lulus tes untuk posisi {$jobTitle}.\n\nTim rekrutmen kami akan segera menghubungi Anda untuk tahap wawancara.\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_PASSED) {
             // Kandidat diminta MENGISI DATA dulu, bukan menunggu (permintaan user 2026-09-30):
             // surat penawarannya baru bisa disusun setelah datanya masuk, dan formnya ada di
             // dashboard (lihat route offering-letter.data).
-            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lolos tahap wawancara untuk posisi {$jobTitle}.\n\nTahap selanjutnya adalah penawaran kerja (offering letter). Mohon masuk ke dashboard akunmu dan lengkapi data diri untuk surat penawaran — suratnya bisa kamu unduh setelahnya.\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSelamat! Anda dinyatakan lolos tahap wawancara untuk posisi {$jobTitle}.\n\nTahap selanjutnya adalah penawaran kerja (offering letter). Mohon masuk ke dashboard akun Anda dan lengkapi data diri untuk surat penawaran — suratnya bisa Anda unduh setelahnya.\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY) {
-            return "Halo {$name},\n\nSelamat! Surat penawaran kerja (offering letter) untuk posisi {$jobTitle} sudah bisa kamu unduh lewat dashboard akunmu.\n\nSetelah dibaca dan ditandatangani, mohon unggah kembali surat tersebut lewat dashboard yang sama.\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSelamat! Surat penawaran kerja (offering letter) untuk posisi {$jobTitle} sudah bisa Anda unduh lewat dashboard akun Anda.\n\nSetelah dibaca dan ditandatangani, mohon unggah kembali surat tersebut lewat dashboard yang sama.\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_OFFERING_SIGNED_RECEIVED) {
-            return "Halo {$name},\n\nSurat penawaran kerja yang sudah kamu tandatangani untuk posisi {$jobTitle} telah kami terima.\n\nTim rekrutmen akan memeriksa dan mengonfirmasi surat tersebut pada jam kerja. Kamu akan kami kabari lagi lewat email begitu ada hasilnya.\n\nTerima kasih atas kesabaranmu.\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSurat penawaran kerja yang sudah Anda tandatangani untuk posisi {$jobTitle} telah kami terima.\n\nTim rekrutmen akan memeriksa dan mengonfirmasi surat tersebut pada jam kerja. Anda akan kami kabari lagi lewat email begitu ada hasilnya.\n\nTerima kasih atas kesabaran Anda.\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_MCU_PASSED) {
-            return "Halo {$name},\n\nSelamat! Kamu dinyatakan fit/lulus Medical Check Up untuk posisi {$jobTitle}.\n\nSebelum lanjut ke tahap TTD & Onboarding, mohon lengkapi data diri kandidat lewat dashboard akunmu. Kamu perlu menyetujui semua persetujuan yang ditampilkan dulu sebelum bisa mengisi data diri.\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSelamat! Anda dinyatakan fit/lulus Medical Check Up untuk posisi {$jobTitle}.\n\nSebelum lanjut ke tahap TTD & Onboarding, mohon lengkapi data diri kandidat lewat dashboard akun Anda. Anda perlu menyetujui semua persetujuan yang ditampilkan dulu sebelum bisa mengisi data diri.\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_MCU_SCHEDULED) {
@@ -208,7 +208,7 @@ class ApplicationNotification extends Model
             $time     = $extra['interview_time'] ? " pukul {$extra['interview_time']} WITA" : '';
             $location = $extra['location'] ? "\nLokasi: {$extra['location']}" : '';
             $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
-            return "Halo {$name},\n\nSurat penawaran kerja (offering letter) kamu untuk posisi {$jobTitle} sudah kami terima. Proses dilanjutkan ke tahap Medical Check Up (MCU).\n\nMCU dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSurat penawaran kerja (offering letter) Anda untuk posisi {$jobTitle} sudah kami terima. Proses dilanjutkan ke tahap Medical Check Up (MCU).\n\nMCU dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiran Anda. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_OFFLINE_TEST_SCHEDULED) {
@@ -216,38 +216,38 @@ class ApplicationNotification extends Model
             $time     = $extra['interview_time'] ? " pukul {$extra['interview_time']} WITA" : '';
             $location = $extra['location'] ? "\nLokasi: {$extra['location']}" : '';
             $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
-            return "Halo {$name},\n\nKamu diundang mengikuti tes offline untuk posisi {$jobTitle}.\n\nTes dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiranmu. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nAnda diundang mengikuti tes offline untuk posisi {$jobTitle}.\n\nTes dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiran Anda. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_QUIZ_REJECTED) {
-            return "Halo {$name},\n\nTerima kasih telah mengikuti proses seleksi untuk posisi {$jobTitle}.\n\nSetelah meninjau hasil Tes, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nJangan menyerah — terus tingkatkan kemampuanmu dan kami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
+            return "Halo {$name},\n\nTerima kasih telah mengikuti proses seleksi untuk posisi {$jobTitle}.\n\nSetelah meninjau hasil Tes, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran Anda.\n\nJangan menyerah — terus tingkatkan kemampuan Anda dan kami doakan yang terbaik untuk Anda.\n\nSalam hangat,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_INTERVIEW_REJECTED) {
-            return "Halo {$name},\n\nTerima kasih telah meluangkan waktu untuk mengikuti proses wawancara posisi {$jobTitle}.\n\nSetelah melalui pertimbangan, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nKami sangat menghargai antusiasme dan usahamu. Jangan menyerah — terus tingkatkan diri dan kami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
+            return "Halo {$name},\n\nTerima kasih telah meluangkan waktu untuk mengikuti proses wawancara posisi {$jobTitle}.\n\nSetelah melalui pertimbangan, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran Anda.\n\nKami sangat menghargai antusiasme dan usaha Anda. Jangan menyerah — terus tingkatkan diri dan kami doakan yang terbaik untuk Anda.\n\nSalam hangat,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_MANUAL_REJECTED) {
             $notes = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
-            return "Halo {$name},\n\nTerima kasih atas partisipasimu dalam proses seleksi untuk posisi {$jobTitle}.\n\nKami informasikan bahwa proses lamaranmu kami hentikan pada tahap ini.{$notes}\n\nKami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
+            return "Halo {$name},\n\nTerima kasih atas partisipasi Anda dalam proses seleksi untuk posisi {$jobTitle}.\n\nKami informasikan bahwa proses lamaran Anda kami hentikan pada tahap ini.{$notes}\n\nKami doakan yang terbaik untuk Anda.\n\nSalam hangat,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_MCU_REJECTED) {
-            return "Halo {$name},\n\nTerima kasih telah menjalani proses Medical Check Up (MCU) untuk posisi {$jobTitle}.\n\nSetelah melalui evaluasi hasil MCU, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nKami sangat menghargai kesungguhanmu selama proses seleksi. Kami doakan yang terbaik untukmu.\n\nSalam hangat,\nTim Rekrutmen";
+            return "Halo {$name},\n\nTerima kasih telah menjalani proses Medical Check Up (MCU) untuk posisi {$jobTitle}.\n\nSetelah melalui evaluasi hasil MCU, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran Anda.\n\nKami sangat menghargai kesungguhan Anda selama proses seleksi. Kami doakan yang terbaik untuk Anda.\n\nSalam hangat,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_ONBOARDING_INVITE) {
             $jadwal = ! empty($extra['onboarding_date'])
-                ? "\n\nJadwal onboarding kamu: {$extra['onboarding_date']}. Mohon hadir tepat waktu; detail lokasi dan agenda menyusul dari tim rekrutmen."
-                : "\n\nTim rekrutmen kami akan segera menghubungimu untuk jadwal dan detail lebih lanjut.";
+                ? "\n\nJadwal onboarding Anda: {$extra['onboarding_date']}. Mohon hadir tepat waktu; detail lokasi dan agenda menyusul dari tim rekrutmen."
+                : "\n\nTim rekrutmen kami akan segera menghubungi Anda untuk jadwal dan detail lebih lanjut.";
 
             $dataDiri = ! empty($extra['data_diri_belum_lengkap'])
-                ? "\n\nCatatan: data diri kandidat kamu belum lengkap. Mohon lengkapi lewat dashboard akunmu sebelum hari onboarding supaya proses administrasi karyawan berjalan lancar."
+                ? "\n\nCatatan: data diri kandidat Anda belum lengkap. Mohon lengkapi lewat dashboard akun Anda sebelum hari onboarding supaya proses administrasi karyawan berjalan lancar."
                 : '';
 
-            return "Halo {$name},\n\nSelamat! Kamu dinyatakan lolos seluruh tahap seleksi untuk posisi {$jobTitle} di Syifa Global Group.\n\nLangkah terakhir: penandatanganan kontrak dan onboarding.{$jadwal}{$dataDiri}\n\nSelamat bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
+            return "Halo {$name},\n\nSelamat! Anda dinyatakan lolos seluruh tahap seleksi untuk posisi {$jobTitle} di Syifa Global Group.\n\nLangkah terakhir: penandatanganan kontrak dan onboarding.{$jadwal}{$dataDiri}\n\nSelamat bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
         }
 
-        return "Halo {$name},\n\nTerima kasih telah melamar untuk posisi {$jobTitle}.\n\nSetelah melalui proses seleksi berkas, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran kamu.\n\nJangan menyerah ya! Terus tingkatkan diri dan semoga kesuksesan selalu menyertaimu.\n\nSalam hangat,\nTim Rekrutmen";
+        return "Halo {$name},\n\nTerima kasih telah melamar untuk posisi {$jobTitle}.\n\nSetelah melalui proses seleksi berkas, kami sampaikan bahwa pada tahap ini kami belum dapat melanjutkan proses lamaran Anda.\n\nJangan menyerah ya! Terus tingkatkan diri dan semoga kesuksesan selalu menyertai Anda.\n\nSalam hangat,\nTim Rekrutmen";
     }
 }

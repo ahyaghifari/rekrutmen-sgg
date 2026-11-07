@@ -430,7 +430,7 @@
       </div>
       <h3 class="m-0 text-[18px] font-extrabold text-slate-800 tracking-[-0.3px]">Kirim Lamaran?</h3>
       <p class="m-0 text-[13.5px] text-slate-500 leading-relaxed">
-        Pastikan semua data yang kamu isi sudah benar.<br>
+        Pastikan semua data yang Anda isi sudah benar.<br>
         Lamaran yang sudah dikirim <strong>tidak dapat diubah</strong>.
       </p>
     </div>

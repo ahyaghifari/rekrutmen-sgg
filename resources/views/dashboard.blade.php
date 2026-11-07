@@ -95,8 +95,8 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
       <i class="fa-solid fa-trophy text-lg"></i>
     </div>
     <div>
-      <h2 class="m-0 mb-1 text-xl font-extrabold tracking-[-0.4px]">Selamat, kamu diterima!</h2>
-      <p class="m-0 text-[13.5px] text-white/85">Kamu resmi bergabung sebagai <strong>{{ $activeApp->jobOpening->title }}</strong> di {{ $activeApp->jobOpening->company_name }}. Sampai jumpa di hari pertama kerja!</p>
+      <h2 class="m-0 mb-1 text-xl font-extrabold tracking-[-0.4px]">Selamat, Anda diterima!</h2>
+      <p class="m-0 text-[13.5px] text-white/85">Anda resmi bergabung sebagai <strong>{{ $activeApp->jobOpening->title }}</strong> di {{ $activeApp->jobOpening->company_name }}. Sampai jumpa di hari pertama kerja!</p>
     </div>
   </div>
 </div>
@@ -226,7 +226,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
       @elseif($semuaKuisSelesai)
       <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3 bg-emerald-50 border border-emerald-200">
         <i class="fa-solid fa-circle-check text-emerald-500 mt-px text-xs"></i>
-        <span class="text-[13px] text-emerald-700">Semua tes sudah kamu selesaikan. Menunggu keputusan dari tim rekrutmen.</span>
+        <span class="text-[13px] text-emerald-700">Semua tes sudah Anda selesaikan. Menunggu keputusan dari tim rekrutmen.</span>
       </div>
       @else
       <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3 bg-amber-50 border border-amber-200">
@@ -252,21 +252,53 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
       @endforeach
     @endif
 
+    {{-- Biodata: terbuka sejak jadwal wawancara pertama terbit (JobApplication::biodataOpen()), sebelum onboarding. --}}
+    @php
+      // Tidak tampil lagi saat offering/MCU (biodata dikunci) maupun onboarding.
+      $bioShow = $activeApp->biodataOpen() && ! $activeApp->onboardingStage() && ! $activeApp->biodataLocked();
+      if ($bioShow) {
+          $bioList = auth()->user()->candidate?->biodataChecklist() ?? [];
+          $bioDone = collect($bioList)->where('filled', true)->count();
+      }
+    @endphp
+
     @if($activeApp->status === 'interview')
     @php $interviewSchedule = $activeApp->interviewInvitee?->schedule; @endphp
-    <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3" style="background:{{ $tlBrand }}14;border:1px solid {{ $tlBrand }}33;">
-      <i class="fa-solid fa-calendar-days mt-px text-xs" style="color:{{ $tlBrand }};"></i>
-      <div class="text-[13px]" style="color:{{ $tlBrand }};">
-        @if($interviewSchedule)
-          <strong>Jadwal Wawancara:</strong>
-          {{ $interviewSchedule->interview_date?->translatedFormat('l, j F Y') }}
-          @if($interviewSchedule->interview_time) &middot; {{ substr($interviewSchedule->interview_time, 0, 5) }} WITA @endif
-          @if($interviewSchedule->location) <br>Lokasi: {{ $interviewSchedule->location }} @endif
-          @if($interviewSchedule->notes) <br>Catatan: {{ $interviewSchedule->notes }} @endif
-        @else
-          Jadwal wawancara akan diinformasikan oleh tim rekrutmen. Tunggu pemberitahuan selanjutnya.
-        @endif
+    {{-- Satu kartu: jadwal wawancara di kiri, biodata di kanan (desktop) / di bawah lokasi (HP). --}}
+    <div class="mt-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between rounded-[12px] px-4 py-3" style="background:{{ $tlBrand }}14;border:1px solid {{ $tlBrand }}33;">
+      <div class="flex items-start gap-2.5">
+        <i class="fa-solid fa-calendar-days mt-px text-xs" style="color:{{ $tlBrand }};"></i>
+        <div class="text-[13px]" style="color:{{ $tlBrand }};">
+          @if($interviewSchedule)
+            <strong>Jadwal Wawancara:</strong>
+            {{ $interviewSchedule->interview_date?->translatedFormat('l, j F Y') }}
+            @if($interviewSchedule->interview_time) &middot; {{ substr($interviewSchedule->interview_time, 0, 5) }} WITA @endif
+            @if($interviewSchedule->location) <br>Lokasi: {{ $interviewSchedule->location }} @endif
+            @if($interviewSchedule->notes) <br>Catatan: {{ $interviewSchedule->notes }} @endif
+          @else
+            Jadwal wawancara akan diinformasikan oleh tim rekrutmen. Tunggu pemberitahuan selanjutnya.
+          @endif
+        </div>
       </div>
+      @if($bioShow)
+      <div class="flex items-start gap-2.5 pt-3 border-t md:border-t-0 md:border-l md:pt-0 md:pl-5 md:max-w-[44%]" style="border-color:{{ $tlBrand }}33;">
+        <i class="fa-solid fa-id-card mt-px text-xs" style="color:{{ $tlBrand }};"></i>
+        @include('dashboard-parts.biodata')
+      </div>
+      @endif
+    </div>
+    @elseif($bioShow)
+    {{-- Tahap lain (offering/mcu): kartu biodata berdiri sendiri. --}}
+    <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3" style="background:{{ $tlBrand }}14;border:1px solid {{ $tlBrand }}33;">
+      <i class="fa-solid fa-id-card mt-px text-xs" style="color:{{ $tlBrand }};"></i>
+      @include('dashboard-parts.biodata')
+    </div>
+    @endif
+
+    {{-- Unggah biodata bertanda tangan: di bawah kartu, selebar penuh. --}}
+    @if($bioShow)
+    <div class="mt-3 rounded-[12px] px-4 py-3" style="background:{{ $tlBrand }}14;border:1px solid {{ $tlBrand }}33;color:{{ $tlBrand }};">
+      @include('candidate-profile.partials.signed-upload')
     </div>
     @endif
 
@@ -300,9 +332,14 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
         </button>
         @else
         <div class="rounded-[10px] px-3 py-2.5 mb-3 text-[12.5px] bg-amber-50 text-amber-700 border border-amber-200">
-          <i class="fa-solid fa-circle-info text-xs mr-1"></i>Lengkapi data berikut untuk bisa mengunduh surat penawaranmu.
+          <i class="fa-solid fa-circle-info text-xs mr-1"></i>Lengkapi data berikut untuk bisa mengunduh surat penawaran Anda.
         </div>
         @endif
+      @php
+        // Biodata sudah memuat tempat/tanggal lahir + alamat -> offering hanya meminta nama dengan gelar.
+        $bioCand = auth()->user()->candidate;
+        $bioIdentity = $bioCand?->biodataIdentityFilled() ?? false;
+      @endphp
       <form x-show="open" @if($activeApp->offering_data_confirmed_at) x-cloak style="display:none;" @endif method="POST" action="{{ route('offering-letter.data') }}" class="space-y-4 mt-3" @submit="saving = true">
         @csrf
         <div>
@@ -311,6 +348,13 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
                  value="{{ old('offering_full_name') }}"
                  class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">
         </div>
+        @if($bioIdentity)
+        <div class="rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12.5px] text-slate-600">
+          <div><strong>Tempat, tanggal lahir:</strong> {{ $bioCand->birth_place }}, {{ $bioCand->birth_date?->translatedFormat('j F Y') }}</div>
+          <div class="mt-1"><strong>Alamat:</strong> {{ $bioCand->ktp_address }}, {{ $bioCand->village }}, {{ $bioCand->district }}, {{ $bioCand->city }}, {{ $bioCand->province }}</div>
+          <div class="mt-1.5 text-slate-500">Diambil dari biodata Anda.@unless($activeApp->biodataLocked()) <a href="{{ route('data-diri.edit') }}" class="font-bold text-navy underline">Ubah di Biodata</a>@endunless</div>
+        </div>
+        @else
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block mb-1 text-[12.5px] font-bold text-slate-700">Tempat Lahir</label>
@@ -332,6 +376,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
                     class="w-full rounded-[10px] border border-slate-300 px-3 py-2 text-[13px] focus:border-navy focus:outline-none">{{ old('offering_domicile_address', $activeApp->offering_domicile_address ?? $activeApp->answersMap()['domicile_address'] ?? '') }}</textarea>
         </div>
         <x-wilayah-picker prefix="offering_" :values="['province' => $activeApp->offering_province ?? '', 'city' => $activeApp->offering_city ?? '', 'district' => $activeApp->offering_district ?? '', 'village' => $activeApp->offering_village ?? '']" />
+        @endif
         <button type="submit" x-bind:disabled="saving"
                 class="w-full py-[11px] rounded-[10px] border-0 bg-navy hover:bg-navy-dark text-white text-[13px] font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
           <span x-text="saving ? 'Menyimpan...' : 'Simpan Data'">Simpan Data</span>
@@ -355,7 +400,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
         <div class="text-[12.5px] font-bold text-slate-700">Riwayat Negosiasi</div>
         @foreach($negos as $n)
         <div class="rounded-xl px-3 py-2 text-[12.5px] {{ $n->sender === 'applicant' ? 'bg-slate-100 text-slate-700' : 'bg-navy/5 text-navy' }}">
-          <div class="font-semibold">{{ $n->sender === 'applicant' ? 'Kamu' : 'Tim Rekrutmen' }} &middot; <span class="font-normal text-slate-400">{{ $n->created_at->translatedFormat('j M Y, H:i') }} WITA</span></div>
+          <div class="font-semibold">{{ $n->sender === 'applicant' ? 'Anda' : 'Tim Rekrutmen' }} &middot; <span class="font-normal text-slate-400">{{ $n->created_at->translatedFormat('j M Y, H:i') }} WITA</span></div>
           <div class="mt-0.5 whitespace-pre-line">{{ $n->message }}</div>
         </div>
         @endforeach
@@ -366,25 +411,25 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
         @if($activeApp->offering_signed_reviewed_at)
         <div class="mt-3 rounded-[10px] px-3 py-2.5 text-[12.5px] bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-start gap-2">
           <i class="fa-solid fa-circle-check text-xs mt-[3px]"></i>
-          <span>Surat bertanda tangan sudah diterima tim rekrutmen pada {{ $activeApp->offering_signed_reviewed_at->translatedFormat('j F Y, H:i') }} WITA. Proses lamaranmu berlanjut ke tahap berikutnya.</span>
+          <span>Surat bertanda tangan sudah diterima tim rekrutmen pada {{ $activeApp->offering_signed_reviewed_at->translatedFormat('j F Y, H:i') }} WITA. Proses lamaran Anda berlanjut ke tahap berikutnya.</span>
         </div>
         @else
         <div class="mt-3 rounded-[10px] px-3 py-2.5 text-[12.5px] bg-slate-50 text-slate-600 border border-slate-200 flex items-start gap-2">
           <i class="fa-solid fa-clock text-xs mt-[3px]"></i>
-          <span>Surat bertanda tangan sudah diunggah {{ $activeApp->offering_letter_signed_at->translatedFormat('j F Y, H:i') }} WITA. Sedang dikonfirmasi tim rekrutmen pada jam kerja — kamu akan dikabari lewat email begitu ada hasilnya.</span>
+          <span>Surat bertanda tangan sudah diunggah {{ $activeApp->offering_letter_signed_at->translatedFormat('j F Y, H:i') }} WITA. Sedang dikonfirmasi tim rekrutmen pada jam kerja — Anda akan dikabari lewat email begitu ada hasilnya.</span>
         </div>
         @endif
       @else
         @if($activeApp->offering_signed_revision_reason)
         <div class="mt-3 rounded-[10px] px-3 py-2.5 text-[12.5px] bg-amber-50 text-amber-700 border border-amber-200 flex items-start gap-2">
           <i class="fa-solid fa-triangle-exclamation text-xs mt-[3px]"></i>
-          <span>Tim rekrutmen meminta kamu mengunggah <strong>ulang</strong> surat penawaran bertanda tangan.<br>Alasan: <span class="whitespace-pre-line">{{ $activeApp->offering_signed_revision_reason }}</span></span>
+          <span>Tim rekrutmen meminta Anda mengunggah <strong>ulang</strong> surat penawaran bertanda tangan.<br>Alasan: <span class="whitespace-pre-line">{{ $activeApp->offering_signed_revision_reason }}</span></span>
         </div>
         @endif
         <div class="mt-4">
           @if($negos->last()?->sender === 'applicant')
           <div class="rounded-[10px] px-3 py-2.5 text-[12.5px] bg-amber-50 text-amber-700 border border-amber-200">
-            <i class="fa-solid fa-clock text-xs mr-1"></i>Pengajuan negosiasi kamu sedang ditinjau tim rekrutmen. Kamu bisa mengirim lagi setelah ada balasan.
+            <i class="fa-solid fa-clock text-xs mr-1"></i>Pengajuan negosiasi Anda sedang ditinjau tim rekrutmen. Anda bisa mengirim lagi setelah ada balasan.
           </div>
           @else
           <div x-data="{ open: false, sending: false }">

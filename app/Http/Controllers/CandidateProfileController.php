@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Candidate;
 use App\Models\CandidateDocument;
+use App\Support\BiodataData;
+use App\Support\BiodataFields;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -12,19 +18,36 @@ use Illuminate\View\View;
 
 class CandidateProfileController extends Controller
 {
-    private function currentCandidate()
+    /**
+     * Candidate milik user, dibuat saat ini juga kalau biodata sudah terbuka (jadwal wawancara pertama terbit, atau
+     * lamaran sudah melewati wawancara). Lazy-create karena HRIS menulis DB langsung — event model bisa tidak jalan.
+     */
+    private function currentCandidate(): Candidate
     {
-        $candidate = Auth::user()->candidate;
-        abort_if(! $candidate, 403, 'Kamu belum lolos seleksi berkas, belum bisa mengisi data diri kandidat.');
+        $application = Auth::user()->biodataApplication();
+        abort_if(! $application, 403, 'Biodata baru bisa diisi setelah Anda dijadwalkan wawancara.');
 
-        return $candidate;
+        return Candidate::ensureFor($application);
+    }
+
+    /** Persetujuan hanya untuk tahap onboarding; sebelum itu halamannya tidak relevan. */
+    private function onboarding(Candidate $candidate): bool
+    {
+        return (bool) $candidate->jobApplication?->onboardingStage();
+    }
+
+    /** Onboarding dan biodata sudah lengkap: biodata tidak diubah lagi, hanya BPJS/rekening yang diisi. Belum lengkap: form terbuka penuh. */
+    private function biodataFrozen(Candidate $candidate, bool $onboarding): bool
+    {
+        return $onboarding && $candidate->biodataComplete();
     }
 
     public function edit(): RedirectResponse|View
     {
         $candidate = $this->currentCandidate();
+        $onboarding = $this->onboarding($candidate);
 
-        if ($candidate->agreementsPending()) {
+        if ($onboarding && $candidate->agreementsPending()) {
             return redirect()->route('persetujuan.edit')
                 ->with('warning', 'Setujui semua persetujuan dulu sebelum mengisi data diri.');
         }
@@ -35,11 +58,23 @@ class CandidateProfileController extends Controller
             'documents',
         ]);
 
-        return view('candidate-profile.edit', compact('candidate'));
+        // Tahap biodata: tanpa tab 3 (BPJS & Rekening) dan 12 (Dokumen). Onboarding+: semua tab.
+        $sections = BiodataFields::sections($candidate->biodataCompany());
+        $checklist = $onboarding ? $candidate->requiredDataChecklist(true) : $candidate->biodataChecklist();
+
+        $locked = (bool) $candidate->jobApplication?->biodataLocked();
+
+        $frozen = $this->biodataFrozen($candidate, $onboarding);
+
+        return view('candidate-profile.edit', compact('candidate', 'onboarding', 'sections', 'checklist', 'locked', 'frozen'));
     }
 
-    public function agreements(): View
+    public function agreements(): View|RedirectResponse
     {
+        if (! $this->onboarding($this->currentCandidate())) {
+            return redirect()->route('data-diri.edit');
+        }
+
         $candidate = $this->currentCandidate()->load([
             'agreements',
             'jobApplication.jobOpening.company.agreements', 'jobApplication.jobOpening.agreements',
@@ -56,6 +91,10 @@ class CandidateProfileController extends Controller
     public function updateAgreements(Request $request): RedirectResponse
     {
         $candidate = $this->currentCandidate();
+
+        if (! $this->onboarding($candidate)) {
+            return redirect()->route('data-diri.edit');
+        }
 
         // Sudah lengkap -> read-only, tidak menerima perubahan lagi.
         if (! $candidate->agreementsPending()) {
@@ -101,10 +140,28 @@ class CandidateProfileController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $candidate = $this->currentCandidate();
+        $onboarding = $this->onboarding($candidate);
 
-        if ($candidate->agreementsPending()) {
+        if ($candidate->jobApplication?->biodataLocked()) {
+            return redirect()->route('data-diri.edit')
+                ->with('warning', 'Biodata tidak bisa diubah lagi pada tahap offering.');
+        }
+
+        if ($onboarding && $candidate->agreementsPending()) {
             return redirect()->route('persetujuan.edit')
                 ->with('warning', 'Setujui semua persetujuan dulu sebelum mengisi data diri.');
+        }
+
+        // Onboarding: biodata dibekukan, hanya BPJS/rekening yang bisa diisi (dokumen KTP/KK nanti di HRIS).
+        if ($this->biodataFrozen($candidate, $onboarding)) {
+            $only = $request->validate([
+                'no_bpjskes' => ['nullable', 'string', 'max:50'], 'faskes' => ['nullable', 'string', 'max:255'],
+                'no_bpjstk' => ['nullable', 'string', 'max:50'], 'company_bpjstk' => ['nullable', 'string', 'max:255'],
+                'bsi_bank_number' => ['nullable', 'string', 'max:50'],
+            ]);
+            $candidate->update(Arr::only($only, ['no_bpjskes', 'faskes', 'no_bpjstk', 'company_bpjstk', 'bsi_bank_number']));
+
+            return redirect()->route('data-diri.edit')->with('success', 'Data diri berhasil disimpan.');
         }
 
         // Checkbox yang tidak dicentang tidak ikut terkirim; STR seumur hidup tidak punya tanggal.
@@ -114,15 +171,19 @@ class CandidateProfileController extends Controller
         }
 
         $data = $request->validate([
-            'name'                  => ['required', 'string', 'max:255'],
             'nickname'              => ['nullable', 'string', 'max:100'],
-            'nik'                   => ['nullable', 'string', 'max:16'],
+            'gender'                => ['nullable', 'in:Laki-laki,Perempuan'],
+            'birth_place'           => ['nullable', 'string', 'max:255'],
+            'birth_date'            => ['nullable', 'date', 'before_or_equal:today'],
+            'emergency_contact_name'  => ['nullable', 'string', 'max:255'],
+            'emergency_contact_phone' => ['nullable', 'string', 'max:30'],
+            'biodata_confirmed'     => ['nullable', 'boolean'],
             'no_kk'                 => ['nullable', 'string', 'max:16'],
             'blood_type'            => ['nullable', 'string', 'max:5'],
             'body_height_weight'    => ['nullable', 'string', 'max:100'],
             'religion'              => ['nullable', 'string', 'max:100'],
             'nationality'           => ['nullable', 'string', 'max:100'],
-            'status_marital'        => ['nullable', 'in:Belum Menikah,Sudah Menikah'],
+            'status_marital'        => ['nullable', 'in:Belum Menikah,Sudah Menikah,Janda,Duda'],
             'marriage_date'         => ['nullable', 'date'],
             'mother_name'           => ['nullable', 'string', 'max:255'],
             'no_str'                => ['nullable', 'string', 'max:100'],
@@ -158,21 +219,21 @@ class CandidateProfileController extends Controller
             'education.*.start_year'  => ['nullable', 'integer'],
             'education.*.end_year'    => ['nullable', 'integer'],
 
-            'training'            => ['array'],
+            'training'            => ['array', 'max:5'], // template biodata: 5 baris pelatihan
             'training.*.type'        => ['nullable', 'string', 'max:255'],
             'training.*.institution' => ['nullable', 'string', 'max:255'],
             'training.*.material'    => ['nullable', 'string', 'max:255'],
             'training.*.duration'    => ['nullable', 'string', 'max:100'],
             'training.*.location'    => ['nullable', 'string', 'max:255'],
 
-            'organization'                    => ['array'],
+            'organization'                    => ['array', 'max:5'], // template biodata: 5 baris organisasi
             'organization.*.organization_name' => ['nullable', 'string', 'max:255'],
             'organization.*.field'             => ['nullable', 'string', 'max:255'],
             'organization.*.position'          => ['nullable', 'string', 'max:255'],
             'organization.*.duration'          => ['nullable', 'string', 'max:100'],
             'organization.*.location'          => ['nullable', 'string', 'max:255'],
 
-            'work'                    => ['array'],
+            'work'                    => ['array', 'max:3'], // template biodata memuat 3 blok pekerjaan
             'work.*.company_name'    => ['nullable', 'string', 'max:255'],
             'work.*.business_type'   => ['nullable', 'string', 'max:255'],
             'work.*.company_address' => ['nullable', 'string'],
@@ -180,10 +241,13 @@ class CandidateProfileController extends Controller
             'work.*.start_date'      => ['nullable', 'date'],
             'work.*.end_date'        => ['nullable', 'date'],
             'work.*.salary'          => ['nullable', 'numeric'],
+            'work.*.salary_start'      => ['nullable', 'numeric'],
+            'work.*.job_description' => ['nullable', 'string'],
+            'work.*.org_position_description' => ['nullable', 'string'],
             'work.*.resign_reason'   => ['nullable', 'string'],
             'work.*.is_current'      => ['nullable', 'boolean'],
 
-            'reference'            => ['array'],
+            'reference'            => ['array', 'max:3'], // template biodata: 3 baris referensi
             'reference.*.name'     => ['nullable', 'string', 'max:255'],
             'reference.*.address'  => ['nullable', 'string'],
             'reference.*.job'      => ['nullable', 'string', 'max:255'],
@@ -212,18 +276,24 @@ class CandidateProfileController extends Controller
             'documents.*.file'       => ['nullable', 'file', 'max:5120'],
         ]);
 
-        DB::transaction(function () use ($candidate, $data, $request) {
-            $candidate->update(collect($data)->only([
-                'name', 'nickname', 'nik', 'no_kk', 'blood_type', 'body_height_weight',
-                'religion', 'nationality', 'status_marital', 'marriage_date', 'mother_name', 'no_str',
-                'str_seumur_hidup', 'str_berlaku_mulai', 'str_berlaku_sampai',
-                'ktp_address', 'village', 'district', 'city', 'province', 'social_media_accounts',
-                'no_bpjskes', 'faskes', 'no_bpjstk', 'company_bpjstk', 'bsi_bank_number',
-            ])->all());
+        DB::transaction(function () use ($candidate, $data, $request, $onboarding) {
+            $candidate->update(collect($data)->only($this->savableColumns($candidate, $onboarding))->all());
+
+            if ($request->boolean('biodata_confirmed') && ! $candidate->biodata_confirmed_at) {
+                $candidate->update(['biodata_confirmed_at' => now()]);
+            }
 
             // Replace-all untuk tiap koleksi berulang — sederhana, tidak perlu diffing.
             $candidate->familyMembers()->delete();
-            $candidate->familyMembers()->createMany(array_values($data['family'] ?? []));
+            // Ayah selalu Laki-laki, Ibu selalu Perempuan (juga di server, bukan hanya di form).
+            $family = collect($data['family'] ?? [])->map(function ($m) {
+                $rel = mb_strtolower(trim((string) ($m['relation'] ?? '')));
+                if (in_array($rel, ['ayah', 'bapak'], true)) $m['gender'] = 'Laki-laki';
+                if ($rel === 'ibu') $m['gender'] = 'Perempuan';
+
+                return $m;
+            })->values()->all();
+            $candidate->familyMembers()->createMany($family);
 
             $candidate->educations()->delete();
             $candidate->educations()->createMany(array_values($data['education'] ?? []));
@@ -235,7 +305,9 @@ class CandidateProfileController extends Controller
             $candidate->organizations()->createMany(array_values($data['organization'] ?? []));
 
             $candidate->workExperiences()->delete();
-            $candidate->workExperiences()->createMany(array_values($data['work'] ?? []));
+            // Uraian tugas dan posisi organisasi hanya ditanyakan di rumah sakit.
+            $work = collect($data['work'] ?? [])->map(fn ($w) => $candidate->isHospital() ? $w : Arr::except($w, ['job_description', 'org_position_description']))->values()->all();
+            $candidate->workExperiences()->createMany($work);
 
             $candidate->references()->delete();
             $candidate->references()->createMany(array_values($data['reference'] ?? []));
@@ -248,7 +320,8 @@ class CandidateProfileController extends Controller
                 $candidate->selfAssessment()->updateOrCreate([], $data['self_assessment']);
             }
 
-            foreach ($request->file('documents', []) as $i => $doc) {
+            // Dokumen hanya di tahap onboarding (tab Dokumen tidak ada di tahap biodata).
+            foreach ($onboarding ? $request->file('documents', []) : [] as $i => $doc) {
                 if (! isset($doc['file'])) continue;
                 $docType = $data['documents'][$i]['doc_type'];
                 $path = $doc['file']->store("candidates/{$candidate->id}/{$docType}", 'local');
@@ -264,6 +337,105 @@ class CandidateProfileController extends Controller
         });
 
         return redirect()->route('data-diri.edit')->with('success', 'Data diri berhasil disimpan.');
+    }
+
+    /**
+     * Kolom candidates yang boleh disimpan: isian yang dimatikan master perusahaan tidak ditimpa, dan kolom
+     * BPJS/rekening hanya di tahap onboarding (tabnya tidak tampil sebelum itu).
+     */
+    private function savableColumns(Candidate $candidate, bool $onboarding): array
+    {
+        $columns = [
+            'nickname', 'gender', 'birth_place', 'birth_date', 'no_kk', 'blood_type', 'body_height_weight',
+            'religion', 'nationality', 'status_marital', 'marriage_date', 'mother_name',
+            'emergency_contact_name', 'emergency_contact_phone', 'no_str',
+            'str_seumur_hidup', 'str_berlaku_mulai', 'str_berlaku_sampai',
+            'ktp_address', 'village', 'district', 'city', 'province', 'social_media_accounts',
+        ];
+        if ($onboarding) {
+            array_push($columns, 'no_bpjskes', 'faskes', 'no_bpjstk', 'company_bpjstk', 'bsi_bank_number');
+        }
+
+        $enabled = BiodataFields::flat($candidate->biodataCompany());
+        $disabled = collect(config('biodata.fields'))
+            ->reject(fn ($def, $key) => isset($enabled[$key]))
+            ->flatMap(fn ($def, $key) => $def['columns'] ?? [$key])
+            ->all();
+
+        return array_values(array_diff($columns, $disabled, array_keys($candidate->lockedFields())));
+    }
+
+    private function biodataPdf(): array
+    {
+        $candidate = $this->currentCandidate();
+        $pdf = Pdf::loadView('candidate-profile.biodata-pdf', ['d' => BiodataData::for($candidate)])->setPaper('a4');
+
+        return [$pdf, 'biodata-' . (Str::slug($candidate->name) ?: 'pelamar') . '.pdf'];
+    }
+
+    /** Pratinjau biodata sebagai PDF inline (tab baru), dirender dari isian (BiodataData). */
+    public function previewBiodata()
+    {
+        [$pdf, $file] = $this->biodataPdf();
+
+        return $pdf->stream($file);
+    }
+
+    /** Unduh biodata sebagai file PDF. */
+    public function downloadBiodata()
+    {
+        [$pdf, $file] = $this->biodataPdf();
+
+        return $pdf->download($file);
+    }
+
+    /**
+     * Kandidat: unggah biodata (hasil cetak PDF) yang sudah ditandatangani, seperti surat penawaran.
+     * Hanya sekali; setelah itu tidak bisa diunggah ulang.
+     */
+    public function uploadSignedBiodata(Request $request): RedirectResponse
+    {
+        $candidate = $this->currentCandidate();
+
+        if ($candidate->jobApplication?->biodataLocked() || $this->biodataFrozen($candidate, $this->onboarding($candidate))) {
+            return back()->with('warning', 'Biodata sudah dikunci, unggahan tidak bisa diganti lagi.');
+        }
+
+        // Pengiriman hanya sekali (seperti surat penawaran).
+        if ($candidate->biodata_signed_path) {
+            return back()->with('warning', 'Biodata bertanda tangan sudah diunggah dan tidak bisa diunggah ulang.');
+        }
+
+        $request->validate(['file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120']]);
+
+        $candidate->update([
+            'biodata_signed_path' => $request->file('file')->store("candidates/{$candidate->id}/biodata-signed", 'local'),
+            'biodata_signed_at'   => now(),
+        ]);
+
+        return back()->with('success', 'Biodata bertanda tangan berhasil diunggah.');
+    }
+
+    public function downloadSignedBiodata()
+    {
+        $candidate = $this->currentCandidate();
+        abort_unless($candidate->biodata_signed_path && Storage::disk('local')->exists($candidate->biodata_signed_path), 404);
+
+        return Storage::disk('local')->response($candidate->biodata_signed_path);
+    }
+
+    /** Admin/HR: biodata bertanda tangan milik satu lamaran (hak akses sama dengan surat penawaran). */
+    public function adminSignedBiodata(\App\Models\JobApplication $application)
+    {
+        $user = Auth::user();
+        abort_unless(
+            $user->hasAnyRole(['super_admin', 'Super Admin']) || ($user->is_staff && $user->company_id === $application->jobOpening->company_id),
+            403
+        );
+        $path = Candidate::where('user_id', $application->user_id)->value('biodata_signed_path');
+        abort_unless($path && Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->response($path);
     }
 
     public function downloadDocument(CandidateDocument $document)

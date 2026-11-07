@@ -131,7 +131,7 @@
             <div>
                 <div class="text-sm font-bold text-green-900 dark:text-green-100">Email Lolos Berkas Ditahan</div>
                 <div class="text-xs text-green-700 dark:text-green-400 mt-0.5">
-                    <strong>{{ $pendingPassedCount }}</strong> pelamar belum menerima pemberitahuan lolos seleksi berkas. Kirim kapan saja kamu siap.
+                    <strong>{{ $pendingPassedCount }}</strong> pelamar belum menerima pemberitahuan lolos seleksi berkas. Kirim kapan saja Anda siap.
                 </div>
             </div>
         </div>
@@ -149,7 +149,7 @@
             <div>
                 <div class="text-sm font-bold text-red-900 dark:text-red-100">Email Tidak Dilanjutkan Ditahan</div>
                 <div class="text-xs text-red-700 dark:text-red-400 mt-0.5">
-                    <strong>{{ $pendingRejectionCount }}</strong> pelamar belum menerima pemberitahuan tidak dilanjutkan. Kirim kapan saja kamu siap.
+                    <strong>{{ $pendingRejectionCount }}</strong> pelamar belum menerima pemberitahuan tidak dilanjutkan. Kirim kapan saja Anda siap.
                 </div>
             </div>
         </div>

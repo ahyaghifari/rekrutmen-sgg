@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ApplicationNotification;
+use App\Models\Candidate;
 use App\Models\CompanyMessageTemplate;
 use App\Models\JobApplication;
 use Illuminate\Http\RedirectResponse;
@@ -74,7 +75,7 @@ class OfferingLetterController extends Controller
         $application = $this->currentOfferingApplication();
 
         if ($application->offering_letter_signed_path && $application->offering_signed_revision_reason === null) {
-            return back()->with('warning', 'Surat sudah diunggah dan sedang dikonfirmasi tim rekrutmen. Kamu bisa mengunggah ulang hanya jika diminta.');
+            return back()->with('warning', 'Surat sudah diunggah dan sedang dikonfirmasi tim rekrutmen. Anda bisa mengunggah ulang hanya jika diminta.');
         }
 
         $request->validate([
@@ -117,23 +118,50 @@ class OfferingLetterController extends Controller
     public function updateData(Request $request): RedirectResponse
     {
         $application = $this->currentOfferingApplication();
+        $candidate = Candidate::ensureFor($application);
 
-        $data = $request->validate([
-            'offering_full_name'        => ['required', 'string', 'max:255'],
-            'offering_birth_place'      => ['required', 'string', 'max:255'],
-            'offering_birth_date'       => ['required', 'date'],
-            'offering_domicile_address' => ['required', 'string', 'max:2000'],
-            'offering_village'          => ['required', 'string', 'max:100'],
-            'offering_district'         => ['required', 'string', 'max:100'],
-            'offering_city'             => ['required', 'string', 'max:100'],
-            'offering_province'         => ['required', 'string', 'max:100'],
-        ]);
+        // Biodata sudah memuat tempat/tanggal lahir + alamat: cukup nama dengan gelar. Kiriman manual untuk field
+        // lain diabaikan (tidak menimpa biodata); nilainya disalin dari biodata ke offering_* supaya surat tidak berubah.
+        if ($candidate->biodataIdentityFilled()) {
+            $data = $request->validate(['offering_full_name' => ['required', 'string', 'max:255']]) + [
+                'offering_birth_place'      => $candidate->birth_place,
+                'offering_birth_date'       => $candidate->birth_date,
+                'offering_domicile_address' => $candidate->ktp_address,
+                'offering_village'          => $candidate->village,
+                'offering_district'         => $candidate->district,
+                'offering_city'             => $candidate->city,
+                'offering_province'         => $candidate->province,
+            ];
+        } else {
+            // Pelamar yang biodatanya belum lengkap (mis. sudah di tahap offering sebelum fitur biodata): form lengkap
+            // seperti semula, dan hasilnya ikut masuk ke biodata supaya tidak diminta lagi.
+            $data = $request->validate([
+                'offering_full_name'        => ['required', 'string', 'max:255'],
+                'offering_birth_place'      => ['required', 'string', 'max:255'],
+                'offering_birth_date'       => ['required', 'date'],
+                'offering_domicile_address' => ['required', 'string', 'max:2000'],
+                'offering_village'          => ['required', 'string', 'max:100'],
+                'offering_district'         => ['required', 'string', 'max:100'],
+                'offering_city'             => ['required', 'string', 'max:100'],
+                'offering_province'         => ['required', 'string', 'max:100'],
+            ]);
+
+            $candidate->update([
+                'birth_place' => $data['offering_birth_place'],
+                'birth_date'  => $data['offering_birth_date'],
+                'ktp_address' => $data['offering_domicile_address'],
+                'village'     => $data['offering_village'],
+                'district'    => $data['offering_district'],
+                'city'        => $data['offering_city'],
+                'province'    => $data['offering_province'],
+            ]);
+        }
 
         $application->update([...$data, 'offering_data_confirmed_at' => now()]);
 
         ApplicationNotification::createAndSend($application, CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY);
 
-        return back()->with('success', 'Data tersimpan — surat penawaranmu sudah bisa diunduh.');
+        return back()->with('success', 'Data tersimpan — surat penawaran Anda sudah bisa diunduh.');
     }
 
     /** Kandidat: ajukan negosiasi sebelum menandatangani. */
@@ -147,7 +175,7 @@ class OfferingLetterController extends Controller
 
         // Tidak boleh kirim lagi selama pengajuan terakhir belum dibalas tim rekrutmen.
         if ($application->offeringNegotiations()->latest('created_at')->first()?->sender === 'applicant') {
-            return back()->with('warning', 'Pengajuan negosiasi kamu masih menunggu balasan tim rekrutmen.');
+            return back()->with('warning', 'Pengajuan negosiasi Anda masih menunggu balasan tim rekrutmen.');
         }
 
         $application->offeringNegotiations()->create([

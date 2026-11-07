@@ -36,7 +36,7 @@ class JobApplicationController extends Controller
 
         if (JobApplication::cannotApplyTo(Auth::id(), $jobOpening->id)) {
             return redirect()->route('dashboard')
-                ->with('warning', 'Kamu tidak bisa melamar lowongan ini (sudah dilamar atau sudah diterima di lowongan lain).');
+                ->with('warning', 'Anda tidak bisa melamar lowongan ini (sudah dilamar atau sudah diterima di lowongan lain).');
         }
 
         $previousApp = Auth::user()->jobApplications()->with(['jobOpening', 'answers'])->latest()->first();
@@ -58,7 +58,7 @@ class JobApplicationController extends Controller
 
         if (JobApplication::cannotApplyTo(Auth::id(), $jobOpening->id)) {
             return redirect()->route('dashboard')
-                ->with('warning', 'Kamu tidak bisa melamar lowongan ini (sudah dilamar atau sudah diterima di lowongan lain).');
+                ->with('warning', 'Anda tidak bisa melamar lowongan ini (sudah dilamar atau sudah diterima di lowongan lain).');
         }
 
         // Data Utama: section tetap paling atas, wajib di semua lowongan. Field master bernama sama diabaikan.
@@ -132,7 +132,7 @@ class JobApplicationController extends Controller
 
         if ($duplicate) {
             return redirect()->route('dashboard')
-                ->with('warning', 'Kamu tidak bisa melamar lowongan ini (sudah dilamar atau sudah diterima di lowongan lain).');
+                ->with('warning', 'Anda tidak bisa melamar lowongan ini (sudah dilamar atau sudah diterima di lowongan lain).');
         }
 
         return redirect()->route('dashboard')

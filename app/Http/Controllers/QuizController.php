@@ -15,7 +15,7 @@ class QuizController extends Controller
     private function currentApplication(): JobApplication
     {
         $app = Auth::user()->jobApplications()->with('jobOpening.quizzes')->latest()->first();
-        abort_if(! $app || $app->status !== 'shortlisted' || ! $app->quiz_sent_at, 403, 'Tes online belum tersedia untukmu.');
+        abort_if(! $app || $app->status !== 'shortlisted' || ! $app->quiz_sent_at, 403, 'Tes online belum tersedia untuk Anda.');
         abort_if($app->jobOpening->quizzes->isEmpty(), 404, 'Lowongan ini belum punya kuis yang dikonfigurasi.');
 
         return $app;
