@@ -189,8 +189,8 @@ class HrisIntegrationController extends Controller
     public function biodataPdf(string $application)
     {
         $app = JobApplication::findOrFail($application);
-        $candidate = \App\Models\Candidate::where('user_id', $app->user_id)->first();
-        abort_unless($candidate, 404, 'Pelamar belum membuka biodata.');
+        // Belum pernah dibuka pelamar = baris candidates belum ada: dibuat sekarang (prefill dari lamaran), form tampil walau kosong.
+        $candidate = \App\Models\Candidate::ensureFor($app);
 
         return \Barryvdh\DomPDF\Facade\Pdf::loadView('candidate-profile.biodata-pdf', ['d' => \App\Support\BiodataData::for($candidate)])
             ->setPaper('a4')->stream('biodata.pdf');
