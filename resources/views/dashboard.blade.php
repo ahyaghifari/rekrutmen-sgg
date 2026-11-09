@@ -104,6 +104,12 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
 
 {{-- Active application widget --}}
 @if($activeApp)
+{{-- Konfirmasi kehadiran jadwal: paling atas supaya tidak terlewat. --}}
+@if($activeApp->status === 'interview')
+  @include('dashboard-parts.schedule-response', ['invitee' => $activeApp->interviewInvitee, 'type' => 'wawancara', 'mode' => 'top'])
+@elseif($activeApp->status === 'mcu')
+  @include('dashboard-parts.schedule-response', ['invitee' => $activeApp->mcuInvitee, 'type' => 'mcu', 'mode' => 'top'])
+@endif
 <div class="sg-card mt-5 rounded-[18px] overflow-hidden">
   <div class="sg-dd-header px-6 py-[14px] border-b border-slate-100 flex items-center justify-between">
     @php
@@ -252,6 +258,24 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
       @endforeach
     @endif
 
+    @if($activeApp->status === 'mcu')
+    @php $mcuSchedule = $activeApp->mcuInvitee?->schedule; @endphp
+    <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3" style="background:{{ $tlBrand }}14;border:1px solid {{ $tlBrand }}33;">
+      <i class="fa-solid fa-calendar-days mt-px text-xs" style="color:{{ $tlBrand }};"></i>
+      <div class="text-[13px]" style="color:{{ $tlBrand }};">
+        @if($mcuSchedule)
+          <strong>Jadwal Medical Check Up:</strong>
+          {{ $mcuSchedule->mcu_date?->translatedFormat('l, j F Y') }}
+          @if($mcuSchedule->mcu_time) &middot; {{ substr($mcuSchedule->mcu_time, 0, 5) }} WITA @endif
+          @if($mcuSchedule->location) <br>Lokasi: {{ $mcuSchedule->location }} @endif
+          @if($mcuSchedule->notes) <br>Catatan: {{ $mcuSchedule->notes }} @endif
+        @else
+          Jadwal MCU akan diinformasikan oleh tim rekrutmen. Tunggu pemberitahuan selanjutnya.
+        @endif
+      </div>
+    </div>
+    @include('dashboard-parts.schedule-response', ['invitee' => $activeApp->mcuInvitee, 'type' => 'mcu', 'mode' => 'inline'])
+    @endif
     {{-- Biodata: terbuka sejak jadwal wawancara pertama terbit (JobApplication::biodataOpen()), sebelum onboarding. --}}
     @php
       // Tidak tampil lagi saat offering/MCU (biodata dikunci) maupun onboarding.
@@ -287,6 +311,7 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
       </div>
       @endif
     </div>
+    @include('dashboard-parts.schedule-response', ['invitee' => $activeApp->interviewInvitee, 'type' => 'wawancara', 'mode' => 'inline'])
     @elseif($bioShow)
     {{-- Tahap lain (offering/mcu): kartu biodata berdiri sendiri. --}}
     <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3" style="background:{{ $tlBrand }}14;border:1px solid {{ $tlBrand }}33;">
@@ -302,23 +327,6 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
     </div>
     @endif
 
-    @if($activeApp->status === 'mcu')
-    @php $mcuSchedule = $activeApp->mcuInvitee?->schedule; @endphp
-    <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3" style="background:{{ $tlBrand }}14;border:1px solid {{ $tlBrand }}33;">
-      <i class="fa-solid fa-calendar-days mt-px text-xs" style="color:{{ $tlBrand }};"></i>
-      <div class="text-[13px]" style="color:{{ $tlBrand }};">
-        @if($mcuSchedule)
-          <strong>Jadwal Medical Check Up:</strong>
-          {{ $mcuSchedule->mcu_date?->translatedFormat('l, j F Y') }}
-          @if($mcuSchedule->mcu_time) &middot; {{ substr($mcuSchedule->mcu_time, 0, 5) }} WITA @endif
-          @if($mcuSchedule->location) <br>Lokasi: {{ $mcuSchedule->location }} @endif
-          @if($mcuSchedule->notes) <br>Catatan: {{ $mcuSchedule->notes }} @endif
-        @else
-          Jadwal MCU akan diinformasikan oleh tim rekrutmen. Tunggu pemberitahuan selanjutnya.
-        @endif
-      </div>
-    </div>
-    @endif
 
     @if($activeApp->status === 'offering')
     <div class="mt-4 pt-4 sg-dd-border border-t">

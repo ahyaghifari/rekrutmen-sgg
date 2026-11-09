@@ -46,9 +46,9 @@ class ApplicationNotification extends Model
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal Wawancara'],
             CompanyMessageTemplate::EVENT_MCU_SCHEDULED =>
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal MCU'],
-            'interview_rescheduled' =>
+            'interview_rescheduled', 'interview_reschedule_approved', 'interview_reschedule_rejected' =>
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal Wawancara'],
-            'mcu_rescheduled' =>
+            'mcu_rescheduled', 'mcu_reschedule_approved', 'mcu_reschedule_rejected' =>
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal MCU'],
             CompanyMessageTemplate::EVENT_OFFLINE_TEST_SCHEDULED, 'offline_test_rescheduled' =>
                 ['url' => route('lamaran.show', $this->job_application_id), 'label' => 'Lihat Jadwal Tes'],
@@ -152,7 +152,11 @@ class ApplicationNotification extends Model
             CompanyMessageTemplate::EVENT_OFFERING_SIGNED_RECEIVED => "Surat Penawaran Bertanda Tangan Diterima – {$jobTitle}",
             CompanyMessageTemplate::EVENT_MANUAL_REJECTED     => "Update Lamaran Anda – {$jobTitle}",
             CompanyMessageTemplate::EVENT_OFFLINE_TEST_SCHEDULED => "Jadwal Tes Offline – {$jobTitle}",
-            default                                           => "Update Lamaran Anda – {$jobTitle}",
+            'interview_reschedule_approved' => "Reschedule Wawancara Disetujui – {$jobTitle}",
+            'interview_reschedule_rejected' => "Reschedule Wawancara Tidak Disetujui – {$jobTitle}",
+            'mcu_reschedule_approved'       => "Reschedule MCU Disetujui – {$jobTitle}",
+            'mcu_reschedule_rejected'       => "Reschedule MCU Tidak Disetujui – {$jobTitle}",
+            default                                          => "Update Lamaran Anda – {$jobTitle}",
         };
     }
 
@@ -217,6 +221,19 @@ class ApplicationNotification extends Model
             $location = $extra['location'] ? "\nLokasi: {$extra['location']}" : '';
             $notes    = $extra['notes'] ? "\n\nCatatan: {$extra['notes']}" : '';
             return "Halo {$name},\n\nAnda diundang mengikuti tes offline untuk posisi {$jobTitle}.\n\nTes dijadwalkan pada:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon konfirmasi kehadiran Anda. Kami tunggu ya!\n\nSalam,\nTim Rekrutmen";
+        }
+
+        // Keputusan HR atas permintaan reschedule pelamar (lihat NotifiesRescheduleDecision).
+        if (preg_match('/^(interview|mcu)_reschedule_(approved|rejected)$/', $event, $m)) {
+            $what     = $m[1] === 'mcu' ? 'Medical Check Up (MCU)' : 'wawancara';
+            $time     = ! empty($extra['interview_time']) ? " pukul {$extra['interview_time']} WITA" : '';
+            $location = ! empty($extra['location']) ? "\nLokasi: {$extra['location']}" : '';
+            $notes    = ! empty($extra['notes']) ? "\n\nCatatan: {$extra['notes']}" : '';
+            $date     = $extra['interview_date'] ?? '-';
+
+            return $m[2] === 'approved'
+                ? "Halo {$name},\n\nPermintaan reschedule {$what} Anda untuk posisi {$jobTitle} telah DISETUJUI.\n\nJadwal baru Anda:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon hadir sesuai jadwal baru tersebut.\n\nSalam,\nTim Rekrutmen"
+                : "Halo {$name},\n\nMohon maaf, permintaan reschedule {$what} Anda untuk posisi {$jobTitle} belum dapat kami setujui.\n\nSilakan hadir sesuai jadwal awal yang sudah ditentukan:\nTanggal: {$date}{$time}{$location}{$notes}\n\nTerima kasih atas pengertian Anda.\n\nSalam,\nTim Rekrutmen";
         }
 
         if ($event === CompanyMessageTemplate::EVENT_QUIZ_REJECTED) {

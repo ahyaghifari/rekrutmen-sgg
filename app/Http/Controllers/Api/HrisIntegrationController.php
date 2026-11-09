@@ -28,6 +28,8 @@ class HrisIntegrationController extends Controller
         'interview_rescheduled', 'mcu_rescheduled', 'offering_negotiation_replied',
         'offering_signed_received', 'offering_signed_accepted', 'offering_revision_requested',
         'offline_test_scheduled', 'offline_test_rescheduled',
+        'interview_reschedule_approved', 'interview_reschedule_rejected',
+        'mcu_reschedule_approved', 'mcu_reschedule_rejected',
     ];
 
     /**

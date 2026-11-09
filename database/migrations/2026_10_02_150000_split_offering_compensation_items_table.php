@@ -14,6 +14,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Aman diulang: percobaan sebelumnya yang gagal di tengah (DDL MySQL tidak ikut rollback) meninggalkan tabel setengah jadi.
+        Schema::dropIfExists('job_opening_offering_compensation_items');
+
         Schema::create('job_opening_offering_compensation_items', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->foreignUlid('job_opening_id')->constrained('job_openings')->cascadeOnDelete();
@@ -23,7 +26,8 @@ return new class extends Migration
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->timestamps();
 
-            $table->index(['job_opening_id', 'type']);
+            // Nama eksplisit: nama otomatis 66 karakter, melebihi batas 64 MySQL ("Identifier name is too long").
+            $table->index(['job_opening_id', 'type'], 'comp_items_opening_type_idx');
         });
 
         DB::table('job_opening_offering_compensation_rows')

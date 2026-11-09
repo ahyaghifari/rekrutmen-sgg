@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\NotifiesRescheduleDecision;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,9 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class McuInvitee extends Model
 {
-    use HasUlids;
+    use HasUlids, NotifiesRescheduleDecision;
 
-    protected $fillable = ['mcu_schedule_id', 'job_application_id', 'status_mcu', 'catatan_mcu'];
+    protected $fillable = ['mcu_schedule_id', 'job_application_id', 'status_mcu', 'catatan_mcu', 'response', 'response_reason', 'proposed_date', 'proposed_time', 'responded_at', 'reschedule_status', 'reschedule_decided_by', 'reschedule_decided_at', 'reschedule_note'];
+
+    protected $casts = ['proposed_date' => 'date', 'responded_at' => 'datetime', 'reschedule_decided_at' => 'datetime'];
 
     public function jobApplication(): BelongsTo
     {
