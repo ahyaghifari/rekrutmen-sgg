@@ -158,7 +158,7 @@ class CandidateProfileController extends Controller
                 'no_bpjskes' => ['nullable', 'string', 'max:50'], 'faskes' => ['nullable', 'string', 'max:255'],
                 'no_bpjstk' => ['nullable', 'string', 'max:50'], 'company_bpjstk' => ['nullable', 'string', 'max:255'],
                 'bsi_bank_number' => ['nullable', 'string', 'max:50'],
-            ]);
+            ], $this->validationMessages(), $this->validationAttributes());
             $candidate->update(Arr::only($only, ['no_bpjskes', 'faskes', 'no_bpjstk', 'company_bpjstk', 'bsi_bank_number']));
 
             return redirect()->route('data-diri.edit')->with('success', 'Data diri berhasil disimpan.');
@@ -274,7 +274,7 @@ class CandidateProfileController extends Controller
             'documents.*.doc_type'   => ['required_with:documents', 'string', 'max:100'],
             'documents.*.label'      => ['nullable', 'string', 'max:255'],
             'documents.*.file'       => ['nullable', 'file', 'max:5120'],
-        ]);
+        ], $this->validationMessages(), $this->validationAttributes());
 
         DB::transaction(function () use ($candidate, $data, $request, $onboarding) {
             $candidate->update(collect($data)->only($this->savableColumns($candidate, $onboarding))->all());
@@ -337,6 +337,62 @@ class CandidateProfileController extends Controller
         });
 
         return redirect()->route('data-diri.edit')->with('success', 'Data diri berhasil disimpan.');
+    }
+
+    /** Pesan galat berbahasa Indonesia: bawaan Laravel berbahasa Inggris dan menyebut nama teknis ("work.0.salary"). */
+    private function validationMessages(): array
+    {
+        return [
+            'required_with' => ':attribute wajib diisi.',
+            'max.string'    => ':attribute terlalu panjang (maksimal :max karakter).',
+            'max.array'     => ':attribute maksimal :max baris.',
+            'max.file'      => ':attribute terlalu besar (maksimal :max KB).',
+            'numeric'       => ':attribute harus berupa angka.',
+            'integer'       => ':attribute harus berupa bilangan bulat.',
+            'date'          => ':attribute bukan tanggal yang valid.',
+            'in'            => ':attribute tidak valid, pilih salah satu pilihan yang tersedia.',
+            'before_or_equal' => ':attribute tidak boleh melewati hari ini.',
+            'after_or_equal'  => ':attribute tidak boleh sebelum tanggal mulai.',
+            'boolean'       => ':attribute tidak valid.',
+            'array'         => ':attribute tidak valid.',
+            'file'          => ':attribute harus berupa berkas.',
+        ];
+    }
+
+    /** Nama isian yang mudah dipahami; baris berulang disebut "baris ke-N" lewat placeholder :position. */
+    private function validationAttributes(): array
+    {
+        $out = [
+            'nickname' => 'Nama panggilan', 'gender' => 'Jenis kelamin', 'birth_place' => 'Tempat lahir', 'birth_date' => 'Tanggal lahir',
+            'emergency_contact_name' => 'Nama kontak darurat', 'emergency_contact_phone' => 'No. telepon kontak darurat',
+            'no_kk' => 'No. KK', 'blood_type' => 'Golongan darah', 'body_height_weight' => 'Tinggi/berat badan', 'religion' => 'Agama',
+            'nationality' => 'Kewarganegaraan', 'status_marital' => 'Status pernikahan', 'marriage_date' => 'Tanggal pernikahan',
+            'mother_name' => 'Nama ibu kandung', 'no_str' => 'No. STR', 'str_berlaku_mulai' => 'Tanggal mulai berlaku STR',
+            'str_berlaku_sampai' => 'Tanggal berakhir STR', 'ktp_address' => 'Alamat KTP', 'village' => 'Kelurahan/Desa', 'district' => 'Kecamatan',
+            'city' => 'Kota/Kabupaten', 'province' => 'Provinsi', 'social_media_accounts' => 'Akun media sosial',
+            'no_bpjskes' => 'No. BPJS Kesehatan', 'faskes' => 'Faskes', 'no_bpjstk' => 'No. BPJS Ketenagakerjaan',
+            'company_bpjstk' => 'Perusahaan BPJS Ketenagakerjaan', 'bsi_bank_number' => 'No. rekening',
+            'additional_info.available_start_date' => 'Tanggal bersedia mulai bekerja', 'self_assessment.satisfaction_level' => 'Tingkat kepuasan',
+        ];
+
+        $rows = [
+            'family' => ['Data keluarga', ['relation' => 'hubungan', 'gender' => 'jenis kelamin', 'name' => 'nama', 'birth_date' => 'tanggal lahir', 'education' => 'pendidikan', 'job' => 'pekerjaan', 'phone' => 'telepon']],
+            'education' => ['Riwayat pendidikan', ['level' => 'jenjang', 'school_name' => 'nama sekolah', 'major' => 'jurusan', 'gpa' => 'IPK/nilai', 'start_year' => 'tahun masuk', 'end_year' => 'tahun lulus']],
+            'training' => ['Riwayat pelatihan', ['type' => 'jenis', 'institution' => 'penyelenggara', 'material' => 'materi', 'duration' => 'lama', 'location' => 'lokasi']],
+            'organization' => ['Pengalaman organisasi', ['organization_name' => 'nama organisasi', 'field' => 'bidang', 'position' => 'jabatan', 'duration' => 'lama', 'location' => 'lokasi']],
+            'work' => ['Pengalaman kerja', ['company_name' => 'nama perusahaan', 'business_type' => 'bidang usaha', 'company_address' => 'alamat', 'position' => 'posisi', 'start_date' => 'tanggal mulai', 'end_date' => 'tanggal selesai', 'salary_start' => 'gaji awal', 'salary' => 'gaji akhir', 'resign_reason' => 'alasan berhenti']],
+            'reference' => ['Referensi', ['name' => 'nama', 'address' => 'alamat', 'job' => 'pekerjaan', 'phone' => 'telepon', 'relation' => 'hubungan']],
+        ];
+        foreach ($rows as $prefix => [$title, $cols]) {
+            foreach ($cols as $key => $label) {
+                $out["{$prefix}.*.{$key}"] = "{$title} baris ke-:position ({$label})";
+            }
+        }
+        foreach (['family' => 'Data keluarga', 'education' => 'Riwayat pendidikan', 'training' => 'Riwayat pelatihan', 'organization' => 'Pengalaman organisasi', 'work' => 'Pengalaman kerja', 'reference' => 'Referensi'] as $prefix => $title) {
+            $out[$prefix] = $title;
+        }
+
+        return $out;
     }
 
     /**

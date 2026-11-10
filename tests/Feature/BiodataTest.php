@@ -500,4 +500,26 @@ class BiodataTest extends TestCase
 
         $this->actingAs($user)->get(route('data-diri.biodata'))->assertForbidden();
     }
+
+    public function test_failed_validation_keeps_typed_rows_and_shows_readable_errors(): void
+    {
+        [$user] = $this->applicant('interview', 'published');
+        $this->actingAs($user)->get(route('data-diri.edit'));
+
+        $payload = [
+            'mother_name' => 'Siti',
+            'family' => [['relation' => 'Ayah', 'name' => 'Budi Ayah'], ['relation' => '', 'name' => 'Tanpa Hubungan']],
+            'education' => [['level' => 'S1', 'school_name' => 'Universitas Uji', 'gpa' => 'tiga koma lima']],
+        ];
+
+        $this->from(route('data-diri.edit'))->patch(route('data-diri.update'), $payload)->assertRedirect(route('data-diri.edit'))->assertSessionHasErrors();
+
+        $page = $this->get(route('data-diri.edit'));
+        $page->assertSee('Data belum tersimpan')
+            ->assertSee('Data keluarga baris ke-2 (hubungan) wajib diisi.')
+            ->assertSee('Riwayat pendidikan baris ke-1 (IPK/nilai) harus berupa angka.')
+            ->assertSee('Budi Ayah')            // isian keluarga tidak hilang
+            ->assertSee('Universitas Uji')      // isian pendidikan tidak hilang
+            ->assertSee('novalidate', false);
+    }
 }

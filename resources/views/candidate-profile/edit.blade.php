@@ -15,6 +15,13 @@ $trainingsData      = $candidate->trainings->map->only(['type','institution','ma
 $organizationsData  = $candidate->organizations->map->only(['organization_name','field','position','duration','location']);
 $workExperiencesData = $candidate->workExperiences->map(fn ($w) => array_merge($w->only(['company_name','business_type','company_address','position','start_date','end_date','salary_start','salary','resign_reason','is_current','job_description','org_position_description']), ['start_date' => $ymd($w->start_date), 'end_date' => $ymd($w->end_date), 'salary_start' => $money($w->salary_start), 'salary' => $money($w->salary)]));
 $referencesData     = $candidate->references->map->only(['name','address','job','phone','relation']);
+// Setelah validasi gagal, baris berulang harus tetap seperti yang diketik pelamar, bukan dimuat ulang dari DB (yang masih kosong
+// kalau belum pernah tersimpan) — kalau tidak, semua isian keluarga/pendidikan/pekerjaan tampak hilang.
+foreach (['family' => 'familyMembersData', 'education' => 'educationsData', 'training' => 'trainingsData', 'organization' => 'organizationsData', 'work' => 'workExperiencesData', 'reference' => 'referencesData'] as $oldKey => $var) {
+    if (is_array(old($oldKey))) {
+        $$var = collect(old($oldKey))->values()->map(fn ($r) => $oldKey === 'work' ? array_merge((array) $r, ['is_current' => (bool) ($r['is_current'] ?? false)]) : $r);
+    }
+}
 @endphp
 
 <div>
@@ -24,8 +31,17 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
   @endif
 
   @if($errors->any())
-  <div class="mb-4 rounded-xl px-4 py-3 border border-red-200 bg-red-600/[0.06]">
-    <div class="text-sm font-bold text-red-700 mb-1">Periksa kembali isian Anda:</div>
+  @php
+    // Tab tempat galat pertama berada (baris berulang saja; isian biasa tetap di tab pertama).
+    $errTab = ['family' => 4, 'education' => 5, 'training' => 6, 'organization' => 7, 'work' => 8, 'reference' => 9][\Illuminate\Support\Str::before($errors->keys()[0], '.')] ?? null;
+  @endphp
+  <script>document.addEventListener('alpine:initialized', () => {
+    const f = document.getElementById('biodata-form'), t = @json($errTab);
+    if (f && t && Alpine.$data(f).order.includes(t)) Alpine.$data(f).tab = t;
+    document.getElementById('form-errors')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });</script>
+  <div id="form-errors" class="mb-4 rounded-xl px-4 py-3 border border-red-200 bg-red-600/[0.06]">
+    <div class="text-sm font-bold text-red-700 mb-1">Data belum tersimpan. Periksa kembali isian Anda:</div>
     <ul class="text-[12.5px] text-red-600 list-disc pl-4">
       @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
     </ul>
@@ -71,7 +87,9 @@ $referencesData     = $candidate->references->map->only(['name','address','job',
     ];
   @endphp
 
-  <form method="POST" action="{{ route('data-diri.update') }}" enctype="multipart/form-data" class="flex flex-col gap-4" x-data="{ tab: @js($tabOrder[0]), order: @js($tabOrder),
+  {{-- novalidate: validasi browser pada isian di tab yang tersembunyi memblokir submit tanpa pesan apa pun (tombol Simpan "tidak
+       bisa diklik"). Validasi dilakukan server dan hasilnya tampil di banner di atas. --}}
+  <form id="biodata-form" novalidate method="POST" action="{{ route('data-diri.update') }}" enctype="multipart/form-data" class="flex flex-col gap-4" x-data="{ tab: @js($tabOrder[0]), order: @js($tabOrder),
       step(d) { this.tab = this.order[Math.min(Math.max(this.order.indexOf(this.tab) + d, 0), this.order.length - 1)]; } }">
     @csrf
     @method('PATCH')
