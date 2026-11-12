@@ -244,6 +244,11 @@ class ApplicationNotification extends Model
             $notes    = ! empty($extra['notes']) ? "\n\nCatatan: {$extra['notes']}" : '';
             $date     = $extra['interview_date'] ?? '-';
 
+            // "Setuju Ditetapkan": reschedule disetujui, tapi HR menetapkan jadwal baru sendiri (bukan usulan pelamar).
+            if ($m[2] === 'approved' && ! empty($extra['ditetapkan_hr'])) {
+                return "Halo {$name},\n\nPermintaan reschedule {$what} Anda untuk posisi {$jobTitle} telah DISETUJUI. Namun, jadwal barunya ditetapkan oleh tim rekrutmen dan mungkin berbeda dari usulan Anda.\n\nJadwal yang ditetapkan:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon hadir sesuai jadwal yang ditetapkan tersebut. Terima kasih atas pengertian Anda.\n\nSalam,\nTim Rekrutmen";
+            }
+
             return $m[2] === 'approved'
                 ? "Halo {$name},\n\nPermintaan reschedule {$what} Anda untuk posisi {$jobTitle} telah DISETUJUI.\n\nJadwal baru Anda:\nTanggal: {$date}{$time}{$location}{$notes}\n\nMohon hadir sesuai jadwal baru tersebut.\n\nSalam,\nTim Rekrutmen"
                 : "Halo {$name},\n\nMohon maaf, permintaan reschedule {$what} Anda untuk posisi {$jobTitle} belum dapat kami setujui.\n\nSilakan hadir sesuai jadwal awal yang sudah ditentukan:\nTanggal: {$date}{$time}{$location}{$notes}\n\nTerima kasih atas pengertian Anda.\n\nSalam,\nTim Rekrutmen";

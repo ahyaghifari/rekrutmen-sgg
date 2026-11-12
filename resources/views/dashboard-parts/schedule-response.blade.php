@@ -83,6 +83,7 @@
   $stText = match (true) {
     $invitee->response !== 'reschedule' => null,
     $invitee->reschedule_status === 'approved' => 'Disetujui',
+    $invitee->reschedule_status === 'approved_set' => 'Disetujui dengan penetapan jadwal oleh tim rekrutmen',
     $invitee->reschedule_status === 'rejected' => 'Tidak disetujui, silakan hadir sesuai jadwal awal',
     default => 'Menunggu persetujuan',
   };
@@ -94,6 +95,10 @@
     @if($invitee->response === 'reschedule')
     <tr class="align-top"><td class="pr-2 whitespace-nowrap text-slate-500">Jadwal diajukan</td><td class="pr-2 text-slate-500">:</td><td>{{ $invitee->proposed_date?->translatedFormat('l, j F Y') }} &middot; {{ substr($invitee->proposed_time, 0, 5) }} WITA</td></tr>
     <tr class="align-top"><td class="pr-2 whitespace-nowrap text-slate-500">Status</td><td class="pr-2 text-slate-500">:</td><td class="font-semibold text-slate-800">{{ $stText }}</td></tr>
+    {{-- Setuju Ditetapkan: jadwal barunya dari HR (bisa beda dari usulan), ditampilkan jelas supaya pelamar hadir sesuai ini. --}}
+    @if($invitee->reschedule_status === 'approved_set' && $schDate)
+    <tr class="align-top"><td class="pr-2 whitespace-nowrap text-slate-500">Jadwal ditetapkan</td><td class="pr-2 text-slate-500">:</td><td class="font-semibold text-slate-800">{{ $schDate->translatedFormat('l, j F Y') }}@php $schTime = $type === 'mcu' ? $sch?->mcu_time : $sch?->interview_time; @endphp @if($schTime)&middot; {{ substr($schTime, 0, 5) }} WITA @endif</td></tr>
+    @endif
     @endif
   </table>
 </div>
