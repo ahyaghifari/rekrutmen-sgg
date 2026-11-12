@@ -30,6 +30,9 @@ class ApplicationNotification extends Model
         return match ($this->event) {
             CompanyMessageTemplate::EVENT_QUIZ_SENT =>
                 ['url' => route('tes-online.show'), 'label' => 'Kerjakan Tes'],
+            // Lolos berkas: tes online langsung aktif (quiz_sent_at terisi) -> tombol langsung ke tes.
+            CompanyMessageTemplate::EVENT_SCREENING_PASSED =>
+                $this->jobApplication?->quiz_sent_at ? ['url' => route('tes-online.show'), 'label' => 'Kerjakan Tes'] : null,
             CompanyMessageTemplate::EVENT_OFFERING_LETTER_READY =>
                 ['url' => route('dashboard'), 'label' => 'Unggah Surat Penawaran'],
             CompanyMessageTemplate::EVENT_OFFERING_REVISION_REQUESTED =>
@@ -103,6 +106,11 @@ class ApplicationNotification extends Model
             $extra['data_diri_belum_lengkap'] = ! ($app->candidate?->requiredDataComplete() ?? false);
         }
 
+        // Lolos berkas: email menyebut tes online sudah bisa dikerjakan hanya kalau tesnya memang sudah aktif untuknya.
+        if ($event === CompanyMessageTemplate::EVENT_SCREENING_PASSED) {
+            $extra['bisa_tes'] = (bool) $app->quiz_sent_at;
+        }
+
         // {tahap} = nama sesi wawancara ("Wawancara HR", "Wawancara Tahap 2"), dikirim HRIS sejak
         // wawancara boleh berkali-kali. Template lama yang tidak memakainya tidak terpengaruh.
         $placeholders = ['{nama}', '{posisi}', '{tanggal}', '{waktu}', '{lokasi}', '{catatan}', '{tahap}'];
@@ -163,6 +171,11 @@ class ApplicationNotification extends Model
     private static function defaultBody(string $event, string $name, string $jobTitle, array $extra = []): string
     {
         if ($event === CompanyMessageTemplate::EVENT_SCREENING_PASSED) {
+            // Tes online sudah aktif sejak lolos berkas: pelamar bisa langsung mengerjakan, tidak perlu menunggu kabar lagi.
+            if ($extra['bisa_tes'] ?? false) {
+                return "Halo {$name},\n\nSelamat! Berkas lamaran Anda untuk posisi {$jobTitle} dinyatakan LOLOS seleksi berkas.\n\nTahap selanjutnya adalah tes online, dan tes ini sudah bisa Anda kerjakan sekarang lewat dashboard akun Anda. Perlu diperhatikan: begitu Anda menekan tombol \"Mulai Tes\", pengerjaan harus diselesaikan dalam batas waktu yang ditentukan — jadi pastikan waktu Anda cukup sebelum memulai.\n\nSemangat mengerjakan, dan terima kasih atas ketertarikan Anda bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
+            }
+
             return "Halo {$name},\n\nKami dengan senang hati menginformasikan bahwa berkas lamaran Anda untuk posisi {$jobTitle} telah berhasil lolos tahap seleksi berkas.\n\nTahap selanjutnya adalah tes online. Tim kami akan segera memberi tahu Anda begitu tesnya sudah bisa dikerjakan lewat dashboard akun Anda.\n\nTetap semangat dan terima kasih atas ketertarikan Anda bergabung bersama kami!\n\nSalam,\nTim Rekrutmen";
         }
 
