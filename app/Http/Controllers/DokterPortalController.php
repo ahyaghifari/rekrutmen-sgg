@@ -153,7 +153,7 @@ class DokterPortalController extends Controller
 
         $files = $application->files ?? [];
         if (isset($files[$key])) {
-            Storage::delete($files[$key]['path']);
+            Storage::disk('local')->delete($files[$key]['path']);
         }
         $files[$key] = $this->storeFile($request->file('berkas'), "doctor-applications/{$application->id}");
         $application->update(['files' => $files]);
@@ -166,13 +166,14 @@ class DokterPortalController extends Controller
         $application = $this->application() ?? abort(404);
         $file = ($application->files ?? [])[$key] ?? abort(404);
 
-        return Storage::download($file['path'], $file['name']);
+        return Storage::disk('local')->download($file['path'], $file['name']);
     }
 
     private function storeFile($upload, string $dir): array
     {
         return [
-            'path' => $upload->store($dir),
+            // Selalu privat (disk `local` = storage/app/private, yang juga dibaca HRIS sebagai disk `rekrutmen`), tidak ikut FILESYSTEM_DISK.
+            'path' => $upload->store($dir, 'local'),
             'name' => $upload->getClientOriginalName(),
             'at'   => now()->toDateTimeString(),
         ];
