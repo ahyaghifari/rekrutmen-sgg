@@ -39,6 +39,7 @@ class Candidate extends Model
         'str_seumur_hidup',
         'str_berlaku_mulai',
         'str_berlaku_sampai',
+        'str_file_path',
         'ktp_address',
         'village',
         'district',

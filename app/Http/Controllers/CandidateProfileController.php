@@ -158,8 +158,10 @@ class CandidateProfileController extends Controller
                 'no_bpjskes' => ['nullable', 'string', 'max:50'], 'faskes' => ['nullable', 'string', 'max:255'],
                 'no_bpjstk' => ['nullable', 'string', 'max:50'], 'company_bpjstk' => ['nullable', 'string', 'max:255'],
                 'bsi_bank_number' => ['nullable', 'string', 'max:50'],
+                'str_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             ], $this->validationMessages(), $this->validationAttributes());
             $candidate->update(Arr::only($only, ['no_bpjskes', 'faskes', 'no_bpjstk', 'company_bpjstk', 'bsi_bank_number']));
+            $this->storeStrFile($candidate, $request);
 
             return redirect()->route('data-diri.edit')->with('success', 'Data diri berhasil disimpan.');
         }
@@ -190,6 +192,7 @@ class CandidateProfileController extends Controller
             'str_seumur_hidup'      => ['boolean'],
             'str_berlaku_mulai'     => ['nullable', 'date'],
             'str_berlaku_sampai'    => ['nullable', 'date', 'after_or_equal:str_berlaku_mulai'],
+            'str_file'              => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             'ktp_address'           => ['nullable', 'string'],
             'village'               => ['nullable', 'string', 'max:100'],
             'district'              => ['nullable', 'string', 'max:100'],
@@ -278,6 +281,7 @@ class CandidateProfileController extends Controller
 
         DB::transaction(function () use ($candidate, $data, $request, $onboarding) {
             $candidate->update(collect($data)->only($this->savableColumns($candidate, $onboarding))->all());
+            $this->storeStrFile($candidate, $request);
 
             if ($request->boolean('biodata_confirmed') && ! $candidate->biodata_confirmed_at) {
                 $candidate->update(['biodata_confirmed_at' => now()]);
@@ -419,6 +423,21 @@ class CandidateProfileController extends Controller
             ->all();
 
         return array_values(array_diff($columns, $disabled, array_keys($candidate->lockedFields())));
+    }
+
+    /** Scan STR opsional (biodata atau menyusul saat onboarding); file baru menggantikan yang lama. */
+    private function storeStrFile(Candidate $candidate, Request $request): void
+    {
+        if (! $request->hasFile('str_file')) {
+            return;
+        }
+
+        $old = $candidate->str_file_path;
+        $candidate->update(['str_file_path' => $request->file('str_file')->store("candidates/{$candidate->id}/str", 'local')]);
+
+        if ($old) {
+            Storage::disk('local')->delete($old);
+        }
     }
 
     private function biodataPdf(): array

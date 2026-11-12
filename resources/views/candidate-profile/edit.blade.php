@@ -197,6 +197,10 @@ foreach (['family' => 'familyMembersData', 'education' => 'educationsData', 'tra
           <input type="text" name="company_bpjstk" value="{{ old('company_bpjstk', $candidate->company_bpjstk) }}" class="form-field" /></div>
         <div class="col-span-full"><label class="block mb-[7px] text-[13px] font-bold text-slate-700">No. Rekening BSI</label>
           <input type="text" name="bsi_bank_number" value="{{ old('bsi_bank_number', $candidate->bsi_bank_number) }}" class="form-field" /></div>
+        {{-- Biodata sudah dibekukan: STR tidak bisa diubah, tapi scan-nya masih bisa diunggah di sini. --}}
+        @if($frozen && $candidate->isHospital() && $candidate->jobApplication?->jobOpening?->is_nakes)
+          @include('candidate-profile.partials.str-file')
+        @endif
       </div>
     </section>
 

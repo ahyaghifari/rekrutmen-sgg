@@ -63,6 +63,7 @@
       <input type="date" name="str_berlaku_sampai" :disabled="lifetime" value="{{ old('str_berlaku_sampai', $candidate->str_berlaku_sampai?->format('Y-m-d')) }}" class="form-field" /></div>
   </div>
 </div>
+@include('candidate-profile.partials.str-file')
 @endif
 
 @elseif($f['type'] === 'address')
