@@ -36,6 +36,7 @@ class JobApplication extends Model
         'offering_signed_reviewed_at',
         'offering_signed_revision_reason',
         'onboarding_date',
+        'onboarding_time',
         'offering_full_name',
         'offering_birth_place',
         'offering_birth_date',

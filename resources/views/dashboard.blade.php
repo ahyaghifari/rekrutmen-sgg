@@ -276,6 +276,18 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
     </div>
     @include('dashboard-parts.schedule-response', ['invitee' => $activeApp->mcuInvitee, 'type' => 'mcu', 'mode' => 'inline'])
     @endif
+    {{-- Jadwal onboarding (tanggal + waktu) yang ditetapkan recruiter di tahap TTD & Onboarding. --}}
+    @if($activeApp->status === 'onboarding' && $activeApp->onboarding_date)
+    <div class="mt-4 flex items-start gap-2.5 rounded-[12px] px-4 py-3" style="background:{{ $tlBrand }}14;border:1px solid {{ $tlBrand }}33;">
+      <i class="fa-solid fa-calendar-days mt-px text-xs" style="color:{{ $tlBrand }};"></i>
+      <div class="text-[13px]" style="color:{{ $tlBrand }};">
+        <strong>Jadwal Onboarding:</strong>
+        {{ $activeApp->onboarding_date->translatedFormat('l, j F Y') }}
+        @if($activeApp->onboarding_time) &middot; {{ substr($activeApp->onboarding_time, 0, 5) }} WITA @endif
+      </div>
+    </div>
+    @endif
+
     {{-- Biodata: terbuka sejak jadwal wawancara pertama terbit (JobApplication::biodataOpen()), sebelum onboarding. --}}
     @php
       // Tidak tampil lagi saat offering/MCU (biodata dikunci) maupun onboarding.

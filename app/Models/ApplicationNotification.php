@@ -272,8 +272,9 @@ class ApplicationNotification extends Model
         }
 
         if ($event === CompanyMessageTemplate::EVENT_ONBOARDING_INVITE) {
+            $waktu = ! empty($extra['onboarding_time']) ? " pukul {$extra['onboarding_time']} WITA" : '';
             $jadwal = ! empty($extra['onboarding_date'])
-                ? "\n\nJadwal onboarding Anda: {$extra['onboarding_date']}. Mohon hadir tepat waktu; detail lokasi dan agenda menyusul dari tim rekrutmen."
+                ? "\n\nJadwal onboarding Anda: {$extra['onboarding_date']}{$waktu}. Mohon hadir tepat waktu; detail lokasi dan agenda menyusul dari tim rekrutmen."
                 : "\n\nTim rekrutmen kami akan segera menghubungi Anda untuk jadwal dan detail lebih lanjut.";
 
             $dataDiri = ! empty($extra['data_diri_belum_lengkap'])
