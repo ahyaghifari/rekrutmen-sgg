@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Route;
 // HRIS mengelola seluruh proses rekrutmen langsung ke DB bersama (koneksi `recruitment`).
 // Yang tersisa lewat HTTP: pemicu email pemberitahuan pelamar.
 Route::middleware(HrisApiAuth::class)->group(function () {
-    Route::post('/integrations/hris/notifications', [HrisIntegrationController::class, 'sendNotification']);
+    Route::post('/integrations/hris/users/verification', [HrisIntegrationController::class, 'sendVerification']);
+    Route::post('/integrations/hris/notifications',[HrisIntegrationController::class, 'sendNotification']);
     Route::post('/integrations/hris/notifications/flush', [HrisIntegrationController::class, 'flushNotifications']);
     Route::get('/integrations/hris/applications/{application}/biodata.pdf', [HrisIntegrationController::class, 'biodataPdf']);
 });

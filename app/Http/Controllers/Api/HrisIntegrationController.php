@@ -19,6 +19,21 @@ use Illuminate\Validation\Rule;
  */
 class HrisIntegrationController extends Controller
 {
+    /** Kirim ulang email verifikasi akun pelamar (dipicu admin dari panel HRIS). */
+    public function sendVerification(Request $request): JsonResponse
+    {
+        $id = $request->validate(['user_id' => ['required']])['user_id'];
+        $user = \App\Models\User::where('is_staff', false)->findOrFail($id);
+
+        if ($user->email_verified_at) {
+            return response()->json(['message' => 'Email sudah terverifikasi.'], 422);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json(['ok' => true]);
+    }
+
     /** Event pemberitahuan yang boleh diminta HRIS. */
     private const NOTIFICATION_EVENTS = [
         'screening_rejected', 'screening_passed', 'quiz_sent', 'quiz_passed', 'quiz_rejected',

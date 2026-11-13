@@ -188,7 +188,12 @@ class JobApplication extends Model
 
     public function interviewInvitee(): HasOne
     {
-        return $this->hasOne(InterviewInvitee::class);
+        // Undangan TERBARU yang jadwalnya sudah terbit: pelamar bisa ikut banyak sesi wawancara, dashboard
+        // harus menampilkan sesi terbaru (bukan yang pertama), dan draf sesi baru belum boleh tampil.
+        return $this->hasOne(InterviewInvitee::class)->ofMany(
+            ['id' => 'max'],
+            fn ($q) => $q->whereHas('schedule', fn ($s) => $s->where('status', 'published'))
+        );
     }
 
     public function interviewInvitees(): HasMany
