@@ -25,7 +25,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new \App\Notifications\VerifyEmailNotification);
+        $this->notify(new \App\Notifications\VerifyEmailNotification($this->email));
     }
 
     /**
