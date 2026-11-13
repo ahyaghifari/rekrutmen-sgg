@@ -25,6 +25,13 @@ class AppServiceProvider extends ServiceProvider
     {
         Password::defaults(fn () => Password::min(8)->letters()->numbers()->symbols());
 
+        // Catat email verifikasi pelamar yang BERHASIL diserahkan ke SMTP (pasangan log gagal di VerifyEmailNotification::failed).
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Notifications\Events\NotificationSent::class,
+            fn ($e) => $e->notification instanceof \App\Notifications\VerifyEmailNotification
+                && \Illuminate\Support\Facades\Log::info('Email verifikasi pelamar terkirim.', ['email' => $e->notifiable->email])
+        );
+
         RateLimiter::for('api', fn (Request $request) =>
             Limit::perMinute(60)->by($request->user()?->id ?: $request->ip())
         );
