@@ -169,6 +169,9 @@ class OfferingLetterController extends Controller
     {
         $application = $this->currentOfferingApplication();
 
+        // Negosiasi hanya untuk lowongan yang mengaktifkannya (batas pangkat jabatan, diatur dari HRIS).
+        abort_unless($application->jobOpening?->can_negotiation, 403, 'Negosiasi tidak tersedia untuk lowongan ini.');
+
         $data = $request->validate([
             'message' => ['required', 'string', 'max:2000'],
         ]);

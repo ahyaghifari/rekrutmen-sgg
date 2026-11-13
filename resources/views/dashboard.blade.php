@@ -447,7 +447,9 @@ $pastApps  = $applications->filter(fn($a) => in_array($a->status, ['passed','rej
         </div>
         @endif
         <div class="mt-4">
-          @if($negos->last()?->sender === 'applicant')
+          {{-- Form negosiasi hanya bila lowongan mengaktifkannya (can_negotiation); riwayat yang sudah ada tetap tampil di atas. --}}
+          @if(! $activeApp->jobOpening?->can_negotiation)
+          @elseif($negos->last()?->sender === 'applicant')
           <div class="rounded-[10px] px-3 py-2.5 text-[12.5px] bg-amber-50 text-amber-700 border border-amber-200">
             <i class="fa-solid fa-clock text-xs mr-1"></i>Pengajuan negosiasi Anda sedang ditinjau tim rekrutmen. Anda bisa mengirim lagi setelah ada balasan.
           </div>

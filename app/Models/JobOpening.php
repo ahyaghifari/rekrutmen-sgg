@@ -21,6 +21,7 @@ class JobOpening extends Model
         'title',
         'division_name',
         'is_nakes',
+        'can_negotiation',
         'company_name',
         'quota',
         'max_applicants',
@@ -40,6 +41,7 @@ class JobOpening extends Model
     protected $casts = [
         'is_active'             => 'boolean',
         'is_nakes'              => 'boolean',
+        'can_negotiation'       => 'boolean',
         'quota'                 => 'integer',
         'max_applicants'        => 'integer',
         'applications_deadline' => 'date',
