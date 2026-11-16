@@ -22,6 +22,22 @@ class HrisIntegrationController extends Controller
     /** Kirim ulang email verifikasi akun pelamar (dipicu admin dari panel HRIS). */
     public function sendVerification(Request $request): JsonResponse
     {
+        // Mode tes: kirim langsung (sinkron) ke email tertentu tanpa perlu akun pelamar.
+        // Pengguna sementara tidak disimpan (id 0), jadi tautan di email tidak memverifikasi akun apa pun.
+        if ($request->filled('test_email')) {
+            $email = $request->validate(['test_email' => ['email']])['test_email'];
+            $tmp = new \App\Models\User(['name' => 'Tes Pengiriman', 'email' => $email]);
+            $tmp->id = 0;
+
+            try {
+                \Illuminate\Support\Facades\Notification::sendNow($tmp, new \App\Notifications\VerifyEmailNotification($email));
+            } catch (\Throwable $e) {
+                return response()->json(['message' => 'Gagal kirim: ' . $e->getMessage()], 500);
+            }
+
+            return response()->json(['ok' => true]);
+        }
+
         $id = $request->validate(['user_id' => ['required']])['user_id'];
         $user = \App\Models\User::where('is_staff', false)->findOrFail($id);
 
