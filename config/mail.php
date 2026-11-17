@@ -45,8 +45,32 @@ return [
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            'timeout' => env('MAIL_TIMEOUT'), // detik; isi (mis. 15) kalau memakai cadangan supaya SMTP yang macet tidak menahan antrean lama
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        // SMTP cadangan: akun lain, dipakai otomatis lewat mailer `resilient` kalau SMTP utama gagal.
+        'smtp_backup' => [
+            'transport' => 'smtp',
+            'scheme' => env('MAIL_BACKUP_SCHEME'),
+            'host' => env('MAIL_BACKUP_HOST', '127.0.0.1'),
+            'port' => env('MAIL_BACKUP_PORT', 587),
+            'username' => env('MAIL_BACKUP_USERNAME'),
+            'password' => env('MAIL_BACKUP_PASSWORD'),
+            'timeout' => env('MAIL_TIMEOUT'),
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        // Aktifkan dengan MAIL_MAILER=resilient (nilai MAIL_* tetap untuk akun utama, MAIL_BACKUP_* untuk cadangan).
+        'resilient' => [
+            'transport' => 'failover_from',
+            'primary' => 'smtp',
+            'backup' => 'smtp_backup',
+            'backup_from' => [
+                'address' => env('MAIL_BACKUP_FROM_ADDRESS'),
+                'name' => env('MAIL_BACKUP_FROM_NAME', env('MAIL_FROM_NAME', 'Example')),
+            ],
+            'skip_minutes' => env('MAIL_PRIMARY_SKIP_MINUTES', 5), // utama yang baru gagal dilewati sekian menit
         ],
 
         'ses' => [
@@ -107,6 +131,9 @@ return [
     | used globally for all emails that are sent by your application.
     |
     */
+
+    // Balasan pelamar masuk ke kotak HR (email yang menulis "Balas email ini" jadi benar). Kosong = tanpa Reply-To.
+    'reply_to' => env('MAIL_REPLY_TO_ADDRESS') ? ['address' => env('MAIL_REPLY_TO_ADDRESS'), 'name' => env('MAIL_FROM_NAME', 'Example')] : null,
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
