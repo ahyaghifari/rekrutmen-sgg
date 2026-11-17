@@ -26,7 +26,7 @@ class OnboardingInviteNotification extends Notification
 
         return (new MailMessage)
             ->subject('Selamat Bergabung! Undangan TTD & Onboarding — Syifa Global Group')
-            ->view('emails.onboarding-invite', [
+            ->view(['emails.onboarding-invite', 'emails.onboarding-invite-text'], [
                 'name'     => $notifiable->name,
                 'position' => $this->application->jobOpening->title,
                 'company'  => $this->application->jobOpening->company?->name ?? 'Syifa Global Group',

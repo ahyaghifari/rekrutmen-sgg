@@ -23,7 +23,7 @@ class ApplicantNotificationMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
-        return new Content(view: 'mail.applicant-notification');
+        return new Content(view: 'mail.applicant-notification', text: 'mail.applicant-notification-text');
     }
 
     public function attachments(): array
