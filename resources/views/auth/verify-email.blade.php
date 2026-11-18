@@ -3,9 +3,14 @@
         Terima kasih sudah mendaftar! Sebelum melanjutkan, mohon verifikasi alamat email Anda dengan mengklik tautan yang baru saja kami kirimkan. Belum menerima emailnya? Tenang, kami akan dengan senang hati mengirimkan yang baru.
     </div>
 
+    <div class="mb-4 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <span class="font-bold">!</span>
+        <span>Email verifikasi bisa masuk ke folder <strong>Spam</strong> atau <strong>Promosi</strong>. Jika tidak ada di kotak masuk, mohon cek folder tersebut. Jika menemukannya di sana, tandai sebagai <strong>"Bukan spam"</strong> agar email berikutnya masuk ke kotak masuk. Email bisa tiba dalam beberapa menit.</span>
+    </div>
+
     @if (session('status') == 'verification-link-sent')
         <div class="mb-4 font-medium text-sm text-green-600">
-            Tautan verifikasi baru telah dikirim ke alamat email yang Anda daftarkan.
+            Tautan verifikasi baru telah dikirim ke alamat email yang Anda daftarkan. Jangan lupa cek folder Spam jika belum masuk.
         </div>
     @endif
 
